@@ -1,13 +1,29 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+/**
+ * Life-OS 2026 - Main Entry Point
+ * Based on Superhábitos methodology
+ */
+
+import { LifeOSProvider, useLifeOSContext } from "@/context/LifeOSContext";
+import { YearWizard } from "@/components/wizard/YearWizard";
+import { Dashboard } from "@/components/layout/Dashboard";
+
+function LifeOSApp() {
+  const { state } = useLifeOSContext();
+
+  // Show wizard if not configured
+  if (!state.isConfigured) {
+    return <YearWizard />;
+  }
+
+  // Show main dashboard
+  return <Dashboard />;
+}
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <LifeOSProvider>
+      <LifeOSApp />
+    </LifeOSProvider>
   );
 };
 
