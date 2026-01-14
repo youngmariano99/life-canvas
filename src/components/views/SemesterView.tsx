@@ -1,11 +1,13 @@
 /**
  * Semester View - Roadmap
- * Shows goals organized by quarter with drag-and-drop reordering
+ * Shows goals organized by quarter with optional exact dates
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Plus, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Check, Clock, Pause, X } from "lucide-react";
+import { Plus, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Check, Clock, Pause, X, Calendar, Eye, EyeOff, Package } from "lucide-react";
+import { format, parseISO, isWithinInterval, startOfQuarter, endOfQuarter, isBefore } from "date-fns";
+import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { Goal, ROLE_COLORS } from "@/types/lifeOS";
@@ -13,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ResourceManager } from "@/components/resources/ResourceManager";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
@@ -33,14 +36,21 @@ const STATUS_CONFIG = {
 };
 
 export function SemesterView() {
-  const { state, getGoalsByQuarter, updateGoal, addGoal, deleteGoal, getRoleById } = useLifeOSContext();
+  const { state, getGoalsByQuarter, updateGoal, addGoal, deleteGoal, getRoleById, toggleShowPastItems } = useLifeOSContext();
   const [selectedSemester, setSelectedSemester] = useState<1 | 2>(1);
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
   const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalRole, setNewGoalRole] = useState("");
   const [newGoalQuarter, setNewGoalQuarter] = useState<1 | 2 | 3 | 4>(1);
+  const [newGoalDate, setNewGoalDate] = useState("");
 
   const visibleQuarters = QUARTERS.filter(q => q.semester === selectedSemester);
+  const today = new Date();
+
+  // Get current quarter for filtering
+  const currentQuarter = Math.ceil((today.getMonth() + 1) / 3) as 1 | 2 | 3 | 4;
 
   const handleMoveGoal = (goalId: string, newQuarter: 1 | 2 | 3 | 4) => {
     updateGoal(goalId, { 
@@ -53,6 +63,10 @@ export function SemesterView() {
     updateGoal(goalId, { status });
   };
 
+  const handleDateChange = (goalId: string, date: string) => {
+    updateGoal(goalId, { targetDate: date || undefined });
+  };
+
   const handleAddGoal = () => {
     if (!newGoalTitle.trim() || !newGoalRole) return;
     addGoal({
@@ -61,9 +75,36 @@ export function SemesterView() {
       quarter: newGoalQuarter,
       semester: newGoalQuarter <= 2 ? 1 : 2,
       status: "pending",
+      targetDate: newGoalDate || undefined,
     });
     setNewGoalTitle("");
+    setNewGoalDate("");
     setIsAddingGoal(false);
+  };
+
+  // Filter goals
+  const filterGoals = (goals: Goal[]) => {
+    return goals.filter(goal => {
+      // Role filter
+      if (selectedRoleFilter !== "all" && goal.roleId !== selectedRoleFilter) {
+        return false;
+      }
+      
+      // Time filter - hide past quarters unless showPastItems is true
+      if (!state.showPastItems) {
+        if (goal.targetDate) {
+          const goalDate = parseISO(goal.targetDate);
+          if (isBefore(goalDate, today) && goal.status !== "completed") {
+            // Keep showing if not completed
+          }
+        } else if (goal.quarter < currentQuarter && goal.status !== "completed") {
+          // Hide past quarter goals that aren't completed
+          return false;
+        }
+      }
+      
+      return true;
+    });
   };
 
   return (
@@ -78,7 +119,7 @@ export function SemesterView() {
               : state.yearSettings?.h2Priority || "Segundo Semestre"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={selectedSemester === 1 ? "default" : "outline"}
             onClick={() => setSelectedSemester(1)}
@@ -93,6 +134,30 @@ export function SemesterView() {
           >
             H2
           </Button>
+
+          {/* Role Filter */}
+          <Select value={selectedRoleFilter} onValueChange={setSelectedRoleFilter}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Filtrar rol" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {state.roles.map((role) => (
+                <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Toggle Past Items */}
+          <Button
+            variant={state.showPastItems ? "default" : "outline"}
+            size="sm"
+            onClick={toggleShowPastItems}
+            className="gap-1"
+          >
+            {state.showPastItems ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </Button>
+
           <Dialog open={isAddingGoal} onOpenChange={setIsAddingGoal}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1 ml-2">
@@ -135,6 +200,14 @@ export function SemesterView() {
                     ))}
                   </SelectContent>
                 </Select>
+                <div>
+                  <label className="text-sm text-muted-foreground">Fecha exacta (opcional)</label>
+                  <Input
+                    type="date"
+                    value={newGoalDate}
+                    onChange={(e) => setNewGoalDate(e.target.value)}
+                  />
+                </div>
                 <Button onClick={handleAddGoal} disabled={!newGoalTitle.trim() || !newGoalRole} className="w-full">
                   Agregar
                 </Button>
@@ -147,7 +220,8 @@ export function SemesterView() {
       {/* Quarters Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {visibleQuarters.map((quarter) => {
-          const goals = getGoalsByQuarter(quarter.id as 1|2|3|4);
+          const allGoals = getGoalsByQuarter(quarter.id as 1|2|3|4);
+          const goals = filterGoals(allGoals);
           
           return (
             <motion.div
@@ -181,6 +255,7 @@ export function SemesterView() {
                     const Icon = role ? ICON_MAP[role.icon] || Users : Users;
                     const colors = role ? ROLE_COLORS[role.color] : ROLE_COLORS.student;
                     const statusConfig = STATUS_CONFIG[goal.status];
+                    const isExpanded = expandedGoalId === goal.id;
 
                     return (
                       <motion.div
@@ -194,7 +269,15 @@ export function SemesterView() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-foreground truncate">{goal.title}</h4>
-                            <p className="text-xs text-muted-foreground">{role?.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-muted-foreground">{role?.name}</p>
+                              {goal.targetDate && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {format(parseISO(goal.targetDate), "d MMM", { locale: es })}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <button 
                             onClick={() => deleteGoal(goal.id)}
@@ -235,7 +318,37 @@ export function SemesterView() {
                               ))}
                             </SelectContent>
                           </Select>
+
+                          <Input
+                            type="date"
+                            value={goal.targetDate || ""}
+                            onChange={(e) => handleDateChange(goal.id, e.target.value)}
+                            className="h-7 text-xs w-auto"
+                            placeholder="Fecha"
+                          />
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={() => setExpandedGoalId(isExpanded ? null : goal.id)}
+                          >
+                            <Package className="w-3 h-3" />
+                            Recursos
+                          </Button>
                         </div>
+
+                        {/* Resources Section */}
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="pt-3 border-t border-border"
+                          >
+                            <ResourceManager goalId={goal.id} resources={goal.resources || []} />
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
                   })

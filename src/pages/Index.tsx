@@ -10,8 +10,8 @@ import { Dashboard } from "@/components/layout/Dashboard";
 function LifeOSApp() {
   const { state } = useLifeOSContext();
 
-  // Show wizard if not configured
-  if (!state.isConfigured) {
+  // Show wizard if not configured OR if editing wizard
+  if (!state.isConfigured || state.isEditingWizard) {
     return <YearWizard />;
   }
 

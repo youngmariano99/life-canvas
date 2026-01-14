@@ -1,23 +1,39 @@
 /**
  * Daily View - "La Represa"
- * Daily execution with stone tracking and habit grid
+ * Daily execution with stone tracking, habits, and activities by role
  */
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { format, addDays, subDays, startOfWeek, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Gem, Check, X, Minus, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Gem, Check, Calendar, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { cn } from "@/lib/utils";
 import { HabitTracker } from "@/components/habits/HabitTracker";
+import { ROLE_COLORS } from "@/types/lifeOS";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
+};
 
 export function DailyView() {
-  const { state, getDailyStone, setDailyStone, completeDailyStone } = useLifeOSContext();
+  const { 
+    state, 
+    getDailyStone, 
+    setDailyStone, 
+    completeDailyStone, 
+    getActivitiesForDate,
+    getRoleById,
+    updateProjectActivity,
+    toggleShowPastItems
+  } = useLifeOSContext();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [stoneInput, setStoneInput] = useState("");
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const dailyStone = getDailyStone(dateStr);
@@ -26,6 +42,29 @@ export function DailyView() {
   // Week days for navigation
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // Get activities for this date, grouped by role
+  const activitiesForDate = useMemo(() => {
+    const activities = getActivitiesForDate(dateStr);
+    
+    // Filter by role if selected
+    const filtered = selectedRoleFilter === "all" 
+      ? activities 
+      : activities.filter(a => a.roleId === selectedRoleFilter);
+
+    // Group by role
+    const grouped: Record<string, typeof activities> = {};
+    
+    filtered.forEach(activity => {
+      const roleId = activity.roleId || "no-role";
+      if (!grouped[roleId]) grouped[roleId] = [];
+      grouped[roleId].push(activity);
+    });
+
+    return grouped;
+  }, [dateStr, getActivitiesForDate, selectedRoleFilter]);
+
+  const hasActivities = Object.keys(activitiesForDate).length > 0;
 
   const handleSetStone = () => {
     if (!stoneInput.trim()) return;
@@ -37,6 +76,11 @@ export function DailyView() {
     if (dailyStone) {
       completeDailyStone(dateStr, !dailyStone.completed);
     }
+  };
+
+  const handleToggleActivity = (activityId: string, currentStatus: string) => {
+    const newStatus = currentStatus === "Completada" ? "Por hacer" : "Completada";
+    updateProjectActivity(activityId, { status: newStatus });
   };
 
   return (
@@ -181,6 +225,78 @@ export function DailyView() {
           </div>
         </div>
       </motion.div>
+
+      {/* Daily Activities by Role */}
+      {hasActivities && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Actividades del Día</h3>
+            <Select value={selectedRoleFilter} onValueChange={setSelectedRoleFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Filtrar rol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los roles</SelectItem>
+                {state.roles.map((role) => (
+                  <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(activitiesForDate).map(([roleId, activities]) => {
+              const role = roleId !== "no-role" ? getRoleById(roleId) : null;
+              const Icon = role ? ICON_MAP[role.icon] || Users : Users;
+              const colors = role ? ROLE_COLORS[role.color] : { bg: "bg-muted", text: "text-muted-foreground" };
+
+              return (
+                <div key={roleId} className="bg-card rounded-xl border border-border overflow-hidden">
+                  <div className={cn("flex items-center gap-3 px-4 py-3", colors.bg)}>
+                    <Icon className="w-5 h-5 text-white" />
+                    <span className="font-medium text-white">{role?.name || "Sin rol"}</span>
+                    <span className="text-white/70 text-sm ml-auto">
+                      {activities.length} actividad{activities.length !== 1 ? 'es' : ''}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {activities.map((activity) => {
+                      const isCompleted = activity.status === "Completada";
+                      return (
+                        <div 
+                          key={activity.id} 
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                        >
+                          <button
+                            onClick={() => handleToggleActivity(activity.id, activity.status)}
+                            className={cn(
+                              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
+                              isCompleted 
+                                ? "bg-success border-success text-white" 
+                                : "border-border hover:border-primary"
+                            )}
+                          >
+                            {isCompleted && <Check className="w-3 h-3" />}
+                          </button>
+                          <span className={cn(
+                            "flex-1",
+                            isCompleted && "line-through text-muted-foreground"
+                          )}>
+                            {activity.title}
+                          </span>
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                            {activity.status}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Habit Tracker */}
       <HabitTracker selectedDate={dateStr} />

@@ -4,11 +4,14 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { WizardStep1Vision } from "./WizardStep1Vision";
 import { WizardStep2Mission } from "./WizardStep2Mission";
 import { WizardStep3Roles } from "./WizardStep3Roles";
 import { WizardStep4Goals } from "./WizardStep4Goals";
+import { WizardStep5Habits } from "./WizardStep5Habits";
 import { WizardProgress } from "./WizardProgress";
 
 const STEPS = [
@@ -16,14 +19,16 @@ const STEPS = [
   { id: 2, title: "Misión Personal", description: "Tu propósito central" },
   { id: 3, title: "Roles de Vida", description: "Máximo 7 áreas clave" },
   { id: 4, title: "Objetivos 2026", description: "Metas por rol" },
+  { id: 5, title: "Hábitos", description: "Rutinas por rol" },
 ];
 
 export function YearWizard() {
-  const { state, setWizardStep, completeWizard } = useLifeOSContext();
+  const { state, setWizardStep, completeWizard, cancelEditingWizard } = useLifeOSContext();
   const currentStep = state.wizardStep;
+  const isEditing = state.isEditingWizard;
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setWizardStep(currentStep + 1);
     } else {
       completeWizard();
@@ -44,9 +49,19 @@ export function YearWizard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-semibold text-foreground">Life-OS 2026</h1>
-              <p className="text-sm text-muted-foreground">Planificación Anual</p>
+              <p className="text-sm text-muted-foreground">
+                {isEditing ? "Modificar Planificación" : "Planificación Anual"}
+              </p>
             </div>
-            <WizardProgress steps={STEPS} currentStep={currentStep} />
+            <div className="flex items-center gap-4">
+              <WizardProgress steps={STEPS} currentStep={currentStep} />
+              {isEditing && (
+                <Button variant="ghost" size="sm" onClick={cancelEditingWizard} className="gap-1">
+                  <X className="w-4 h-4" />
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -72,6 +87,9 @@ export function YearWizard() {
             )}
             {currentStep === 4 && (
               <WizardStep4Goals onNext={handleNext} onBack={handleBack} />
+            )}
+            {currentStep === 5 && (
+              <WizardStep5Habits onNext={handleNext} onBack={handleBack} />
             )}
           </motion.div>
         </AnimatePresence>
