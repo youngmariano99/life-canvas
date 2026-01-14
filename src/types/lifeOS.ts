@@ -25,6 +25,15 @@ export const ROLE_COLORS: Record<RoleColor, { bg: string; text: string; border: 
   social: { bg: "bg-role-social", text: "text-role-social", border: "border-role-social" },
 };
 
+// Resource for goals
+export interface Resource {
+  id: string;
+  name: string;
+  quantityHave: number;
+  quantityNeeded: number;
+  unit?: string;
+}
+
 // Role (max 7 per methodology)
 export interface Role {
   id: string;
@@ -32,6 +41,7 @@ export interface Role {
   icon: string; // Lucide icon name
   color: RoleColor;
   description?: string;
+  imageUrl?: string; // Custom image uploaded by user
 }
 
 // Annual goal linked to a role
@@ -42,7 +52,9 @@ export interface Goal {
   description?: string;
   quarter: 1 | 2 | 3 | 4;
   semester: 1 | 2;
+  targetDate?: string; // Optional exact date (YYYY-MM-DD)
   status: "pending" | "in_progress" | "completed" | "deferred";
+  resources: Resource[]; // Resources needed for this goal
   createdAt: string;
   updatedAt: string;
 }
@@ -99,10 +111,35 @@ export interface YearSettings {
   updatedAt: string;
 }
 
+// Project activity for weekly planning
+export interface ProjectActivity {
+  id: string;
+  projectId: string;
+  title: string;
+  status: string; // User-defined status (default: "todo", "in_progress", "review", "done")
+  order: number;
+  dueDate?: string; // Optional due date
+  roleId?: string;
+  createdAt: string;
+}
+
+// Project linked to a goal
+export interface Project {
+  id: string;
+  goalId: string;
+  name: string;
+  description?: string;
+  dueDate?: string;
+  statuses: string[]; // Custom status columns for kanban
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Complete app state
 export interface LifeOSState {
   isConfigured: boolean;
   wizardStep: number;
+  isEditingWizard: boolean; // Whether we're editing an existing config
   yearSettings: YearSettings | null;
   roles: Role[];
   goals: Goal[];
@@ -110,14 +147,18 @@ export interface LifeOSState {
   habitLogs: HabitLog[];
   deviations: Deviation[];
   dailyStones: DailyStone[];
-  currentView: "identity" | "semester" | "daily";
+  projects: Project[];
+  projectActivities: ProjectActivity[];
+  currentView: "identity" | "semester" | "daily" | "weekly";
   selectedDate: string;
+  showPastItems: boolean; // Toggle to show/hide past items
 }
 
 // Default initial state
 export const initialState: LifeOSState = {
   isConfigured: false,
   wizardStep: 1,
+  isEditingWizard: false,
   yearSettings: null,
   roles: [],
   goals: [],
@@ -125,6 +166,9 @@ export const initialState: LifeOSState = {
   habitLogs: [],
   deviations: [],
   dailyStones: [],
+  projects: [],
+  projectActivities: [],
   currentView: "identity",
   selectedDate: new Date().toISOString().split('T')[0],
+  showPastItems: false,
 };
