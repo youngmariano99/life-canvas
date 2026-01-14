@@ -12,7 +12,10 @@ import {
   Habit, 
   HabitLog, 
   Deviation, 
-  DailyStone 
+  DailyStone,
+  Project,
+  ProjectActivity,
+  Resource
 } from "@/types/lifeOS";
 
 const STORAGE_KEY = "life-os-2026";
@@ -24,7 +27,16 @@ export function loadState(): LifeOSState {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return { ...initialState, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      // Ensure new fields exist with defaults
+      return { 
+        ...initialState, 
+        ...parsed,
+        projects: parsed.projects || [],
+        projectActivities: parsed.projectActivities || [],
+        showPastItems: parsed.showPastItems ?? false,
+        isEditingWizard: parsed.isEditingWizard ?? false,
+      };
     }
   } catch (error) {
     console.error("Failed to load Life-OS state:", error);
@@ -107,18 +119,20 @@ export function deleteRole(state: LifeOSState, roleId: string): LifeOSState {
   return {
     ...state,
     roles: state.roles.filter(r => r.id !== roleId),
-    goals: state.goals.filter(g => g.roleId !== roleId)
+    goals: state.goals.filter(g => g.roleId !== roleId),
+    habits: state.habits.filter(h => h.roleId !== roleId)
   };
 }
 
 /**
  * Add a goal
  */
-export function addGoal(state: LifeOSState, goal: Omit<Goal, "id" | "createdAt" | "updatedAt">): LifeOSState {
+export function addGoal(state: LifeOSState, goal: Omit<Goal, "id" | "createdAt" | "updatedAt" | "resources">): LifeOSState {
   const now = new Date().toISOString();
   const newGoal: Goal = { 
     ...goal, 
     id: generateId(), 
+    resources: [],
     createdAt: now, 
     updatedAt: now 
   };
@@ -148,7 +162,74 @@ export function updateGoal(
 export function deleteGoal(state: LifeOSState, goalId: string): LifeOSState {
   return {
     ...state,
-    goals: state.goals.filter(g => g.id !== goalId)
+    goals: state.goals.filter(g => g.id !== goalId),
+    projects: state.projects.filter(p => p.goalId !== goalId)
+  };
+}
+
+/**
+ * Add resource to goal
+ */
+export function addResourceToGoal(
+  state: LifeOSState,
+  goalId: string,
+  resource: Omit<Resource, "id">
+): LifeOSState {
+  const newResource: Resource = { ...resource, id: generateId() };
+  return {
+    ...state,
+    goals: state.goals.map(g => 
+      g.id === goalId 
+        ? { ...g, resources: [...(g.resources || []), newResource], updatedAt: new Date().toISOString() }
+        : g
+    )
+  };
+}
+
+/**
+ * Update resource in goal
+ */
+export function updateResourceInGoal(
+  state: LifeOSState,
+  goalId: string,
+  resourceId: string,
+  updates: Partial<Resource>
+): LifeOSState {
+  return {
+    ...state,
+    goals: state.goals.map(g => 
+      g.id === goalId 
+        ? { 
+            ...g, 
+            resources: (g.resources || []).map(r => 
+              r.id === resourceId ? { ...r, ...updates } : r
+            ),
+            updatedAt: new Date().toISOString()
+          }
+        : g
+    )
+  };
+}
+
+/**
+ * Delete resource from goal
+ */
+export function deleteResourceFromGoal(
+  state: LifeOSState,
+  goalId: string,
+  resourceId: string
+): LifeOSState {
+  return {
+    ...state,
+    goals: state.goals.map(g => 
+      g.id === goalId 
+        ? { 
+            ...g, 
+            resources: (g.resources || []).filter(r => r.id !== resourceId),
+            updatedAt: new Date().toISOString()
+          }
+        : g
+    )
   };
 }
 
@@ -158,6 +239,31 @@ export function deleteGoal(state: LifeOSState, goalId: string): LifeOSState {
 export function addHabit(state: LifeOSState, habit: Omit<Habit, "id">): LifeOSState {
   const newHabit: Habit = { ...habit, id: generateId() };
   return { ...state, habits: [...state.habits, newHabit] };
+}
+
+/**
+ * Update a habit
+ */
+export function updateHabit(
+  state: LifeOSState, 
+  habitId: string, 
+  updates: Partial<Habit>
+): LifeOSState {
+  return {
+    ...state,
+    habits: state.habits.map(h => h.id === habitId ? { ...h, ...updates } : h)
+  };
+}
+
+/**
+ * Delete a habit
+ */
+export function deleteHabit(state: LifeOSState, habitId: string): LifeOSState {
+  return {
+    ...state,
+    habits: state.habits.filter(h => h.id !== habitId),
+    habitLogs: state.habitLogs.filter(l => l.habitId !== habitId)
+  };
 }
 
 /**
@@ -250,6 +356,122 @@ export function completeDailyStone(
       s.date === date ? { ...s, completed } : s
     )
   };
+}
+
+// ==================== PROJECT FUNCTIONS ====================
+
+/**
+ * Add a project
+ */
+export function addProject(
+  state: LifeOSState, 
+  project: Omit<Project, "id" | "createdAt" | "updatedAt" | "statuses">
+): LifeOSState {
+  const now = new Date().toISOString();
+  const newProject: Project = {
+    ...project,
+    id: generateId(),
+    statuses: ["Por hacer", "En progreso", "En revisión", "Completada"],
+    createdAt: now,
+    updatedAt: now
+  };
+  return { ...state, projects: [...state.projects, newProject] };
+}
+
+/**
+ * Update a project
+ */
+export function updateProject(
+  state: LifeOSState,
+  projectId: string,
+  updates: Partial<Project>
+): LifeOSState {
+  return {
+    ...state,
+    projects: state.projects.map(p => 
+      p.id === projectId 
+        ? { ...p, ...updates, updatedAt: new Date().toISOString() }
+        : p
+    )
+  };
+}
+
+/**
+ * Delete a project
+ */
+export function deleteProject(state: LifeOSState, projectId: string): LifeOSState {
+  return {
+    ...state,
+    projects: state.projects.filter(p => p.id !== projectId),
+    projectActivities: state.projectActivities.filter(a => a.projectId !== projectId)
+  };
+}
+
+/**
+ * Add activity to project
+ */
+export function addProjectActivity(
+  state: LifeOSState,
+  activity: Omit<ProjectActivity, "id" | "createdAt" | "order">
+): LifeOSState {
+  const projectActivities = state.projectActivities.filter(a => a.projectId === activity.projectId);
+  const maxOrder = projectActivities.length > 0 
+    ? Math.max(...projectActivities.map(a => a.order)) 
+    : 0;
+  
+  const newActivity: ProjectActivity = {
+    ...activity,
+    id: generateId(),
+    order: maxOrder + 1,
+    createdAt: new Date().toISOString()
+  };
+  return { ...state, projectActivities: [...state.projectActivities, newActivity] };
+}
+
+/**
+ * Update activity
+ */
+export function updateProjectActivity(
+  state: LifeOSState,
+  activityId: string,
+  updates: Partial<ProjectActivity>
+): LifeOSState {
+  return {
+    ...state,
+    projectActivities: state.projectActivities.map(a => 
+      a.id === activityId ? { ...a, ...updates } : a
+    )
+  };
+}
+
+/**
+ * Delete activity
+ */
+export function deleteProjectActivity(state: LifeOSState, activityId: string): LifeOSState {
+  return {
+    ...state,
+    projectActivities: state.projectActivities.filter(a => a.id !== activityId)
+  };
+}
+
+/**
+ * Reorder activities in kanban
+ */
+export function reorderActivities(
+  state: LifeOSState,
+  projectId: string,
+  activityId: string,
+  newStatus: string,
+  newOrder: number
+): LifeOSState {
+  const activities = state.projectActivities.map(a => {
+    if (a.id === activityId) {
+      return { ...a, status: newStatus, order: newOrder };
+    }
+    return a;
+  });
+  
+  return { ...state, projectActivities: activities };
 }
 
 /**

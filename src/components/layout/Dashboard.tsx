@@ -5,12 +5,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw } from "lucide-react";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
 import { SemesterView } from "@/components/views/SemesterView";
 import { DailyView } from "@/components/views/DailyView";
+import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { cn } from "@/lib/utils";
 import {
@@ -28,6 +29,7 @@ import {
 const VIEWS = [
   { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Misión" },
   { id: "semester", label: "Roadmap", icon: Calendar, description: "Plan Semestral" },
+  { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
   { id: "daily", label: "Ejecución", icon: Target, description: "La Represa" },
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
@@ -35,7 +37,7 @@ const VIEWS = [
 type ViewType = typeof VIEWS[number]["id"];
 
 export function Dashboard() {
-  const { state, setView, resetAll } = useLifeOSContext();
+  const { state, setView, resetAll, startEditingWizard } = useLifeOSContext();
   const [currentView, setCurrentView] = useState<ViewType>("identity");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -86,6 +88,17 @@ export function Dashboard() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
+              {/* Edit Planning Button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground"
+                onClick={startEditingWizard}
+                title="Modificar planificación"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-muted-foreground">
@@ -164,6 +177,7 @@ export function Dashboard() {
         >
           {currentView === "identity" && <IdentityView />}
           {currentView === "semester" && <SemesterView />}
+          {currentView === "weekly" && <WeeklyView />}
           {currentView === "daily" && <DailyView />}
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>
