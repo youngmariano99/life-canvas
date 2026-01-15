@@ -15,7 +15,9 @@ import {
   DailyStone,
   Project,
   ProjectActivity,
-  Resource
+  Resource,
+  FitnessActivity,
+  CalendarEvent
 } from "@/types/lifeOS";
 
 const STORAGE_KEY = "life-os-2026";
@@ -34,8 +36,11 @@ export function loadState(): LifeOSState {
         ...parsed,
         projects: parsed.projects || [],
         projectActivities: parsed.projectActivities || [],
+        fitnessActivities: parsed.fitnessActivities || [],
+        calendarEvents: parsed.calendarEvents || [],
         showPastItems: parsed.showPastItems ?? false,
         isEditingWizard: parsed.isEditingWizard ?? false,
+        focusMode: parsed.focusMode ?? false,
       };
     }
   } catch (error) {
@@ -472,6 +477,101 @@ export function reorderActivities(
   });
   
   return { ...state, projectActivities: activities };
+}
+
+// ==================== FITNESS FUNCTIONS ====================
+
+/**
+ * Add fitness activity
+ */
+export function addFitnessActivity(
+  state: LifeOSState,
+  activity: Omit<FitnessActivity, "id" | "createdAt">
+): LifeOSState {
+  const newActivity: FitnessActivity = {
+    ...activity,
+    id: generateId(),
+    createdAt: new Date().toISOString()
+  };
+  return { ...state, fitnessActivities: [...state.fitnessActivities, newActivity] };
+}
+
+/**
+ * Update fitness activity
+ */
+export function updateFitnessActivity(
+  state: LifeOSState,
+  activityId: string,
+  updates: Partial<FitnessActivity>
+): LifeOSState {
+  return {
+    ...state,
+    fitnessActivities: state.fitnessActivities.map(a =>
+      a.id === activityId ? { ...a, ...updates } : a
+    )
+  };
+}
+
+/**
+ * Delete fitness activity
+ */
+export function deleteFitnessActivity(state: LifeOSState, activityId: string): LifeOSState {
+  return {
+    ...state,
+    fitnessActivities: state.fitnessActivities.filter(a => a.id !== activityId)
+  };
+}
+
+// ==================== CALENDAR EVENT FUNCTIONS ====================
+
+/**
+ * Add calendar event
+ */
+export function addCalendarEvent(
+  state: LifeOSState,
+  event: Omit<CalendarEvent, "id" | "createdAt">
+): LifeOSState {
+  const newEvent: CalendarEvent = {
+    ...event,
+    id: generateId(),
+    createdAt: new Date().toISOString()
+  };
+  return { ...state, calendarEvents: [...state.calendarEvents, newEvent] };
+}
+
+/**
+ * Update calendar event
+ */
+export function updateCalendarEvent(
+  state: LifeOSState,
+  eventId: string,
+  updates: Partial<CalendarEvent>
+): LifeOSState {
+  return {
+    ...state,
+    calendarEvents: state.calendarEvents.map(e =>
+      e.id === eventId ? { ...e, ...updates } : e
+    )
+  };
+}
+
+/**
+ * Delete calendar event
+ */
+export function deleteCalendarEvent(state: LifeOSState, eventId: string): LifeOSState {
+  return {
+    ...state,
+    calendarEvents: state.calendarEvents.filter(e => e.id !== eventId)
+  };
+}
+
+// ==================== FOCUS MODE ====================
+
+/**
+ * Toggle focus mode
+ */
+export function toggleFocusMode(state: LifeOSState): LifeOSState {
+  return { ...state, focusMode: !state.focusMode };
 }
 
 /**

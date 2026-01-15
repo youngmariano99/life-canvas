@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource } from "@/types/lifeOS";
+import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, CalendarEvent } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 export function useLifeOS() {
@@ -26,6 +26,10 @@ export function useLifeOS() {
 
   const toggleShowPastItems = useCallback(() => {
     setState(s => ({ ...s, showPastItems: !s.showPastItems }));
+  }, []);
+
+  const toggleFocusMode = useCallback(() => {
+    setState(s => store.toggleFocusMode(s));
   }, []);
 
   // Wizard
@@ -102,12 +106,7 @@ export function useLifeOS() {
     setState(s => store.deleteHabit(s, habitId));
   }, []);
 
-  const logHabit = useCallback((
-    habitId: string, 
-    date: string, 
-    status: HabitLog["status"],
-    note?: string
-  ) => {
+  const logHabit = useCallback((habitId: string, date: string, status: HabitLog["status"], note?: string) => {
     setState(s => store.logHabit(s, habitId, date, status, note));
   }, []);
 
@@ -153,6 +152,32 @@ export function useLifeOS() {
 
   const reorderActivities = useCallback((projectId: string, activityId: string, newStatus: string, newOrder: number) => {
     setState(s => store.reorderActivities(s, projectId, activityId, newStatus, newOrder));
+  }, []);
+
+  // Fitness Activities
+  const addFitnessActivity = useCallback((activity: Omit<FitnessActivity, "id" | "createdAt">) => {
+    setState(s => store.addFitnessActivity(s, activity));
+  }, []);
+
+  const updateFitnessActivity = useCallback((activityId: string, updates: Partial<FitnessActivity>) => {
+    setState(s => store.updateFitnessActivity(s, activityId, updates));
+  }, []);
+
+  const deleteFitnessActivity = useCallback((activityId: string) => {
+    setState(s => store.deleteFitnessActivity(s, activityId));
+  }, []);
+
+  // Calendar Events
+  const addCalendarEvent = useCallback((event: Omit<CalendarEvent, "id" | "createdAt">) => {
+    setState(s => store.addCalendarEvent(s, event));
+  }, []);
+
+  const updateCalendarEvent = useCallback((eventId: string, updates: Partial<CalendarEvent>) => {
+    setState(s => store.updateCalendarEvent(s, eventId, updates));
+  }, []);
+
+  const deleteCalendarEvent = useCallback((eventId: string) => {
+    setState(s => store.deleteCalendarEvent(s, eventId));
   }, []);
 
   // Reset
@@ -203,6 +228,7 @@ export function useLifeOS() {
     setView,
     setSelectedDate,
     toggleShowPastItems,
+    toggleFocusMode,
     // Wizard
     setWizardStep,
     completeWizard,
@@ -241,6 +267,14 @@ export function useLifeOS() {
     updateProjectActivity,
     deleteProjectActivity,
     reorderActivities,
+    // Fitness
+    addFitnessActivity,
+    updateFitnessActivity,
+    deleteFitnessActivity,
+    // Calendar Events
+    addCalendarEvent,
+    updateCalendarEvent,
+    deleteCalendarEvent,
     // Reset
     resetAll,
     // Helpers

@@ -135,6 +135,54 @@ export interface Project {
   updatedAt: string;
 }
 
+// ==================== FITNESS TRACKING ====================
+
+export type FitnessActivityType = "neat" | "workout";
+
+export interface FitnessActivity {
+  id: string;
+  type: FitnessActivityType;
+  name: string;
+  duration?: number; // in minutes
+  notes?: string;
+  date: string; // YYYY-MM-DD
+  createdAt: string;
+}
+
+// ==================== CALENDAR EVENTS ====================
+
+export type CalendarEventTag = 
+  | "birthday" 
+  | "reminder" 
+  | "appointment" 
+  | "exam" 
+  | "deadline" 
+  | "personal"
+  | "custom";
+
+export const EVENT_TAG_COLORS: Record<CalendarEventTag, { bg: string; text: string }> = {
+  birthday: { bg: "bg-pink-500", text: "text-pink-500" },
+  reminder: { bg: "bg-amber-500", text: "text-amber-500" },
+  appointment: { bg: "bg-blue-500", text: "text-blue-500" },
+  exam: { bg: "bg-red-500", text: "text-red-500" },
+  deadline: { bg: "bg-orange-500", text: "text-orange-500" },
+  personal: { bg: "bg-purple-500", text: "text-purple-500" },
+  custom: { bg: "bg-gray-500", text: "text-gray-500" },
+};
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:MM (optional)
+  endDate?: string; // For multi-day events
+  tag: CalendarEventTag;
+  customTagLabel?: string; // For custom tags
+  customColor?: string; // Custom color for event
+  description?: string;
+  createdAt: string;
+}
+
 // Complete app state
 export interface LifeOSState {
   isConfigured: boolean;
@@ -149,9 +197,12 @@ export interface LifeOSState {
   dailyStones: DailyStone[];
   projects: Project[];
   projectActivities: ProjectActivity[];
-  currentView: "identity" | "semester" | "daily" | "weekly";
+  fitnessActivities: FitnessActivity[];
+  calendarEvents: CalendarEvent[];
+  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness";
   selectedDate: string;
   showPastItems: boolean; // Toggle to show/hide past items
+  focusMode: boolean; // Minimal UI for mental clarity
 }
 
 // Default initial state
@@ -168,7 +219,10 @@ export const initialState: LifeOSState = {
   dailyStones: [],
   projects: [],
   projectActivities: [],
+  fitnessActivities: [],
+  calendarEvents: [],
   currentView: "identity",
   selectedDate: new Date().toISOString().split('T')[0],
   showPastItems: false,
+  focusMode: false,
 };
