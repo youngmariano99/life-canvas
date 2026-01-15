@@ -69,7 +69,7 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
     if (!newHabitName.trim()) return;
     addHabit({
       name: newHabitName.trim(),
-      roleId: newHabitRole || undefined,
+      roleId: newHabitRole === "none" ? undefined : newHabitRole || undefined,
       frequency: "daily",
     });
     setNewHabitName("");
@@ -119,7 +119,7 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
                   <SelectValue placeholder="Asociar a rol (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin rol</SelectItem>
+                  <SelectItem value="none">Sin rol</SelectItem>
                   {state.roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
                   ))}
