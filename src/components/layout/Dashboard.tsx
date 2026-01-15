@@ -4,8 +4,8 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
@@ -13,6 +13,7 @@ import { SemesterView } from "@/components/views/SemesterView";
 import { DailyView } from "@/components/views/DailyView";
 import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
+import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -27,17 +28,18 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const VIEWS = [
-  { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Misión" },
-  { id: "semester", label: "Roadmap", icon: Calendar, description: "Plan Semestral" },
+  { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Roles" },
+  { id: "semester", label: "Roadmap", icon: Calendar, description: "Objetivos" },
   { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
-  { id: "daily", label: "Ejecución", icon: Target, description: "La Represa" },
+  { id: "daily", label: "Ejecución", icon: Target, description: "Hoy" },
+  { id: "fitness", label: "Fitness", icon: Dumbbell, description: "Actividad" },
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
 
 type ViewType = typeof VIEWS[number]["id"];
 
 export function Dashboard() {
-  const { state, setView, resetAll, startEditingWizard } = useLifeOSContext();
+  const { state, resetAll, startEditingWizard } = useLifeOSContext();
   const [currentView, setCurrentView] = useState<ViewType>("identity");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -51,11 +53,11 @@ export function Dashboard() {
       {/* Header */}
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                <Target className="w-5 h-5 text-primary-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary flex items-center justify-center">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div className="hidden sm:block">
                 <h1 className="font-semibold text-foreground">Life-OS 2026</h1>
@@ -64,7 +66,7 @@ export function Dashboard() {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1">
               {VIEWS.map((view) => {
                 const Icon = view.icon;
                 const isActive = currentView === view.id;
@@ -73,7 +75,7 @@ export function Dashboard() {
                     key={view.id}
                     onClick={() => handleViewChange(view.id)}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
                       isActive 
                         ? "bg-primary text-primary-foreground" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -87,12 +89,11 @@ export function Dashboard() {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
-              {/* Edit Planning Button */}
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-muted-foreground"
+                className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9"
                 onClick={startEditingWizard}
                 title="Modificar planificación"
               >
@@ -101,7 +102,7 @@ export function Dashboard() {
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9">
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
@@ -125,50 +126,55 @@ export function Dashboard() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="md:hidden"
+                className="lg:hidden h-8 w-8 sm:h-9 sm:w-9"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
-                <Menu className="w-5 h-5" />
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             </div>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <motion.nav 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden border-t border-border bg-card px-4 py-3 space-y-1"
-          >
-            {VIEWS.map((view) => {
-              const Icon = view.icon;
-              const isActive = currentView === view.id;
-              return (
-                <button
-                  key={view.id}
-                  onClick={() => handleViewChange(view.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  <div className="text-left">
-                    <div>{view.label}</div>
-                    <div className="text-xs opacity-70">{view.description}</div>
-                  </div>
-                </button>
-              );
-            })}
-          </motion.nav>
-        )}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.nav 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden border-t border-border bg-card overflow-hidden"
+            >
+              <div className="px-4 py-3 grid grid-cols-2 gap-2">
+                {VIEWS.map((view) => {
+                  const Icon = view.icon;
+                  const isActive = currentView === view.id;
+                  return (
+                    <button
+                      key={view.id}
+                      onClick={() => handleViewChange(view.id)}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                        isActive 
+                          ? "bg-primary text-primary-foreground" 
+                          : "text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <div className="text-left">
+                        <div>{view.label}</div>
+                        <div className="text-xs opacity-70">{view.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <motion.div
           key={currentView}
           initial={{ opacity: 0, y: 10 }}
@@ -179,6 +185,7 @@ export function Dashboard() {
           {currentView === "semester" && <SemesterView />}
           {currentView === "weekly" && <WeeklyView />}
           {currentView === "daily" && <DailyView />}
+          {currentView === "fitness" && <FitnessArea />}
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>
       </main>
