@@ -37,7 +37,7 @@ export function WizardStep5Habits({ onNext, onBack }: WizardStep5HabitsProps) {
     if (!habitName.trim()) return;
     addHabit({
       name: habitName.trim(),
-      roleId: selectedRole || undefined,
+      roleId: selectedRole === "none" ? undefined : selectedRole || undefined,
       frequency: "daily",
     });
     setHabitName("");
@@ -73,7 +73,7 @@ export function WizardStep5Habits({ onNext, onBack }: WizardStep5HabitsProps) {
               <SelectValue placeholder="Rol (opcional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin rol específico</SelectItem>
+              <SelectItem value="none">Sin rol específico</SelectItem>
               {state.roles.map((role) => {
                 const Icon = ICON_MAP[role.icon] || Users;
                 return (
