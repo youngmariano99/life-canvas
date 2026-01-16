@@ -1,13 +1,17 @@
 /**
  * Identity View - "El Norte"
  * Displays Vision, Mission, and Roles as the strategic foundation
+ * With expandable role cards that link to RoleSummaryView
  */
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Telescope, Compass, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Target } from "lucide-react";
+import { Telescope, Compass, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Target, ChevronLeft, Grid3X3, LayoutGrid } from "lucide-react";
 import { useLifeOSContext } from "@/context/LifeOSContext";
-import { ROLE_COLORS } from "@/types/lifeOS";
+import { ROLE_COLORS, Role } from "@/types/lifeOS";
 import { RoleCard } from "@/components/roles/RoleCard";
+import { RoleSummaryView } from "@/components/roles/RoleSummaryView";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -24,6 +28,8 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function IdentityView() {
   const { state, getGoalsByRole } = useLifeOSContext();
   const { yearSettings, roles } = state;
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [viewMode, setViewMode] = useState<"compact" | "expanded">("expanded");
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -37,6 +43,23 @@ export function IdentityView() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
+
+  // If a role is selected, show the summary view
+  if (selectedRole) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => setSelectedRole(null)}
+          className="gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Volver a roles
+        </Button>
+        <RoleSummaryView role={selectedRole} />
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -125,8 +148,36 @@ export function IdentityView() {
 
       {/* Roles Section */}
       <motion.div variants={itemVariants} className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">Roles de Vida</h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Roles de Vida</h3>
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === "compact" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => setViewMode("compact")}
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === "expanded" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => setViewMode("expanded")}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Haz clic en un rol para ver el resumen diario de actividades
+        </p>
+        <div className={cn(
+          "grid gap-4",
+          viewMode === "compact" 
+            ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+            : "sm:grid-cols-2 lg:grid-cols-3"
+        )}>
           {roles.map((role, index) => {
             const goals = getGoalsByRole(role.id);
             const completedGoals = goals.filter(g => g.status === "completed").length;
@@ -139,6 +190,8 @@ export function IdentityView() {
                 goalsCount={goals.length}
                 progress={progress}
                 delay={index * 0.05}
+                variant={viewMode}
+                onClick={() => setSelectedRole(role)}
               />
             );
           })}
