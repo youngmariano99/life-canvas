@@ -115,6 +115,31 @@ CREATE TABLE project_activities (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Fitness activities (NEAT and workouts)
+CREATE TABLE fitness_activities (
+    id SERIAL PRIMARY KEY,
+    activity_date DATE NOT NULL,
+    activity_type VARCHAR(20) NOT NULL CHECK (activity_type IN ('neat', 'workout')),
+    name VARCHAR(255) NOT NULL,
+    duration_minutes INTEGER,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Calendar events (birthdays, appointments, important dates)
+CREATE TABLE calendar_events (
+    id SERIAL PRIMARY KEY,
+    event_date DATE NOT NULL,
+    time VARCHAR(10), -- Optional time in HH:MM format
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    tag VARCHAR(50) NOT NULL CHECK (tag IN ('cumpleaños', 'cita_medica', 'parcial', 'importante', 'recordatorio', 'otro')),
+    custom_color VARCHAR(20), -- Optional custom color
+    recurring BOOLEAN DEFAULT FALSE,
+    recurring_type VARCHAR(20) CHECK (recurring_type IN ('weekly', 'monthly', 'yearly')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX idx_goals_role ON goals(role_id);
 CREATE INDEX idx_goals_quarter ON goals(quarter);
@@ -129,3 +154,7 @@ CREATE INDEX idx_activities_project ON project_activities(project_id);
 CREATE INDEX idx_activities_status ON project_activities(status);
 CREATE INDEX idx_activities_due_date ON project_activities(due_date);
 CREATE INDEX idx_goal_resources_goal ON goal_resources(goal_id);
+CREATE INDEX idx_fitness_date ON fitness_activities(activity_date);
+CREATE INDEX idx_fitness_type ON fitness_activities(activity_type);
+CREATE INDEX idx_calendar_date ON calendar_events(event_date);
+CREATE INDEX idx_calendar_tag ON calendar_events(tag);
