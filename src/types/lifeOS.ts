@@ -38,10 +38,10 @@ export interface Resource {
 export interface Role {
   id: string;
   name: string;
-  icon: string; // Lucide icon name
+  icon: string;
   color: RoleColor;
   description?: string;
-  imageUrl?: string; // Custom image uploaded by user
+  imageUrl?: string;
 }
 
 // Annual goal linked to a role
@@ -52,9 +52,9 @@ export interface Goal {
   description?: string;
   quarter: 1 | 2 | 3 | 4;
   semester: 1 | 2;
-  targetDate?: string; // Optional exact date (YYYY-MM-DD)
+  targetDate?: string;
   status: "pending" | "in_progress" | "completed" | "deferred";
-  resources: Resource[]; // Resources needed for this goal
+  resources: Resource[];
   createdAt: string;
   updatedAt: string;
 }
@@ -65,14 +65,14 @@ export interface Habit {
   name: string;
   roleId?: string;
   frequency: "daily" | "weekdays" | "weekends" | "custom";
-  customDays?: number[]; // 0-6, Sunday-Saturday
+  customDays?: number[];
 }
 
 // Daily habit log entry
 export interface HabitLog {
   id: string;
   habitId: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   status: "completed" | "missed" | "day_off" | "other";
   note?: string;
 }
@@ -103,10 +103,10 @@ export interface DailyStone {
 export interface YearSettings {
   year: number;
   vision5Years: string;
-  visionImages?: string[]; // URLs or base64
+  visionImages?: string[];
   mission: string;
-  h1Priority: string; // First half priority
-  h2Priority: string; // Second half priority
+  h1Priority: string;
+  h2Priority: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,9 +116,9 @@ export interface ProjectActivity {
   id: string;
   projectId: string;
   title: string;
-  status: string; // User-defined status (default: "todo", "in_progress", "review", "done")
+  status: string;
   order: number;
-  dueDate?: string; // Optional due date
+  dueDate?: string;
   roleId?: string;
   createdAt: string;
 }
@@ -130,7 +130,7 @@ export interface Project {
   name: string;
   description?: string;
   dueDate?: string;
-  statuses: string[]; // Custom status columns for kanban
+  statuses: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -143,9 +143,9 @@ export interface FitnessActivity {
   id: string;
   type: FitnessActivityType;
   name: string;
-  duration?: number; // in minutes
+  duration?: number;
   notes?: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   createdAt: string;
 }
 
@@ -173,13 +173,57 @@ export const EVENT_TAG_COLORS: Record<CalendarEventTag, { bg: string; text: stri
 export interface CalendarEvent {
   id: string;
   title: string;
-  date: string; // YYYY-MM-DD
-  time?: string; // HH:MM (optional)
-  endDate?: string; // For multi-day events
+  date: string;
+  time?: string;
+  endDate?: string;
   tag: CalendarEventTag;
-  customTagLabel?: string; // For custom tags
-  customColor?: string; // Custom color for event
+  customTagLabel?: string;
+  customColor?: string;
   description?: string;
+  createdAt: string;
+}
+
+// ==================== NOTES SYSTEM ====================
+
+export type NoteType = "note" | "whiteboard" | "document";
+
+export interface NoteTag {
+  id: string;
+  name: string;
+  color: string;
+  type: "role" | "goal" | "project" | "custom";
+  referenceId?: string;
+}
+
+export interface NoteFolder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  color?: string;
+  icon?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Note {
+  id: string;
+  folderId: string;
+  type: NoteType;
+  title: string;
+  content: string;
+  tags: string[];
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NoteDocument {
+  id: string;
+  noteId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  dataUrl: string;
   createdAt: string;
 }
 
@@ -187,7 +231,7 @@ export interface CalendarEvent {
 export interface LifeOSState {
   isConfigured: boolean;
   wizardStep: number;
-  isEditingWizard: boolean; // Whether we're editing an existing config
+  isEditingWizard: boolean;
   yearSettings: YearSettings | null;
   roles: Role[];
   goals: Goal[];
@@ -199,10 +243,14 @@ export interface LifeOSState {
   projectActivities: ProjectActivity[];
   fitnessActivities: FitnessActivity[];
   calendarEvents: CalendarEvent[];
-  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness";
+  noteFolders: NoteFolder[];
+  notes: Note[];
+  noteTags: NoteTag[];
+  noteDocuments: NoteDocument[];
+  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness" | "notes";
   selectedDate: string;
-  showPastItems: boolean; // Toggle to show/hide past items
-  focusMode: boolean; // Minimal UI for mental clarity
+  showPastItems: boolean;
+  focusMode: boolean;
 }
 
 // Default initial state
@@ -221,6 +269,10 @@ export const initialState: LifeOSState = {
   projectActivities: [],
   fitnessActivities: [],
   calendarEvents: [],
+  noteFolders: [],
+  notes: [],
+  noteTags: [],
+  noteDocuments: [],
   currentView: "identity",
   selectedDate: new Date().toISOString().split('T')[0],
   showPastItems: false,

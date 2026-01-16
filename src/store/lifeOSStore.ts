@@ -17,7 +17,11 @@ import {
   ProjectActivity,
   Resource,
   FitnessActivity,
-  CalendarEvent
+  CalendarEvent,
+  NoteFolder,
+  Note,
+  NoteTag,
+  NoteDocument
 } from "@/types/lifeOS";
 
 const STORAGE_KEY = "life-os-2026";
@@ -30,7 +34,6 @@ export function loadState(): LifeOSState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Ensure new fields exist with defaults
       return { 
         ...initialState, 
         ...parsed,
@@ -38,6 +41,10 @@ export function loadState(): LifeOSState {
         projectActivities: parsed.projectActivities || [],
         fitnessActivities: parsed.fitnessActivities || [],
         calendarEvents: parsed.calendarEvents || [],
+        noteFolders: parsed.noteFolders || [],
+        notes: parsed.notes || [],
+        noteTags: parsed.noteTags || [],
+        noteDocuments: parsed.noteDocuments || [],
         showPastItems: parsed.showPastItems ?? false,
         isEditingWizard: parsed.isEditingWizard ?? false,
         focusMode: parsed.focusMode ?? false,
@@ -580,4 +587,104 @@ export function toggleFocusMode(state: LifeOSState): LifeOSState {
 export function resetState(): LifeOSState {
   localStorage.removeItem(STORAGE_KEY);
   return initialState;
+}
+
+// ==================== NOTES FUNCTIONS ====================
+
+export function addNoteFolder(
+  state: LifeOSState,
+  folder: Omit<NoteFolder, "id" | "createdAt" | "updatedAt">
+): LifeOSState {
+  const now = new Date().toISOString();
+  const newFolder: NoteFolder = {
+    ...folder,
+    id: generateId(),
+    createdAt: now,
+    updatedAt: now
+  };
+  return { ...state, noteFolders: [...state.noteFolders, newFolder] };
+}
+
+export function updateNoteFolder(
+  state: LifeOSState,
+  folderId: string,
+  updates: Partial<NoteFolder>
+): LifeOSState {
+  return {
+    ...state,
+    noteFolders: state.noteFolders.map(f =>
+      f.id === folderId ? { ...f, ...updates, updatedAt: new Date().toISOString() } : f
+    )
+  };
+}
+
+export function deleteNoteFolder(state: LifeOSState, folderId: string): LifeOSState {
+  return {
+    ...state,
+    noteFolders: state.noteFolders.filter(f => f.id !== folderId),
+    notes: state.notes.filter(n => n.folderId !== folderId)
+  };
+}
+
+export function addNote(
+  state: LifeOSState,
+  note: Omit<Note, "id" | "createdAt" | "updatedAt">
+): LifeOSState {
+  const now = new Date().toISOString();
+  const newNote: Note = {
+    ...note,
+    id: generateId(),
+    createdAt: now,
+    updatedAt: now
+  };
+  return { ...state, notes: [...state.notes, newNote] };
+}
+
+export function updateNote(
+  state: LifeOSState,
+  noteId: string,
+  updates: Partial<Note>
+): LifeOSState {
+  return {
+    ...state,
+    notes: state.notes.map(n =>
+      n.id === noteId ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n
+    )
+  };
+}
+
+export function deleteNote(state: LifeOSState, noteId: string): LifeOSState {
+  return {
+    ...state,
+    notes: state.notes.filter(n => n.id !== noteId),
+    noteDocuments: state.noteDocuments.filter(d => d.noteId !== noteId)
+  };
+}
+
+export function addNoteTag(
+  state: LifeOSState,
+  tag: Omit<NoteTag, "id">
+): LifeOSState {
+  const newTag: NoteTag = { ...tag, id: generateId() };
+  return { ...state, noteTags: [...state.noteTags, newTag] };
+}
+
+export function deleteNoteTag(state: LifeOSState, tagId: string): LifeOSState {
+  return { ...state, noteTags: state.noteTags.filter(t => t.id !== tagId) };
+}
+
+export function addNoteDocument(
+  state: LifeOSState,
+  doc: Omit<NoteDocument, "id" | "createdAt">
+): LifeOSState {
+  const newDoc: NoteDocument = {
+    ...doc,
+    id: generateId(),
+    createdAt: new Date().toISOString()
+  };
+  return { ...state, noteDocuments: [...state.noteDocuments, newDoc] };
+}
+
+export function deleteNoteDocument(state: LifeOSState, docId: string): LifeOSState {
+  return { ...state, noteDocuments: state.noteDocuments.filter(d => d.id !== docId) };
 }
