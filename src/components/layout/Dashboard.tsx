@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X } from "lucide-react";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
@@ -14,6 +14,7 @@ import { DailyView } from "@/components/views/DailyView";
 import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { FitnessArea } from "@/components/fitness/FitnessArea";
+import { NotesSection } from "@/components/notes/NotesSection";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -33,6 +34,7 @@ const VIEWS = [
   { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
   { id: "daily", label: "Ejecución", icon: Target, description: "Hoy" },
   { id: "fitness", label: "Fitness", icon: Dumbbell, description: "Actividad" },
+  { id: "notes", label: "Apuntes", icon: FileText, description: "Notas e ideas" },
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
 
@@ -186,6 +188,7 @@ export function Dashboard() {
           {currentView === "weekly" && <WeeklyView />}
           {currentView === "daily" && <DailyView />}
           {currentView === "fitness" && <FitnessArea />}
+          {currentView === "notes" && <NotesSection />}
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>
       </main>
