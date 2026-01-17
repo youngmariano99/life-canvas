@@ -140,7 +140,62 @@ CREATE TABLE calendar_events (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Indexes for performance
+-- ==================== NOTES SYSTEM ====================
+
+-- Note tags for categorization
+CREATE TABLE note_tags (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    tag_type VARCHAR(20) NOT NULL CHECK (tag_type IN ('role', 'goal', 'project', 'custom')),
+    reference_id INTEGER, -- Links to role_id, goal_id, project_id depending on tag_type
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Note folders for organization
+CREATE TABLE note_folders (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    parent_id INTEGER REFERENCES note_folders(id) ON DELETE CASCADE,
+    color VARCHAR(50),
+    icon VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Notes (rich text notes, whiteboards, or document references)
+CREATE TABLE notes (
+    id SERIAL PRIMARY KEY,
+    folder_id INTEGER REFERENCES note_folders(id) ON DELETE CASCADE,
+    note_type VARCHAR(20) NOT NULL CHECK (note_type IN ('note', 'whiteboard', 'document')),
+    title VARCHAR(255) NOT NULL,
+    content TEXT, -- JSON for rich text (TipTap), JSON for whiteboard (Excalidraw), or description for documents
+    is_pinned BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Many-to-many relationship between notes and tags
+CREATE TABLE note_tag_relations (
+    note_id INTEGER REFERENCES notes(id) ON DELETE CASCADE,
+    tag_id INTEGER REFERENCES note_tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (note_id, tag_id)
+);
+
+-- Documents attached to notes (files stored externally, URLs stored here)
+CREATE TABLE note_documents (
+    id SERIAL PRIMARY KEY,
+    note_id INTEGER REFERENCES notes(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100) NOT NULL, -- MIME type
+    file_size INTEGER NOT NULL, -- Size in bytes
+    file_url TEXT NOT NULL, -- URL to blob storage (NOT base64 data)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==================== INDEXES ====================
+
+-- Existing indexes
 CREATE INDEX idx_goals_role ON goals(role_id);
 CREATE INDEX idx_goals_quarter ON goals(quarter);
 CREATE INDEX idx_goals_target_date ON goals(target_date);
@@ -158,3 +213,13 @@ CREATE INDEX idx_fitness_date ON fitness_activities(activity_date);
 CREATE INDEX idx_fitness_type ON fitness_activities(activity_type);
 CREATE INDEX idx_calendar_date ON calendar_events(event_date);
 CREATE INDEX idx_calendar_tag ON calendar_events(tag);
+
+-- Notes system indexes
+CREATE INDEX idx_note_folders_parent ON note_folders(parent_id);
+CREATE INDEX idx_notes_folder ON notes(folder_id);
+CREATE INDEX idx_notes_type ON notes(note_type);
+CREATE INDEX idx_notes_pinned ON notes(is_pinned);
+CREATE INDEX idx_note_documents_note ON note_documents(note_id);
+CREATE INDEX idx_note_tags_type ON note_tags(tag_type);
+CREATE INDEX idx_note_tag_relations_note ON note_tag_relations(note_id);
+CREATE INDEX idx_note_tag_relations_tag ON note_tag_relations(tag_id);

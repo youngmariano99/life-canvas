@@ -15,6 +15,7 @@ import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { NotesSection } from "@/components/notes/NotesSection";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -92,6 +93,8 @@ export function Dashboard() {
 
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
+              <ThemeToggle />
+              
               <Button 
                 variant="ghost" 
                 size="icon" 
