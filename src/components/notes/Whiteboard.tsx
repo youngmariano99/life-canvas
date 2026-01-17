@@ -5,8 +5,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { AppState } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import type { AppState, ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { X, Save, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ interface WhiteboardProps {
 export function Whiteboard({ note, onUpdate, onClose }: WhiteboardProps) {
   const [title, setTitle] = useState(note.title);
   const [isSaving, setIsSaving] = useState(false);
-  const excalidrawRef = useRef<any>(null);
+  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const [initialData, setInitialData] = useState<{
     elements: ExcalidrawElement[];
     appState?: Partial<AppState>;
@@ -80,16 +80,16 @@ export function Whiteboard({ note, onUpdate, onClose }: WhiteboardProps) {
 
   // Export as PNG
   const handleExport = async () => {
-    if (!excalidrawRef.current) return;
+    if (!excalidrawAPI) return;
     
-    const elements = excalidrawRef.current.getSceneElements();
-    const appState = excalidrawRef.current.getAppState();
+    const elements = excalidrawAPI.getSceneElements();
+    const appState = excalidrawAPI.getAppState();
     
     try {
       const blob = await exportToBlob({
         elements,
         appState,
-        files: excalidrawRef.current.getFiles(),
+        files: excalidrawAPI.getFiles(),
         getDimensions: () => ({ width: 1920, height: 1080, scale: 2 })
       });
       
@@ -106,8 +106,8 @@ export function Whiteboard({ note, onUpdate, onClose }: WhiteboardProps) {
 
   // Clear canvas
   const handleClear = () => {
-    if (excalidrawRef.current) {
-      excalidrawRef.current.updateScene({ elements: [] });
+    if (excalidrawAPI) {
+      excalidrawAPI.updateScene({ elements: [] });
       onUpdate({ content: JSON.stringify({ elements: [], appState: {} }) });
     }
   };
@@ -156,7 +156,7 @@ export function Whiteboard({ note, onUpdate, onClose }: WhiteboardProps) {
       {/* Excalidraw Canvas */}
       <div className="flex-1 bg-white dark:bg-zinc-900">
         <Excalidraw
-          ref={excalidrawRef}
+          excalidrawAPI={(api) => setExcalidrawAPI(api)}
           initialData={initialData}
           onChange={handleChange}
           theme="light"
