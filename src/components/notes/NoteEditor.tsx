@@ -1,6 +1,6 @@
 /**
  * NoteEditor - Notion-style rich text editor
- * Uses TipTap for a powerful editing experience
+ * Uses TipTap for a powerful editing experience with markdown shortcuts
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -9,6 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import Typography from "@tiptap/extension-typography";
 import { 
   Bold, 
   Italic, 
@@ -24,7 +25,8 @@ import {
   CheckSquare,
   X,
   Tag as TagIcon,
-  Save
+  Save,
+  Keyboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,11 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Note, NoteTag } from "@/types/lifeOS";
 import { cn } from "@/lib/utils";
 
@@ -59,17 +66,93 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
         }
       }),
       Placeholder.configure({
-        placeholder: "Escribe algo... Usa / para comandos"
+        placeholder: "Escribe algo... Usa # para títulos, - para listas, [] para tareas"
       }),
       TaskList,
       TaskItem.configure({
         nested: true
-      })
+      }),
+      Typography, // Adds smart typography shortcuts
     ],
     content: note.content || "<p></p>",
     editorProps: {
       attributes: {
         class: "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-2"
+      },
+      handleKeyDown: (view, event) => {
+        // Handle markdown-style shortcuts at the start of a line
+        const { state } = view;
+        const { selection } = state;
+        const { $from } = selection;
+        const lineStart = $from.start();
+        const textBefore = state.doc.textBetween(lineStart, $from.pos, "\n", "\n");
+        
+        if (event.key === " " && !event.shiftKey) {
+          // # + space = Heading 1
+          if (textBefore === "#") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleHeading({ level: 1 }).run();
+            return true;
+          }
+          // ## + space = Heading 2
+          if (textBefore === "##") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleHeading({ level: 2 }).run();
+            return true;
+          }
+          // ### + space = Heading 3
+          if (textBefore === "###") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleHeading({ level: 3 }).run();
+            return true;
+          }
+          // - + space = Bullet list
+          if (textBefore === "-" || textBefore === "*") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleBulletList().run();
+            return true;
+          }
+          // 1. + space = Ordered list
+          if (/^\d+\.$/.test(textBefore)) {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleOrderedList().run();
+            return true;
+          }
+          // [] + space = Task list
+          if (textBefore === "[]" || textBefore === "[ ]") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleTaskList().run();
+            return true;
+          }
+          // > + space = Blockquote
+          if (textBefore === ">") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleBlockquote().run();
+            return true;
+          }
+          // ``` + space = Code block
+          if (textBefore === "```") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().toggleCodeBlock().run();
+            return true;
+          }
+          // --- = Horizontal rule
+          if (textBefore === "---") {
+            event.preventDefault();
+            view.dispatch(state.tr.delete(lineStart, $from.pos));
+            editor?.chain().focus().setHorizontalRule().run();
+            return true;
+          }
+        }
+        return false;
       }
     },
     onUpdate: ({ editor }) => {
@@ -202,19 +285,19 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           isActive={editor.isActive("heading", { level: 1 })}
           icon={<Heading1 className="w-4 h-4" />}
-          title="Título 1"
+          title="Título 1 (# + espacio)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           isActive={editor.isActive("heading", { level: 2 })}
           icon={<Heading2 className="w-4 h-4" />}
-          title="Título 2"
+          title="Título 2 (## + espacio)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           isActive={editor.isActive("heading", { level: 3 })}
           icon={<Heading3 className="w-4 h-4" />}
-          title="Título 3"
+          title="Título 3 (### + espacio)"
         />
         
         <div className="w-px h-5 bg-border mx-1" />
@@ -235,13 +318,13 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           onClick={() => editor.chain().focus().toggleStrike().run()}
           isActive={editor.isActive("strike")}
           icon={<Strikethrough className="w-4 h-4" />}
-          title="Tachado"
+          title="Tachado (Ctrl+Shift+X)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
           isActive={editor.isActive("code")}
           icon={<Code className="w-4 h-4" />}
-          title="Código"
+          title="Código (Ctrl+E)"
         />
         
         <div className="w-px h-5 bg-border mx-1" />
@@ -250,19 +333,19 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive("bulletList")}
           icon={<List className="w-4 h-4" />}
-          title="Lista"
+          title="Lista (- + espacio)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           isActive={editor.isActive("orderedList")}
           icon={<ListOrdered className="w-4 h-4" />}
-          title="Lista numerada"
+          title="Lista numerada (1. + espacio)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleTaskList().run()}
           isActive={editor.isActive("taskList")}
           icon={<CheckSquare className="w-4 h-4" />}
-          title="Tareas"
+          title="Tareas ([] + espacio)"
         />
         
         <div className="w-px h-5 bg-border mx-1" />
@@ -271,13 +354,39 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           isActive={editor.isActive("blockquote")}
           icon={<Quote className="w-4 h-4" />}
-          title="Cita"
+          title="Cita (> + espacio)"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           icon={<Minus className="w-4 h-4" />}
-          title="Línea horizontal"
+          title="Línea horizontal (--- + espacio)"
         />
+        
+        <div className="w-px h-5 bg-border mx-1" />
+        
+        {/* Keyboard shortcuts help */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground hover:text-foreground">
+              <Keyboard className="w-4 h-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <div className="text-xs space-y-1">
+              <p className="font-semibold mb-2">Atajos de teclado:</p>
+              <p><kbd className="bg-muted px-1 rounded">#</kbd> + espacio = Título 1</p>
+              <p><kbd className="bg-muted px-1 rounded">##</kbd> + espacio = Título 2</p>
+              <p><kbd className="bg-muted px-1 rounded">###</kbd> + espacio = Título 3</p>
+              <p><kbd className="bg-muted px-1 rounded">-</kbd> + espacio = Lista</p>
+              <p><kbd className="bg-muted px-1 rounded">1.</kbd> + espacio = Lista numerada</p>
+              <p><kbd className="bg-muted px-1 rounded">[]</kbd> + espacio = Tarea</p>
+              <p><kbd className="bg-muted px-1 rounded">&gt;</kbd> + espacio = Cita</p>
+              <p><kbd className="bg-muted px-1 rounded">---</kbd> = Línea</p>
+              <p><kbd className="bg-muted px-1 rounded">Ctrl+B</kbd> = Negrita</p>
+              <p><kbd className="bg-muted px-1 rounded">Ctrl+I</kbd> = Cursiva</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Editor */}
