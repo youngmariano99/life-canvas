@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, CalendarEvent } from "@/types/lifeOS";
+import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 export function useLifeOS() {
@@ -180,6 +180,50 @@ export function useLifeOS() {
     setState(s => store.deleteCalendarEvent(s, eventId));
   }, []);
 
+  // Note Folders
+  const addNoteFolder = useCallback((folder: Omit<NoteFolder, "id" | "createdAt" | "updatedAt">) => {
+    setState(s => store.addNoteFolder(s, folder));
+  }, []);
+
+  const updateNoteFolder = useCallback((folderId: string, updates: Partial<NoteFolder>) => {
+    setState(s => store.updateNoteFolder(s, folderId, updates));
+  }, []);
+
+  const deleteNoteFolder = useCallback((folderId: string) => {
+    setState(s => store.deleteNoteFolder(s, folderId));
+  }, []);
+
+  // Notes
+  const addNote = useCallback((note: Omit<Note, "id" | "createdAt" | "updatedAt">) => {
+    setState(s => store.addNote(s, note));
+  }, []);
+
+  const updateNote = useCallback((noteId: string, updates: Partial<Note>) => {
+    setState(s => store.updateNote(s, noteId, updates));
+  }, []);
+
+  const deleteNote = useCallback((noteId: string) => {
+    setState(s => store.deleteNote(s, noteId));
+  }, []);
+
+  // Note Tags
+  const addNoteTag = useCallback((tag: Omit<NoteTag, "id">) => {
+    setState(s => store.addNoteTag(s, tag));
+  }, []);
+
+  const deleteNoteTag = useCallback((tagId: string) => {
+    setState(s => store.deleteNoteTag(s, tagId));
+  }, []);
+
+  // Note Documents
+  const addNoteDocument = useCallback((doc: Omit<NoteDocument, "id" | "createdAt">) => {
+    setState(s => store.addNoteDocument(s, doc));
+  }, []);
+
+  const deleteNoteDocument = useCallback((docId: string) => {
+    setState(s => store.deleteNoteDocument(s, docId));
+  }, []);
+
   // Reset
   const resetAll = useCallback(() => {
     setState(store.resetState());
@@ -275,6 +319,17 @@ export function useLifeOS() {
     addCalendarEvent,
     updateCalendarEvent,
     deleteCalendarEvent,
+    // Notes
+    addNoteFolder,
+    updateNoteFolder,
+    deleteNoteFolder,
+    addNote,
+    updateNote,
+    deleteNote,
+    addNoteTag,
+    deleteNoteTag,
+    addNoteDocument,
+    deleteNoteDocument,
     // Reset
     resetAll,
     // Helpers
