@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Core Identity & Settings
+// ==========================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  yearSettings      YearSettings[]
+  roles             Role[]
+  goals             Goal[]
+  habits            Habit[]
+  dailyStones       DailyStone[]
+  deviations        Deviation[]
+  fitnessActivities FitnessActivity[]
+  calendarEvents    CalendarEvent[]
+  noteFolders       NoteFolder[]
+  notes             Note[]
+  noteTags          NoteTag[]
+
+  @@map("users")
+}
+
+model YearSettings {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  year         Int      @default(2026)
+  vision5Years String?  @default("") @map("vision_5_years")
+  visionImages String[] @default([]) @map("vision_images")
+  mission      String?  @default("")
+  h1Priority   String?  @default("") @map("h1_priority")
+  h2Priority   String?  @default("") @map("h2_priority")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@map("year_settings")
+}
+
+// ==========================================
+// Roles & Goals System
+// ==========================================
+
+model Role {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String   @db.VarChar(100)
+  icon        String?  @default("circle") @db.VarChar(50)
+  color       String?  @default("student") @db.VarChar(50)
+  description String?
+  imageUrl    String?  @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals             Goal[]
+  habits            Habit[]
+  dailyStones       DailyStone[]
+  projectActivities ProjectActivity[]
+
+  @@map("roles")
+}
+
+model Goal {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  roleId      String    @map("role_id")
+  title       String    @db.VarChar(255)
+  description String?
+  quarter     Int?      @db.SmallInt // 1-4
+  semester    Int?      @db.SmallInt // 1-2
+  targetDate  DateTime? @map("target_date") @db.Date
+  status      String?   @default("pending") @db.VarChar(20) // pending, in_progress, completed, deferred
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  resources  GoalResource[]
+  projects   Project[]
+  deviations Deviation[]
+
+  @@index([roleId])
+  @@index([quarter])
+  @@map("goals")
+}
+
+model GoalResource {
+  id             String  @id @default(uuid())
+  goalId         String  @map("goal_id")
+  name           String  @db.VarChar(100)
+  quantityHave   Decimal @default(0) @map("quantity_have") @db.Decimal(10, 2)
+  quantityNeeded Decimal @default(0) @map("quantity_needed") @db.Decimal(10, 2)
+  unit           String? @db.VarChar(50)
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@map("goal_resources")
+}
+
+// ==========================================
+// Habits & Daily Execution
+// ==========================================
+
+model Habit {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  roleId     String?  @map("role_id")
+  name       String   @db.VarChar(255)
+  frequency  String?  @default("daily") @db.VarChar(20) // daily, weekdays, weekends, custom
+  customDays Int[]    @default([]) @map("custom_days") @db.SmallInt
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role?       @relation(fields: [roleId], references: [id])
+  logs       HabitLog[]
+  deviations Deviation[]
+
+  @@index([roleId])
+  @@map("habits")
+}
+
+model HabitLog {
+  id      String   @id @default(uuid())
+  habitId String   @map("habit_id")
+  date    DateTime @db.Date
+  status  String?  @default("completed") @db.VarChar(20) // completed, missed, day_off, other
+  note    String?
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([date])
+  @@map("habit_logs")
+}
+
+model DailyStone {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  date      DateTime @db.Date
+  title     String   @db.VarChar(255)
+  roleId    String?  @map("role_id")
+  completed Boolean? @default(false)
+  note      String?
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role? @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("daily_stones")
+}
+
+// ==========================================
+// Projects System
+// ==========================================
+
+model Project {
+  id          String    @id @default(uuid())
+  goalId      String    @map("goal_id")
+  name        String    @db.VarChar(255)
+  description String?
+  dueDate     DateTime? @map("due_date") @db.Date
+  statuses    String[]  @default(["Por hacer", "En progreso", "En revisión", "Completada"])
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  goal       Goal              @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  activities ProjectActivity[]
+
+  @@map("projects")
+}
+
+model ProjectActivity {
+  id        String    @id @default(uuid())
+  projectId String    @map("project_id")
+  title     String    @db.VarChar(255)
+  status    String?   @default("Por hacer") @db.VarChar(100)
+  sortOrder Int?      @default(0) @map("sort_order")
+  dueDate   DateTime? @map("due_date") @db.Date
+  roleId    String?   @map("role_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role    Role?   @relation(fields: [roleId], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@map("project_activities")
+}
+
+model Deviation {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  goalId           String?  @map("goal_id")
+  habitId          String?  @map("habit_id")
+  date             DateTime @db.Date
+  whatHappened     String   @map("what_happened")
+  adjustmentAction String   @map("adjustment_action")
+  lesson           String?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal  Goal?  @relation(fields: [goalId], references: [id])
+  habit Habit? @relation(fields: [habitId], references: [id])
+
+  @@map("deviations")
+}
+
+// ==========================================
+// Others
+// ==========================================
+
+model FitnessActivity {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String?  @db.VarChar(20) // neat, workout
+  name      String   @db.VarChar(255)
+  duration  Int? // minutes
+  notes     String?
+  date      DateTime @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@map("fitness_activities")
+}
+
+model CalendarEvent {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  title          String    @db.VarChar(255)
+  date           DateTime  @db.Date
+  time           DateTime? @db.Time
+  endDate        DateTime? @map("end_date") @db.Date
+  tag            String?   @default("personal") @db.VarChar(50)
+  customTagLabel String?   @map("custom_tag_label") @db.VarChar(100)
+  customColor    String?   @map("custom_color") @db.VarChar(20)
+  description    String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@map("calendar_events")
+}
+
+// ==========================================
+// Notes System
+// ==========================================
+
+model NoteFolder {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String   @db.VarChar(255)
+  parentId  String?  @map("parent_id")
+  color     String?  @db.VarChar(20)
+  icon      String?  @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   NoteFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children NoteFolder[] @relation("FolderHierarchy")
+  notes    Note[]
+
+  @@index([parentId])
+  @@map("note_folders")
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  folderId  String   @map("folder_id")
+  type      String?  @default("note") @db.VarChar(20) // note, whiteboard, document
+  title     String   @db.VarChar(255)
+  content   String?  @default("")
+  isPinned  Boolean? @default(false) @map("is_pinned")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder    NoteFolder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  documents NoteDocument[]
+  tags      NoteTag[]
+
+  @@index([folderId])
+  @@map("notes")
+}
+
+model NoteTag {
+  id          String  @id @default(uuid())
+  userId      String  @map("user_id")
+  name        String  @db.VarChar(100)
+  color       String? @default("#6B7280") @db.VarChar(20)
+  type        String? @default("custom") @db.VarChar(20) // role, goal, project, custom
+  referenceId String? @map("reference_id") @db.Uuid
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes Note[]
+
+  @@map("note_tags")
+}
+
+model NoteDocument {
+  id          String   @id @default(uuid())
+  noteId      String   @map("note_id")
+  fileName    String   @map("file_name") @db.VarChar(255)
+  fileType    String?  @map("file_type") @db.VarChar(100)
+  fileSize    Int?     @map("file_size")
+  storagePath String?  @map("storage_path")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@map("note_documents")
+}
