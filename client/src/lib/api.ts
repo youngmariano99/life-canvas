@@ -28,7 +28,17 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
         throw new Error(errorData.message || `Request failed with status ${response.status}`);
     }
 
-    return response.json();
+    if (response.status === 204) {
+        return null;
+    }
+
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : null;
+    } catch (e) {
+        console.warn("Failed to parse JSON response:", text);
+        return null; // Fallback to null if parsing fails
+    }
 };
 
 export const api = {
