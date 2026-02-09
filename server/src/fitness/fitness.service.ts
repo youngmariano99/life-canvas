@@ -6,7 +6,6 @@ import { CreateFitnessRoutineDto } from './dto/create-fitness-routine.dto';
 import { UpdateFitnessActivityDto } from './dto/update-fitness-activity.dto';
 import { FitnessActivity } from './entities/fitness-activity.entity';
 import { FitnessRoutine } from './entities/fitness-routine.entity';
-import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class FitnessService {
@@ -15,27 +14,11 @@ export class FitnessService {
         private activityRepository: Repository<FitnessActivity>,
         @InjectRepository(FitnessRoutine)
         private routineRepository: Repository<FitnessRoutine>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
-
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
 
     // --- Activities ---
 
-    async create(createDto: CreateFitnessActivityDto) {
-        const user = await this.getDemoUser();
-
+    async create(createDto: CreateFitnessActivityDto, userId: string) {
         const activityDate = typeof createDto.date === 'string'
             ? new Date(createDto.date)
             : createDto.date;
@@ -43,59 +26,59 @@ export class FitnessService {
         const activity = this.activityRepository.create({
             ...createDto,
             date: activityDate,
-            user
+            user: { id: userId } as any
         });
         return this.activityRepository.save(activity);
     }
 
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.activityRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { date: 'DESC' },
             take: 100
         });
     }
 
-    async findOne(id: string) {
-        return this.activityRepository.findOneBy({ id });
+    async findOne(id: string, userId: string) {
+        return this.activityRepository.findOne({ where: { id, user: { id: userId } } });
     }
 
-    async update(id: string, updateDto: UpdateFitnessActivityDto) {
+    async update(id: string, updateDto: UpdateFitnessActivityDto, userId: string) {
+        const activity = await this.findOne(id, userId);
+        if (!activity) throw new Error(`Activity ${id} not found`);
+
         const data: any = { ...updateDto };
         if (data.date && typeof data.date === 'string') {
             data.date = new Date(data.date);
         }
         await this.activityRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
 
-    async remove(id: string) {
-        await this.activityRepository.delete(id);
-        return { deleted: true };
+    async remove(id: string, userId: string) {
+        const result = await this.activityRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 
     // --- Routines ---
 
-    async createRoutine(createDto: CreateFitnessRoutineDto) {
-        const user = await this.getDemoUser();
+    async createRoutine(createDto: CreateFitnessRoutineDto, userId: string) {
         const routine = this.routineRepository.create({
             ...createDto,
-            user,
+            user: { id: userId } as any,
         });
         return this.routineRepository.save(routine);
     }
 
-    async findAllRoutines() {
-        const user = await this.getDemoUser();
+    async findAllRoutines(userId: string) {
         return this.routineRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { createdAt: 'DESC' }
         });
     }
 
-    async deleteRoutine(id: string) {
-        await this.routineRepository.delete(id);
-        return { deleted: true };
+    async deleteRoutine(id: string, userId: string) {
+        const result = await this.routineRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 }

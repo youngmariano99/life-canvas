@@ -18,6 +18,8 @@ import { ResourcesModule } from './resources/resources.module';
 import { NotesModule } from './notes/notes.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 // Entities
 import { User } from './database/entities/user.entity';
@@ -38,7 +40,7 @@ import { Goal } from './goals/entities/goal.entity';
       synchronize: true, // Auto-create tables (Dev only)
       logging: true,
     }),
-    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule
+    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule, AuthModule, UsersModule
   ],
   controllers: [AppController],
   providers: [AppService],

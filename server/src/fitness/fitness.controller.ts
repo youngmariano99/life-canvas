@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { FitnessService } from './fitness.service';
 import { CreateFitnessActivityDto } from './dto/create-fitness-activity.dto';
 import { CreateFitnessRoutineDto } from './dto/create-fitness-routine.dto';
 import { UpdateFitnessActivityDto } from './dto/update-fitness-activity.dto';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('fitness')
 export class FitnessController {
     constructor(private readonly fitnessService: FitnessService) { }
@@ -11,44 +13,44 @@ export class FitnessController {
     // --- Routines ---
 
     @Post('routines')
-    createRoutine(@Body() createDto: CreateFitnessRoutineDto) {
-        return this.fitnessService.createRoutine(createDto);
+    createRoutine(@Body() createDto: CreateFitnessRoutineDto, @Request() req) {
+        return this.fitnessService.createRoutine(createDto, req.user.id);
     }
 
     @Get('routines')
-    findAllRoutines() {
-        return this.fitnessService.findAllRoutines();
+    findAllRoutines(@Request() req) {
+        return this.fitnessService.findAllRoutines(req.user.id);
     }
 
     @Delete('routines/:id')
-    deleteRoutine(@Param('id') id: string) {
-        return this.fitnessService.deleteRoutine(id);
+    deleteRoutine(@Param('id') id: string, @Request() req) {
+        return this.fitnessService.deleteRoutine(id, req.user.id);
     }
 
     // --- Activities ---
 
     @Post()
-    create(@Body() createDto: CreateFitnessActivityDto) {
-        return this.fitnessService.create(createDto);
+    create(@Body() createDto: CreateFitnessActivityDto, @Request() req) {
+        return this.fitnessService.create(createDto, req.user.id);
     }
 
     @Get()
-    findAll() {
-        return this.fitnessService.findAll();
+    findAll(@Request() req) {
+        return this.fitnessService.findAll(req.user.id);
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.fitnessService.findOne(id);
+    findOne(@Param('id') id: string, @Request() req) {
+        return this.fitnessService.findOne(id, req.user.id);
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateDto: UpdateFitnessActivityDto) {
-        return this.fitnessService.update(id, updateDto);
+    update(@Param('id') id: string, @Body() updateDto: UpdateFitnessActivityDto, @Request() req) {
+        return this.fitnessService.update(id, updateDto, req.user.id);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.fitnessService.remove(id);
+    remove(@Param('id') id: string, @Request() req) {
+        return this.fitnessService.remove(id, req.user.id);
     }
 }

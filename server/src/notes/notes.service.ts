@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { Note } from './entities/note.entity';
 import { NoteFolder } from './entities/note-folder.entity';
 import { NoteTag } from './entities/note-tag.entity';
-import { User } from '../database/entities/user.entity';
 import { CreateNoteDto, CreateNoteFolderDto } from './dto/create-note.dto';
 import { UpdateNoteDto, UpdateNoteFolderDto } from './dto/update-note.dto';
 
@@ -17,67 +16,51 @@ export class NotesService {
         private folderRepository: Repository<NoteFolder>,
         @InjectRepository(NoteTag)
         private tagRepository: Repository<NoteTag>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
-
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
 
     // --- Folders ---
 
-    async findAllFolders() {
-        const user = await this.getDemoUser();
+    async findAllFolders(userId: string) {
         return this.folderRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { name: 'ASC' }
         });
     }
 
-    async createFolder(createDto: CreateNoteFolderDto) {
-        const user = await this.getDemoUser();
+    async createFolder(createDto: CreateNoteFolderDto, userId: string) {
         const folder = this.folderRepository.create({
             ...createDto,
-            user,
+            user: { id: userId } as any,
             parent: createDto.parentId ? { id: createDto.parentId } as any : null
         });
         return this.folderRepository.save(folder);
     }
 
-    async updateFolder(id: string, updateDto: UpdateNoteFolderDto) {
+    async updateFolder(id: string, updateDto: UpdateNoteFolderDto, userId: string) {
+        const folder = await this.folderRepository.findOne({ where: { id, user: { id: userId } } });
+        if (!folder) throw new Error(`Folder ${id} not found`);
+
         await this.folderRepository.update(id, updateDto);
         return this.folderRepository.findOneBy({ id });
     }
 
-    async removeFolder(id: string) {
-        await this.folderRepository.delete(id);
-        return { deleted: true };
+    async removeFolder(id: string, userId: string) {
+        const result = await this.folderRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 
     // --- Notes ---
 
-    async findAllNotes() {
+    async findAllNotes(userId: string) {
         // Fetch all notes for the user, regardless of folder
-        const user = await this.getDemoUser();
         return this.noteRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { updatedAt: 'DESC' },
             relations: ['tags', 'folder']
         });
     }
 
-    async createNote(createDto: CreateNoteDto) {
-        const user = await this.getDemoUser();
-
+    async createNote(createDto: CreateNoteDto, userId: string) {
         // Handle tags (assuming tags is string[] in DTO, but we need NoteTag entities)
         // For simplicity, we'll ignore tags for now or treating them as needing full implementation later
 
@@ -87,13 +70,16 @@ export class NotesService {
             content: createDto.content,
             isFavorite: createDto.isFavorite,
             folder: createDto.folderId ? { id: createDto.folderId } as any : null,
-            user
+            user: { id: userId } as any
         });
 
         return this.noteRepository.save(note);
     }
 
-    async updateNote(id: string, updateDto: UpdateNoteDto) {
+    async updateNote(id: string, updateDto: UpdateNoteDto, userId: string) {
+        const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
+        if (!note) throw new Error(`Note ${id} not found`);
+
         const { tags, ...data } = updateDto as any; // Ignore tags for simple update
         await this.noteRepository.update(id, data);
         return this.noteRepository.findOne({
@@ -102,8 +88,8 @@ export class NotesService {
         });
     }
 
-    async removeNote(id: string) {
-        await this.noteRepository.delete(id);
-        return { deleted: true };
+    async removeNote(id: string, userId: string) {
+        const result = await this.noteRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 }

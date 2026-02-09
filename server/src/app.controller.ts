@@ -1,7 +1,8 @@
-import { Controller, Get, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller()
 export class AppController {
@@ -20,6 +21,7 @@ export class AppController {
     return { status: 'ok' };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit

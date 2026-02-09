@@ -4,32 +4,15 @@ import { Repository } from 'typeorm';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
 import { CalendarEvent } from './entities/calendar-event.entity';
-import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class CalendarService {
     constructor(
         @InjectRepository(CalendarEvent)
         private calendarRepository: Repository<CalendarEvent>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
 
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-
-    async create(createDto: CreateCalendarEventDto) {
-        const user = await this.getDemoUser();
-
+    async create(createDto: CreateCalendarEventDto, userId: string) {
         const rawStartDate = createDto.startDate || createDto.date;
         if (!rawStartDate) {
             throw new Error('Start date or date is required');
@@ -47,25 +30,27 @@ export class CalendarService {
             ...createDto,
             startDate,
             endDate,
-            user
+            user: { id: userId } as any
         });
         return this.calendarRepository.save(event);
     }
 
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.calendarRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { startDate: 'ASC' },
             take: 200
         });
     }
 
-    async findOne(id: string) {
-        return this.calendarRepository.findOneBy({ id });
+    async findOne(id: string, userId: string) {
+        return this.calendarRepository.findOne({ where: { id, user: { id: userId } } });
     }
 
-    async update(id: string, updateDto: UpdateCalendarEventDto) {
+    async update(id: string, updateDto: UpdateCalendarEventDto, userId: string) {
+        const event = await this.findOne(id, userId);
+        if (!event) throw new Error(`Event ${id} not found`);
+
         const data: any = { ...updateDto };
         if (data.startDate && typeof data.startDate === 'string') {
             data.startDate = new Date(data.startDate);
@@ -75,11 +60,11 @@ export class CalendarService {
         }
 
         await this.calendarRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
 
-    async remove(id: string) {
-        await this.calendarRepository.delete(id);
-        return { deleted: true };
+    async remove(id: string, userId: string) {
+        const result = await this.calendarRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 }

@@ -3,47 +3,30 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDailyStoneDto } from './dto/create-daily-stone.dto';
 import { DailyStone } from './entities/daily-stone.entity';
-import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class DailyStonesService {
     constructor(
         @InjectRepository(DailyStone)
         private dailyStoneRepository: Repository<DailyStone>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
 
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.dailyStoneRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { date: 'DESC' },
             take: 365,
             relations: ['role']
         });
     }
 
-    async upsert(dto: CreateDailyStoneDto) {
-        const user = await this.getDemoUser();
+    async upsert(dto: CreateDailyStoneDto, userId: string) {
         // Extract YYYY-MM-DD to avoid time zone issues
         const dateStr = dto.date.split('T')[0];
 
         // Find by string date to ensure match
         let stone = await this.dailyStoneRepository.createQueryBuilder('stone')
-            .where('stone.user_id = :userId', { userId: user.id })
+            .where('stone.user_id = :userId', { userId: userId })
             .andWhere('stone.date = :date', { date: dateStr })
             .getOne();
 
@@ -55,7 +38,7 @@ export class DailyStonesService {
             // Don't update the date, keep the original
         } else {
             stone = this.dailyStoneRepository.create({
-                user,
+                user: { id: userId } as any,
                 date: dateStr as any, // TypeORM handles string -> date cast for Postgres
                 title: dto.title,
                 roleId: dto.roleId || null,

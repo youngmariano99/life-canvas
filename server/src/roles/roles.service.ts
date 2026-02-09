@@ -11,47 +11,29 @@ export class RolesService {
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
   ) { }
 
-  // Helper to ensure we have a user
-  private async getDemoUser() {
-    let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-    if (!user) {
-      user = this.userRepository.create({
-        email: 'demo@lifecanvas.com',
-        name: 'Demo User',
-      });
-      await this.userRepository.save(user);
-    }
-    return user;
-  }
-
-  async create(createRoleDto: CreateRoleDto) {
-    const user = await this.getDemoUser();
+  async create(createRoleDto: CreateRoleDto, userId: string) {
     const role = this.roleRepository.create({
       ...createRoleDto,
-      user,
+      user: { id: userId } as any, // Simple relation binding
     });
     return this.roleRepository.save(role);
   }
 
-  async findAll() {
-    const user = await this.getDemoUser();
+  async findAll(userId: string) {
     return this.roleRepository.find({
-      where: { user: { id: user.id } },
+      where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string) {
-    return this.roleRepository.findOneBy({ id });
+  async findOne(id: string, userId: string) {
+    return this.roleRepository.findOne({ where: { id, user: { id: userId } } });
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto) {
-    console.log(`Updating role ${id} with:`, updateRoleDto);
-    const role = await this.findOne(id);
+  async update(id: string, updateRoleDto: UpdateRoleDto, userId: string) {
+    const role = await this.findOne(id, userId);
     if (!role) {
       throw new Error(`Role ${id} not found`);
     }
@@ -59,8 +41,8 @@ export class RolesService {
     return this.roleRepository.save(updated);
   }
 
-  async remove(id: string) {
-    await this.roleRepository.delete(id);
-    return { deleted: true };
+  async remove(id: string, userId: string) {
+    const result = await this.roleRepository.delete({ id, user: { id: userId } });
+    return { deleted: (result.affected ?? 0) > 0 };
   }
 }

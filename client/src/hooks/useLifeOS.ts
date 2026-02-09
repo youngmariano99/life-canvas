@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument } from "@/types/lifeOS";
+import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 import { api } from "@/lib/api";

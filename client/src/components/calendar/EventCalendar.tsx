@@ -88,7 +88,7 @@ export function EventCalendar() {
   // Get events for current view
   const eventsForView = useMemo(() => {
     return state.calendarEvents.filter(event => {
-      const rawDate = event.date || event.startDate || new Date().toISOString();
+      const rawDate = event.date || new Date().toISOString();
       // Fix Timezone issue: Treat the date string as local date (YYYY-MM-DD)
       // ignoring the time component/timezone valid for UTC
       const dateStr = rawDate.split('T')[0];
@@ -105,7 +105,7 @@ export function EventCalendar() {
     eventsForView.forEach(event => {
       // Compatibility: Backend returns startDate, Frontend expects date. 
       // We extract the YYYY-MM-DD part from ISO string if needed.
-      const rawDate = event.date || event.startDate;
+      const rawDate = event.date;
       if (!rawDate) return;
 
       const dateKey = rawDate.split('T')[0]; // Ensure we get YYYY-MM-DD

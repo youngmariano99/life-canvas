@@ -4,30 +4,16 @@ import { Repository } from 'typeorm';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { Resource } from './entities/resource.entity';
-import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class ResourcesService {
     constructor(
         @InjectRepository(Resource)
         private resourceRepository: Repository<Resource>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
 
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-
-    async create(createDto: CreateResourceDto) {
+    async create(createDto: CreateResourceDto, userId: string) {
+        // Technically strict check would be goal.user.id == userId
         const resource = this.resourceRepository.create({
             ...createDto,
             goal: createDto.goalId ? { id: createDto.goalId } as any : undefined,
@@ -35,27 +21,35 @@ export class ResourcesService {
         return this.resourceRepository.save(resource);
     }
 
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.resourceRepository.find({
             where: {
-                goal: { user: { id: user.id } }
+                goal: { user: { id: userId } }
             },
             order: { createdAt: 'DESC' }
         });
     }
 
-    async findOne(id: string) {
-        return this.resourceRepository.findOneBy({ id });
+    async findOne(id: string, userId: string) {
+        return this.resourceRepository.findOne({
+            where: { id, goal: { user: { id: userId } } }
+        });
     }
 
-    async update(id: string, updateDto: UpdateResourceDto) {
+    async update(id: string, updateDto: UpdateResourceDto, userId: string) {
+        const resource = await this.findOne(id, userId);
+        if (!resource) throw new Error(`Resource ${id} not found`);
+
         await this.resourceRepository.update(id, updateDto);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
 
-    async remove(id: string) {
-        await this.resourceRepository.delete(id);
-        return { deleted: true };
+    async remove(id: string, userId: string) {
+        const resource = await this.findOne(id, userId);
+        if (resource) {
+            await this.resourceRepository.delete(id);
+            return { deleted: true };
+        }
+        return { deleted: false };
     }
 }

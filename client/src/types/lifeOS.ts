@@ -6,6 +6,13 @@
 import { LucideIcon } from "lucide-react";
 
 // Available role icons and colors
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  createdAt?: string;
+}
+
 export type RoleColor =
   | "student"
   | "athlete"

@@ -4,33 +4,17 @@ import { Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
-import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class ProjectsService {
     constructor(
         @InjectRepository(Project)
         private projectRepository: Repository<Project>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
     ) { }
 
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-
-    async create(createProjectDto: CreateProjectDto) {
-        // user check not strictly needed for creation as it links to goal, 
-        // but good practice to ensure context if we enforce security later.
-
+    async create(createProjectDto: CreateProjectDto, userId: string) {
+        // We link to a goal. Goals belong to verification.
+        // Ideally we should check if goalId belongs to userId.
         const data: any = { ...createProjectDto };
         if (typeof data.dueDate === 'string') {
             data.dueDate = new Date(data.dueDate);
@@ -43,12 +27,11 @@ export class ProjectsService {
         return this.projectRepository.save(project);
     }
 
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.projectRepository.find({
             where: {
                 goal: {
-                    user: { id: user.id }
+                    user: { id: userId }
                 }
             },
             order: { createdAt: 'DESC' },
@@ -56,24 +39,36 @@ export class ProjectsService {
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, userId: string) {
         return this.projectRepository.findOne({
-            where: { id },
+            where: {
+                id,
+                goal: { user: { id: userId } }
+            },
             relations: ['activities']
         });
     }
 
-    async update(id: string, updateProjectDto: UpdateProjectDto) {
+    async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
+        const project = await this.findOne(id, userId);
+        if (!project) throw new Error(`Project ${id} not found`);
+
         const data: any = { ...updateProjectDto };
         if (typeof data.dueDate === 'string') {
             data.dueDate = new Date(data.dueDate);
         }
         await this.projectRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
 
-    async remove(id: string) {
-        await this.projectRepository.delete(id);
-        return { deleted: true };
+    async remove(id: string, userId: string) {
+        // To safely remove, we find it first or use delete with relations filter if TypeORM supports it for delete (it does mostly for direct props, for nested it's harder).
+        // Safest is to find one then delete.
+        const project = await this.findOne(id, userId);
+        if (project) {
+            await this.projectRepository.delete(id);
+            return { deleted: true };
+        }
+        return { deleted: false };
     }
 }

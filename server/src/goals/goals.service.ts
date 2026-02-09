@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { Goal } from './entities/goal.entity';
-import { User } from '../database/entities/user.entity';
 import { SubGoal } from './entities/sub-goal.entity';
 
 @Injectable()
@@ -12,26 +11,11 @@ export class GoalsService {
     constructor(
         @InjectRepository(Goal)
         private goalRepository: Repository<Goal>,
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
         @InjectRepository(SubGoal)
         private subGoalRepository: Repository<SubGoal>,
     ) { }
 
-    private async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-
-    async create(createGoalDto: CreateGoalDto) {
-        const user = await this.getDemoUser();
+    async create(createGoalDto: CreateGoalDto, userId: string) {
         const data: any = { ...createGoalDto };
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
@@ -39,29 +23,33 @@ export class GoalsService {
 
         const goal = this.goalRepository.create({
             ...data,
-            user,
+            user: { id: userId } as any,
             role: { id: createGoalDto.roleId } as any
         });
         return this.goalRepository.save(goal);
     }
 
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId: string) {
         return this.goalRepository.find({
-            where: { userId: user.id },
+            where: { user: { id: userId } },
             relations: ['projects', 'resources', 'subGoals'],
             order: { quarter: 'ASC', createdAt: 'DESC' }
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, userId: string) {
         return this.goalRepository.findOne({
-            where: { id },
+            where: { id, user: { id: userId } },
             relations: ['role', 'projects', 'resources', 'subGoals']
         });
     }
 
-    async update(id: string, updateGoalDto: UpdateGoalDto) {
+    async update(id: string, updateGoalDto: UpdateGoalDto, userId: string) {
+        const existingGoal = await this.findOne(id, userId);
+        if (!existingGoal) {
+            throw new NotFoundException(`Goal #${id} not found`);
+        }
+
         const data: any = { ...updateGoalDto };
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
@@ -69,12 +57,7 @@ export class GoalsService {
 
         // Manual orphan removal for subGoals
         if (data.subGoals && Array.isArray(data.subGoals)) {
-            const existingGoal = await this.goalRepository.findOne({
-                where: { id },
-                relations: ['subGoals']
-            });
-
-            if (existingGoal && existingGoal.subGoals) {
+            if (existingGoal.subGoals) {
                 const incomingIds = data.subGoals.map((sg: any) => sg.id).filter((id: any) => id);
                 const toRemove = existingGoal.subGoals.filter(sg => !incomingIds.includes(sg.id));
 
@@ -85,6 +68,9 @@ export class GoalsService {
         }
 
         // Use preload to handle deep partial updates (like subGoals)
+        // Note: preload validates existence by ID internally but we already checked ownership.
+        // However, preload doesn't take 'where' clause for ownership. 
+        // We trust 'id' is correct and we checked ownership above.
         const goal = await this.goalRepository.preload({
             id: id,
             ...data,
@@ -94,11 +80,14 @@ export class GoalsService {
             throw new NotFoundException(`Goal #${id} not found`);
         }
 
+        // Ensure we don't accidentally ownership change (though preload shouldn't do that unless we pass user)
+        // But to be safe, we can re-assign user? No need if we don't pass 'user' in data.
+
         return this.goalRepository.save(goal);
     }
 
-    async remove(id: string) {
-        await this.goalRepository.delete(id);
-        return { deleted: true };
+    async remove(id: string, userId: string) {
+        const result = await this.goalRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 }
