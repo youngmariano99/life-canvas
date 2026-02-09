@@ -50,8 +50,13 @@ export class RolesService {
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
-    await this.roleRepository.update(id, updateRoleDto);
-    return this.findOne(id);
+    console.log(`Updating role ${id} with:`, updateRoleDto);
+    const role = await this.findOne(id);
+    if (!role) {
+      throw new Error(`Role ${id} not found`);
+    }
+    const updated = this.roleRepository.merge(role, updateRoleDto);
+    return this.roleRepository.save(updated);
   }
 
   async remove(id: string) {

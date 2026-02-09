@@ -10,6 +10,7 @@ import { GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, U
 import { Role, ROLE_COLORS } from "@/types/lifeOS";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/lib/api";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap,
@@ -35,21 +36,51 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
   const { updateRole } = useLifeOSContext();
   const [isHovering, setIsHovering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const Icon = ICON_MAP[role.icon] || Users;
   const colors = ROLE_COLORS[role.color];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
+    console.log("Image upload started");
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      updateRole(role.id, { imageUrl: base64 });
-    };
-    reader.readAsDataURL(file);
+    // Use FormData for file upload
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      console.log("Uploading file...");
+      // Upload first
+      const uploadRes = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        throw new Error(`Upload failed: ${uploadRes.status} ${errText}`);
+      }
+      const { url } = await uploadRes.json();
+      console.log("Upload successful, URL:", url);
+
+      // Construct full URL (removing /api from base URL)
+      const baseUrl = API_URL.replace('/api', '');
+      const fullUrl = `${baseUrl}${url}`;
+      console.log("Full URL:", fullUrl);
+
+      // Update role with the new URL
+      console.log("Updating role...", role.id);
+      await updateRole(role.id, { imageUrl: fullUrl });
+      console.log("Role updated");
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert("Error al subir imagen");
+    }
   };
 
   const handleUploadClick = (e: React.MouseEvent) => {
@@ -73,8 +104,8 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
         <div className="relative h-40 sm:h-48 overflow-hidden">
           {role.imageUrl ? (
             <>
-              <img 
-                src={role.imageUrl} 
+              <img
+                src={role.imageUrl}
                 alt={role.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -85,7 +116,7 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
               <Icon className="w-16 h-16 text-white/80" />
             </div>
           )}
-          
+
           {/* Upload button */}
           {isHovering && (
             <button
@@ -160,8 +191,8 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
       {/* Image Section */}
       {role.imageUrl ? (
         <div className="relative h-24 overflow-hidden">
-          <img 
-            src={role.imageUrl} 
+          <img
+            src={role.imageUrl}
             alt={role.name}
             className="w-full h-full object-cover"
           />
@@ -185,7 +216,7 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
           )}
         </div>
       ) : (
-        <div 
+        <div
           className={cn(
             "relative h-16 flex items-center justify-center cursor-pointer transition-colors",
             colors.bg,

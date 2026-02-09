@@ -28,6 +28,7 @@ let Goal = class Goal {
     projects;
     deviations;
     resources;
+    subGoals;
 };
 exports.Goal = Goal;
 __decorate([
@@ -96,6 +97,10 @@ __decorate([
     (0, typeorm_1.OneToMany)('Resource', (resource) => resource.goal),
     __metadata("design:type", Array)
 ], Goal.prototype, "resources", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)('SubGoal', (subGoal) => subGoal.goal, { cascade: true }),
+    __metadata("design:type", Array)
+], Goal.prototype, "subGoals", void 0);
 exports.Goal = Goal = __decorate([
     (0, typeorm_1.Entity)('goals')
 ], Goal);

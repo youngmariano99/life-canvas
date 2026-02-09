@@ -29,5 +29,8 @@ export class CreateGoalDto {
 
     @IsDateString()
     @IsOptional()
-    targetDate?: Date; // It comes as string from JSON
+    targetDate?: Date;
+
+    @IsOptional()
+    subGoals?: any[];
 }

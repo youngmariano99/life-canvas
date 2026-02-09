@@ -53,9 +53,9 @@ export function SemesterView() {
   const currentQuarter = Math.ceil((today.getMonth() + 1) / 3) as 1 | 2 | 3 | 4;
 
   const handleMoveGoal = (goalId: string, newQuarter: 1 | 2 | 3 | 4) => {
-    updateGoal(goalId, { 
-      quarter: newQuarter, 
-      semester: newQuarter <= 2 ? 1 : 2 
+    updateGoal(goalId, {
+      quarter: newQuarter,
+      semester: newQuarter <= 2 ? 1 : 2
     });
   };
 
@@ -67,6 +67,45 @@ export function SemesterView() {
     updateGoal(goalId, { targetDate: date || undefined });
   };
 
+  const [subGoalInputs, setSubGoalInputs] = useState<Record<string, string>>({});
+
+  const handleAddSubGoal = (goalId: string) => {
+    const title = subGoalInputs[goalId]?.trim();
+    if (!title) return;
+
+    const goal = getGoalById(goalId); // Need helper or find in list
+    if (!goal) return;
+
+    const currentSubGoals = goal.subGoals || [];
+    updateGoal(goalId, {
+      subGoals: [...currentSubGoals, { title, completed: false }] as any
+    });
+
+    setSubGoalInputs(prev => ({ ...prev, [goalId]: "" }));
+  };
+
+  const handleDeleteSubGoal = (goalId: string, subGoalId: string) => {
+    const goal = getGoalById(goalId);
+    if (!goal || !goal.subGoals) return;
+
+    updateGoal(goalId, {
+      subGoals: goal.subGoals.filter(sg => sg.id !== subGoalId)
+    });
+  };
+
+  const handleToggleSubGoal = (goalId: string, subGoalId: string) => {
+    const goal = getGoalById(goalId);
+    if (!goal || !goal.subGoals) return;
+
+    const updatedSubGoals = goal.subGoals.map(sg =>
+      sg.id === subGoalId ? { ...sg, completed: !sg.completed } : sg
+    );
+
+    updateGoal(goalId, { subGoals: updatedSubGoals });
+  };
+
+  const getGoalById = (id: string) => state.goals.find(g => g.id === id);
+
   const handleAddGoal = () => {
     if (!newGoalTitle.trim() || !newGoalRole) return;
     addGoal({
@@ -76,6 +115,7 @@ export function SemesterView() {
       semester: newGoalQuarter <= 2 ? 1 : 2,
       status: "pending",
       targetDate: newGoalDate || undefined,
+      subGoals: [],
     });
     setNewGoalTitle("");
     setNewGoalDate("");
@@ -89,7 +129,7 @@ export function SemesterView() {
       if (selectedRoleFilter !== "all" && goal.roleId !== selectedRoleFilter) {
         return false;
       }
-      
+
       // Time filter - hide past quarters unless showPastItems is true
       if (!state.showPastItems) {
         if (goal.targetDate) {
@@ -102,7 +142,7 @@ export function SemesterView() {
           return false;
         }
       }
-      
+
       return true;
     });
   };
@@ -114,8 +154,8 @@ export function SemesterView() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Roadmap 2026</h2>
           <p className="text-muted-foreground">
-            {selectedSemester === 1 
-              ? state.yearSettings?.h1Priority || "Primer Semestre" 
+            {selectedSemester === 1
+              ? state.yearSettings?.h1Priority || "Primer Semestre"
               : state.yearSettings?.h2Priority || "Segundo Semestre"}
           </p>
         </div>
@@ -185,9 +225,9 @@ export function SemesterView() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select 
-                  value={newGoalQuarter.toString()} 
-                  onValueChange={(v) => setNewGoalQuarter(parseInt(v) as 1|2|3|4)}
+                <Select
+                  value={newGoalQuarter.toString()}
+                  onValueChange={(v) => setNewGoalQuarter(parseInt(v) as 1 | 2 | 3 | 4)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -220,9 +260,9 @@ export function SemesterView() {
       {/* Quarters Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {visibleQuarters.map((quarter) => {
-          const allGoals = getGoalsByQuarter(quarter.id as 1|2|3|4);
+          const allGoals = getGoalsByQuarter(quarter.id as 1 | 2 | 3 | 4);
           const goals = filterGoals(allGoals);
-          
+
           return (
             <motion.div
               key={quarter.id}
@@ -278,8 +318,52 @@ export function SemesterView() {
                                 </span>
                               )}
                             </div>
+
+                            {/* Sub-goals List */}
+                            <div className="mt-3 space-y-1.5">
+                              {goal.subGoals?.map(sg => (
+                                <div key={sg.id} className="flex items-start gap-2 group">
+                                  <button
+                                    onClick={() => handleToggleSubGoal(goal.id, sg.id)}
+                                    className={cn(
+                                      "mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                                      sg.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary/50"
+                                    )}
+                                  >
+                                    {sg.completed && <Check className="w-3 h-3" />}
+                                  </button>
+                                  <span className={cn(
+                                    "text-sm flex-1 break-words leading-tight",
+                                    sg.completed ? "text-muted-foreground line-through decoration-muted-foreground/50" : "text-foreground/90"
+                                  )}>
+                                    {sg.title}
+                                  </span>
+                                  <button
+                                    onClick={() => handleDeleteSubGoal(goal.id, sg.id)}
+                                    className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {/* Add Subgoal Input - Only show if goal is hovered or has subgoals, or just always show small input? 
+                                   Let's put it always but subtle.
+                               */}
+                              <div className="flex items-center gap-2 mt-2">
+                                <Input
+                                  className="h-6 text-xs bg-muted/30 border-none focus-visible:ring-1"
+                                  placeholder="+ Sub-objetivo"
+                                  value={subGoalInputs[goal.id] || ""}
+                                  onChange={(e) => setSubGoalInputs(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleAddSubGoal(goal.id);
+                                  }}
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <button 
+                          <button
                             onClick={() => deleteGoal(goal.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors p-1"
                           >
@@ -305,7 +389,7 @@ export function SemesterView() {
 
                           <Select
                             value={goal.quarter.toString()}
-                            onValueChange={(v) => handleMoveGoal(goal.id, parseInt(v) as 1|2|3|4)}
+                            onValueChange={(v) => handleMoveGoal(goal.id, parseInt(v) as 1 | 2 | 3 | 4)}
                           >
                             <SelectTrigger className="h-7 text-xs w-auto bg-muted">
                               <SelectValue />

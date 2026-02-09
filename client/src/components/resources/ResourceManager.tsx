@@ -17,33 +17,98 @@ interface ResourceManagerProps {
   resources: Resource[];
 }
 
+// Helper component for individual resource item to manage local editing state if needed
+function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string }) {
+  const { updateResourceInGoal, deleteResourceFromGoal } = useLifeOSContext();
+
+  const handleAdjust = (adjustment: number) => {
+    const current = Number(resource.quantityHave) || 0;
+    const newQuantity = Math.max(0, current + adjustment);
+    updateResourceInGoal(goalId, resource.id, { quantityHave: newQuantity });
+  };
+
+  const handleChange = (val: string) => {
+    const num = Number(val);
+    if (!isNaN(num)) {
+      updateResourceInGoal(goalId, resource.id, { quantityHave: num });
+    }
+  };
+
+  const progress = resource.quantityNeeded > 0
+    ? Math.min(100, (Number(resource.quantityHave) / Number(resource.quantityNeeded)) * 100)
+    : 0;
+  const isComplete = Number(resource.quantityHave) >= Number(resource.quantityNeeded);
+
+  return (
+    <div className="bg-muted/30 rounded-lg p-2 space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-foreground truncate flex-1">{resource.name}</span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => handleAdjust(-1)}
+          >
+            <Minus className="w-3 h-3" />
+          </Button>
+
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              className="h-6 w-16 text-center p-1 text-xs bg-background border-muted"
+              value={resource.quantityHave}
+              onChange={(e) => handleChange(e.target.value)}
+            />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              / {resource.quantityNeeded} {resource.unit || ''}
+            </span>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => handleAdjust(1)}
+          >
+            <Plus className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive ml-1"
+            onClick={() => deleteResourceFromGoal(goalId, resource.id)}
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+      <Progress value={progress} className="h-1.5" />
+    </div>
+  );
+}
+
 export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
-  const { addResourceToGoal, updateResourceInGoal, deleteResourceFromGoal } = useLifeOSContext();
+  const { addResourceToGoal } = useLifeOSContext();
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [newResource, setNewResource] = useState({ name: "", quantityHave: 0, quantityNeeded: 0, unit: "" });
 
   const handleAdd = () => {
     if (!newResource.name.trim()) return;
     addResourceToGoal(goalId, {
       name: newResource.name.trim(),
-      quantityHave: newResource.quantityHave,
-      quantityNeeded: newResource.quantityNeeded,
+      quantityHave: Number(newResource.quantityHave),
+      quantityNeeded: Number(newResource.quantityNeeded),
       unit: newResource.unit.trim() || undefined,
     });
     setNewResource({ name: "", quantityHave: 0, quantityNeeded: 0, unit: "" });
     setIsAdding(false);
   };
-
-  const handleAdjust = (resourceId: string, adjustment: number) => {
-    const resource = resources.find(r => r.id === resourceId);
-    if (!resource) return;
-    const newQuantity = Math.max(0, resource.quantityHave + adjustment);
-    updateResourceInGoal(goalId, resourceId, { quantityHave: newQuantity });
-  };
+  // ... rest is same until return ...
 
   return (
     <div className="space-y-3">
+      {/* ... Header ... */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Package className="w-4 h-4" />
@@ -110,53 +175,9 @@ export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
         <p className="text-xs text-muted-foreground italic">Sin recursos definidos</p>
       ) : (
         <div className="space-y-2">
-          {resources.map((resource) => {
-            const progress = resource.quantityNeeded > 0 
-              ? Math.min(100, (resource.quantityHave / resource.quantityNeeded) * 100)
-              : 0;
-            const isComplete = resource.quantityHave >= resource.quantityNeeded;
-
-            return (
-              <div key={resource.id} className="bg-muted/30 rounded-lg p-2 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">{resource.name}</span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => handleAdjust(resource.id, -1)}
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className={cn(
-                      "text-xs font-medium min-w-[60px] text-center",
-                      isComplete ? "text-success" : "text-foreground"
-                    )}>
-                      {resource.quantityHave}/{resource.quantityNeeded}{resource.unit ? ` ${resource.unit}` : ''}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => handleAdjust(resource.id, 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteResourceFromGoal(goalId, resource.id)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-                <Progress value={progress} className="h-1.5" />
-              </div>
-            );
-          })}
+          {resources.map((resource) => (
+            <ResourceItem key={resource.id} resource={resource} goalId={goalId} />
+          ))}
         </div>
       )}
     </div>

@@ -10,16 +10,16 @@ export class Resource {
     goalId: string;
 
     @Column({ length: 255 })
-    title: string;
+    name: string;
 
-    @Column({ length: 50 })
-    type: string; // "link", "book", "video", "tool", "other"
+    @Column({ name: 'quantity_have', type: 'numeric', default: 0 })
+    quantityHave: number;
 
-    @Column({ nullable: true })
-    url: string;
+    @Column({ name: 'quantity_needed', type: 'numeric', default: 0 })
+    quantityNeeded: number;
 
-    @Column({ nullable: true })
-    description: string;
+    @Column({ length: 50, nullable: true })
+    unit: string;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

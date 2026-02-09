@@ -17,6 +17,7 @@ import { DeviationsModule } from './deviations/deviations.module';
 import { ResourcesModule } from './resources/resources.module';
 import { NotesModule } from './notes/notes.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 // Entities
 import { User } from './database/entities/user.entity';
@@ -25,20 +26,19 @@ import { Goal } from './goals/entities/goal.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Makes ConfigService available everywhere
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', '..', 'client', 'dist'),
-      exclude: ['/api/(.*)'],
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL || "postgresql://postgres:Klisten1a3218@127.0.0.1:5432/life_canvas?schema=public",
       autoLoadEntities: true,
       synchronize: true, // Auto-create tables (Dev only)
+      logging: true,
     }),
-    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule
+    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule
   ],
   controllers: [AppController],
   providers: [AppService],

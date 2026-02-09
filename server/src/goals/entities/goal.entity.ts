@@ -4,6 +4,7 @@ import type { Role } from '../../roles/entities/role.entity';
 import type { Project } from '../../projects/entities/project.entity';
 import type { Deviation } from '../../deviations/entities/deviation.entity';
 import type { Resource } from '../../resources/entities/resource.entity';
+import type { SubGoal } from './sub-goal.entity';
 
 @Entity('goals')
 export class Goal {
@@ -56,4 +57,7 @@ export class Goal {
 
     @OneToMany('Resource', (resource: any) => resource.goal)
     resources: Resource[];
+
+    @OneToMany('SubGoal', (subGoal: any) => subGoal.goal, { cascade: true })
+    subGoals: SubGoal[];
 }

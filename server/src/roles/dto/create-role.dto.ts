@@ -15,4 +15,8 @@ export class CreateRoleDto {
     @IsString()
     @IsOptional()
     description?: string;
+
+    @IsString()
+    @IsOptional()
+    imageUrl?: string;
 }

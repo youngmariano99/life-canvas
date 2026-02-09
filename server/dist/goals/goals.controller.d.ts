@@ -7,7 +7,7 @@ export declare class GoalsController {
     create(createGoalDto: CreateGoalDto): Promise<import("./entities/goal.entity").Goal[]>;
     findAll(): Promise<import("./entities/goal.entity").Goal[]>;
     findOne(id: string): Promise<import("./entities/goal.entity").Goal | null>;
-    update(id: string, updateGoalDto: UpdateGoalDto): Promise<import("./entities/goal.entity").Goal | null>;
+    update(id: string, updateGoalDto: UpdateGoalDto): Promise<import("./entities/goal.entity").Goal>;
     remove(id: string): Promise<{
         deleted: boolean;
     }>;

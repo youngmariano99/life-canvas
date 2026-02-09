@@ -3,4 +3,5 @@ export declare class CreateRoleDto {
     icon?: string;
     color?: string;
     description?: string;
+    imageUrl?: string;
 }

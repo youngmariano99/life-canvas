@@ -11,7 +11,7 @@ export declare class RolesService {
     create(createRoleDto: CreateRoleDto): Promise<Role>;
     findAll(): Promise<Role[]>;
     findOne(id: string): Promise<Role | null>;
-    update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role | null>;
+    update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role>;
     remove(id: string): Promise<{
         deleted: boolean;
     }>;

@@ -6,4 +6,5 @@ export declare class CreateGoalDto {
     semester?: number;
     status?: string;
     targetDate?: Date;
+    subGoals?: any[];
 }

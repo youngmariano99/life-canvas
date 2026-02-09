@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { Goal } from './entities/goal.entity';
 import { User } from '../database/entities/user.entity';
+import { SubGoal } from './entities/sub-goal.entity';
 
 @Injectable()
 export class GoalsService {
@@ -13,6 +14,8 @@ export class GoalsService {
         private goalRepository: Repository<Goal>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(SubGoal)
+        private subGoalRepository: Repository<SubGoal>,
     ) { }
 
     private async getDemoUser() {
@@ -29,7 +32,6 @@ export class GoalsService {
 
     async create(createGoalDto: CreateGoalDto) {
         const user = await this.getDemoUser();
-        // Handle date conversion if it comes as string
         const data: any = { ...createGoalDto };
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
@@ -46,16 +48,16 @@ export class GoalsService {
     async findAll() {
         const user = await this.getDemoUser();
         return this.goalRepository.find({
-            where: { user: { id: user.id } },
-            order: { createdAt: 'DESC' },
-            relations: ['role']
+            where: { userId: user.id },
+            relations: ['projects', 'resources', 'subGoals'],
+            order: { quarter: 'ASC', createdAt: 'DESC' }
         });
     }
 
     async findOne(id: string) {
         return this.goalRepository.findOne({
             where: { id },
-            relations: ['role']
+            relations: ['role', 'projects', 'resources', 'subGoals']
         });
     }
 
@@ -64,8 +66,35 @@ export class GoalsService {
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
         }
-        await this.goalRepository.update(id, data);
-        return this.findOne(id);
+
+        // Manual orphan removal for subGoals
+        if (data.subGoals && Array.isArray(data.subGoals)) {
+            const existingGoal = await this.goalRepository.findOne({
+                where: { id },
+                relations: ['subGoals']
+            });
+
+            if (existingGoal && existingGoal.subGoals) {
+                const incomingIds = data.subGoals.map((sg: any) => sg.id).filter((id: any) => id);
+                const toRemove = existingGoal.subGoals.filter(sg => !incomingIds.includes(sg.id));
+
+                if (toRemove.length > 0) {
+                    await this.subGoalRepository.remove(toRemove);
+                }
+            }
+        }
+
+        // Use preload to handle deep partial updates (like subGoals)
+        const goal = await this.goalRepository.preload({
+            id: id,
+            ...data,
+        });
+
+        if (!goal) {
+            throw new NotFoundException(`Goal #${id} not found`);
+        }
+
+        return this.goalRepository.save(goal);
     }
 
     async remove(id: string) {

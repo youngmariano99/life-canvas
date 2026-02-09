@@ -3,6 +3,7 @@ import type { Role } from '../../roles/entities/role.entity';
 import type { Project } from '../../projects/entities/project.entity';
 import type { Deviation } from '../../deviations/entities/deviation.entity';
 import type { Resource } from '../../resources/entities/resource.entity';
+import type { SubGoal } from './sub-goal.entity';
 export declare class Goal {
     id: string;
     userId: string;
@@ -20,4 +21,5 @@ export declare class Goal {
     projects: Project[];
     deviations: Deviation[];
     resources: Resource[];
+    subGoals: SubGoal[];
 }

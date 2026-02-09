@@ -12,13 +12,14 @@ const typeorm_1 = require("@nestjs/typeorm");
 const goals_service_1 = require("./goals.service");
 const goals_controller_1 = require("./goals.controller");
 const goal_entity_1 = require("./entities/goal.entity");
+const sub_goal_entity_1 = require("./entities/sub-goal.entity");
 const user_entity_1 = require("../database/entities/user.entity");
 let GoalsModule = class GoalsModule {
 };
 exports.GoalsModule = GoalsModule;
 exports.GoalsModule = GoalsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([goal_entity_1.Goal, user_entity_1.User])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([goal_entity_1.Goal, sub_goal_entity_1.SubGoal, user_entity_1.User])],
         controllers: [goals_controller_1.GoalsController],
         providers: [goals_service_1.GoalsService],
     })

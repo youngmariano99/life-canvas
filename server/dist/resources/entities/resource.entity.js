@@ -14,10 +14,10 @@ const typeorm_1 = require("typeorm");
 let Resource = class Resource {
     id;
     goalId;
-    title;
-    type;
-    url;
-    description;
+    name;
+    quantityHave;
+    quantityNeeded;
+    unit;
     createdAt;
     goal;
 };
@@ -33,19 +33,19 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
-], Resource.prototype, "title", void 0);
+], Resource.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 50 }),
-    __metadata("design:type", String)
-], Resource.prototype, "type", void 0);
+    (0, typeorm_1.Column)({ name: 'quantity_have', type: 'numeric', default: 0 }),
+    __metadata("design:type", Number)
+], Resource.prototype, "quantityHave", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Resource.prototype, "url", void 0);
+    (0, typeorm_1.Column)({ name: 'quantity_needed', type: 'numeric', default: 0 }),
+    __metadata("design:type", Number)
+], Resource.prototype, "quantityNeeded", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ length: 50, nullable: true }),
     __metadata("design:type", String)
-], Resource.prototype, "description", void 0);
+], Resource.prototype, "unit", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

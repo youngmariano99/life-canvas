@@ -18,12 +18,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const goal_entity_1 = require("./entities/goal.entity");
 const user_entity_1 = require("../database/entities/user.entity");
+const sub_goal_entity_1 = require("./entities/sub-goal.entity");
 let GoalsService = class GoalsService {
     goalRepository;
     userRepository;
-    constructor(goalRepository, userRepository) {
+    subGoalRepository;
+    constructor(goalRepository, userRepository, subGoalRepository) {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
+        this.subGoalRepository = subGoalRepository;
     }
     async getDemoUser() {
         let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
@@ -52,15 +55,15 @@ let GoalsService = class GoalsService {
     async findAll() {
         const user = await this.getDemoUser();
         return this.goalRepository.find({
-            where: { user: { id: user.id } },
-            order: { createdAt: 'DESC' },
-            relations: ['role']
+            where: { userId: user.id },
+            relations: ['projects', 'resources', 'subGoals'],
+            order: { quarter: 'ASC', createdAt: 'DESC' }
         });
     }
     async findOne(id) {
         return this.goalRepository.findOne({
             where: { id },
-            relations: ['role']
+            relations: ['role', 'projects', 'resources', 'subGoals']
         });
     }
     async update(id, updateGoalDto) {
@@ -68,8 +71,27 @@ let GoalsService = class GoalsService {
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
         }
-        await this.goalRepository.update(id, data);
-        return this.findOne(id);
+        if (data.subGoals && Array.isArray(data.subGoals)) {
+            const existingGoal = await this.goalRepository.findOne({
+                where: { id },
+                relations: ['subGoals']
+            });
+            if (existingGoal && existingGoal.subGoals) {
+                const incomingIds = data.subGoals.map((sg) => sg.id).filter((id) => id);
+                const toRemove = existingGoal.subGoals.filter(sg => !incomingIds.includes(sg.id));
+                if (toRemove.length > 0) {
+                    await this.subGoalRepository.remove(toRemove);
+                }
+            }
+        }
+        const goal = await this.goalRepository.preload({
+            id: id,
+            ...data,
+        });
+        if (!goal) {
+            throw new common_1.NotFoundException(`Goal #${id} not found`);
+        }
+        return this.goalRepository.save(goal);
     }
     async remove(id) {
         await this.goalRepository.delete(id);
@@ -81,7 +103,9 @@ exports.GoalsService = GoalsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(goal_entity_1.Goal)),
     __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(2, (0, typeorm_1.InjectRepository)(sub_goal_entity_1.SubGoal)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], GoalsService);
 //# sourceMappingURL=goals.service.js.map

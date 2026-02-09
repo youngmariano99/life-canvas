@@ -6,17 +6,21 @@
 import { LifeOSProvider, useLifeOSContext } from "@/context/LifeOSContext";
 import { YearWizard } from "@/components/wizard/YearWizard";
 import { Dashboard } from "@/components/layout/Dashboard";
+import { ServerStatusIndicator } from "@/components/ui/ServerStatusIndicator";
 
 function LifeOSApp() {
   const { state } = useLifeOSContext();
 
-  // Show wizard if not configured OR if editing wizard
-  if (!state.isConfigured || state.isEditingWizard) {
-    return <YearWizard />;
-  }
-
-  // Show main dashboard
-  return <Dashboard />;
+  return (
+    <>
+      <ServerStatusIndicator />
+      {(!state.isConfigured || state.isEditingWizard) ? (
+        <YearWizard />
+      ) : (
+        <Dashboard />
+      )}
+    </>
+  );
 }
 
 const Index = () => {

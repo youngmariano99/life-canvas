@@ -26,26 +26,26 @@ const deviations_module_1 = require("./deviations/deviations.module");
 const resources_module_1 = require("./resources/resources.module");
 const notes_module_1 = require("./notes/notes.module");
 const calendar_module_1 = require("./calendar/calendar.module");
+const cloudinary_module_1 = require("./cloudinary/cloudinary.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
-            }),
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
             serve_static_1.ServeStaticModule.forRoot({
-                rootPath: (0, path_1.join)(__dirname, '..', '..', '..', 'client', 'dist'),
-                exclude: ['/api/(.*)'],
+                rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
+                serveRoot: '/uploads',
             }),
             typeorm_1.TypeOrmModule.forRoot({
                 type: 'postgres',
                 url: process.env.DATABASE_URL || "postgresql://postgres:Klisten1a3218@127.0.0.1:5432/life_canvas?schema=public",
                 autoLoadEntities: true,
                 synchronize: true,
+                logging: true,
             }),
-            roles_module_1.RolesModule, goals_module_1.GoalsModule, habits_module_1.HabitsModule, habit_logs_module_1.HabitLogsModule, projects_module_1.ProjectsModule, project_activities_module_1.ProjectActivitiesModule, daily_stones_module_1.DailyStonesModule, fitness_module_1.FitnessModule, deviations_module_1.DeviationsModule, resources_module_1.ResourcesModule, notes_module_1.NotesModule, calendar_module_1.CalendarModule
+            roles_module_1.RolesModule, goals_module_1.GoalsModule, habits_module_1.HabitsModule, habit_logs_module_1.HabitLogsModule, projects_module_1.ProjectsModule, project_activities_module_1.ProjectActivitiesModule, daily_stones_module_1.DailyStonesModule, fitness_module_1.FitnessModule, deviations_module_1.DeviationsModule, resources_module_1.ResourcesModule, notes_module_1.NotesModule, calendar_module_1.CalendarModule, cloudinary_module_1.CloudinaryModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

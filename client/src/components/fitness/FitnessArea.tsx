@@ -17,13 +17,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FitnessRoutineCreator } from "./FitnessRoutineCreator";
 import { RoutineSelector } from "./RoutineSelector";
-import { FitnessActivityType } from "@/types/lifeOS";
+import { FitnessActivityView } from "./FitnessActivityView";
+import { FitnessActivity, FitnessActivityType } from "@/types/lifeOS";
 
 export function FitnessArea() {
-  const { state, addFitnessActivity, deleteFitnessActivity } = useLifeOSContext();
+  const { state, addFitnessActivity } = useLifeOSContext();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isAddingActivity, setIsAddingActivity] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<FitnessActivity | null>(null);
 
   const [newActivity, setNewActivity] = useState<{
     type: FitnessActivityType;
@@ -322,7 +324,7 @@ export function FitnessArea() {
                             formattedContent += `Rondas Totales: ${routine.rounds}\n\n`;
                           }
 
-                          formattedContent += routine.content.map(item => {
+                          formattedContent += routine.content.map((item: any) => {
                             if (routine.structureType === 'sets_reps') {
                               return `- ${item.name}: ${item.sets} series x ${item.reps}`;
                             } else if (routine.structureType === 'rounds') {
@@ -376,10 +378,12 @@ export function FitnessArea() {
                     activitiesForDate.map((activity) => (
                       <motion.div
                         key={activity.id}
+                        layoutId={activity.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="group flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                        onClick={() => setSelectedActivity(activity)}
+                        className="group flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
                       >
                         <div className={cn(
                           "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
@@ -400,14 +404,7 @@ export function FitnessArea() {
                             <p className="text-xs text-muted-foreground mt-1 truncate">{activity.notes}</p>
                           )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="opacity-0 group-hover:opacity-100 h-6 w-6 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteFitnessActivity(activity.id)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                        {/* Delete button removed */}
                       </motion.div>
                     ))
                   )}
@@ -422,6 +419,11 @@ export function FitnessArea() {
           )}
         </div>
       </div>
+
+      <FitnessActivityView
+        activity={selectedActivity}
+        onClose={() => setSelectedActivity(null)}
+      />
     </div>
   );
 }

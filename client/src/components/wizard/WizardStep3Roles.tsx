@@ -39,6 +39,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function WizardStep3Roles({ onNext, onBack }: WizardStep3RolesProps) {
   const { state, addRole, deleteRole } = useLifeOSContext();
   const [customName, setCustomName] = useState("");
+  const [customImage, setCustomImage] = useState("");
   const [loadingMsg, setLoadingMsg] = useState<string | null>(null);
 
   const handleAddPreset = async (preset: typeof ROLE_PRESETS[0]) => {
@@ -79,8 +80,10 @@ export function WizardStep3Roles({ onNext, onBack }: WizardStep3RolesProps) {
         name: name,
         icon: "Users",
         color: availableColor,
+        imageUrl: customImage.trim() || undefined,
       });
       setCustomName("");
+      setCustomImage("");
     } finally {
       setLoadingMsg(null);
     }
@@ -182,18 +185,27 @@ export function WizardStep3Roles({ onNext, onBack }: WizardStep3RolesProps) {
           Agregar rol personalizado
         </label>
         <div className="flex gap-2">
-          <Input
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            placeholder="Nombre del rol..."
-            className="flex-1"
-            maxLength={20}
-            disabled={state.roles.length >= 7}
-          />
+          <div className="flex-1 space-y-2">
+            <Input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="Nombre del rol..."
+              maxLength={20}
+              disabled={state.roles.length >= 7}
+            />
+            <Input
+              value={customImage}
+              onChange={(e) => setCustomImage(e.target.value)}
+              placeholder="URL de imagen (opcional)"
+              className="text-xs"
+              disabled={state.roles.length >= 7}
+            />
+          </div>
           <Button
             variant="secondary"
             onClick={handleAddCustom}
             disabled={!customName.trim() || state.roles.length >= 7}
+            className="h-auto"
           >
             <Plus className="w-4 h-4" />
           </Button>

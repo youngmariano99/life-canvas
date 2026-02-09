@@ -56,6 +56,7 @@ export interface Goal {
   targetDate?: string;
   status: "pending" | "in_progress" | "completed" | "deferred";
   resources: Resource[];
+  subGoals?: { id: string; title: string; completed: boolean }[];
   createdAt: string;
   updatedAt: string;
 }

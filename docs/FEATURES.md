@@ -189,23 +189,41 @@ Paso 1: Visión → Paso 2: Misión → Paso 3: Roles → Paso 4: Objetivos → 
 
 ### Tipos de Actividad
 
-| Tipo | Descripción |
-|------|-------------|
-| **NEAT** | Non-Exercise Activity Thermogenesis (caminatas, escaleras, etc.) |
-| **Workout** | Entrenamientos estructurados |
+| Tipo | Descripción | Campos Específicos |
+|------|-------------|-------------------|
+| **NEAT** | Actividad física no ejercicio (caminatas, tareas) | Pasos, Distancia, Calorías |
+| **Workout** | Entrenamientos estructurados y rutinas | Duración, Calorías, Distancia, Rutina asociada |
+
+### Gestión de Rutinas
+
+- **Creación Dinámica**: Formularios adaptables según el tipo de estructura:
+  - **Series y Repeticiones**: Ejercicios clásicos de gimnasio.
+  - **Rondas (Circuitos)**: Definición de vueltas globales y metas por ejercicio.
+  - **Intervalos**: Configuración de Series x Trabajo / Descanso.
+  - **Tiempo Fijo**: Objetivo de tiempo total.
+  - **Distancia Fija**: Objetivo de distancia total.
+- **Selector de Rutinas**: Previsualización inteligente del contenido de la rutina antes de seleccionarla.
+- **Auto-completado**: Al seleccionar una rutina, se rellena automáticamente el nombre y la estructura detallada en las notas.
 
 ### Registro de Actividad
 
-- Nombre de la actividad
-- Duración (minutos)
-- Notas
-- Fecha
+- **Tabs Separados**: Flujos distintos para "Entrenamiento" y "NEAT".
+- **Entrenamiento**:
+  - Opción Manual: Ingreso directo de métricas.
+  - Opción Rutina: Carga desde librería de rutinas personales.
+- **NEAT**: Formulario simplificado enfocado en movimiento diario (Pasos/Km).
 
-### Visualización
+### Visualización y Edición
 
-- Lista de actividades del día
-- Filtro por tipo
-- Total de minutos por tipo
+- **Calendario Mensual**:
+  - Resumen visual con puntos de color (Rojo: Workout, Verde: NEAT).
+  - Navegación entre meses y selección de días.
+- **Lista de Actividades**:
+  - Tarjetas con iconos distintivos y métricas clave.
+- **Modal de Detalle (Nuevo)**:
+  - Al hacer clic en una actividad, se abre un modal con el resumen completo.
+  - **Edición**: Posibilidad de modificar nombre, duración, calorías, distancia y notas.
+  - **Eliminación**: Opción para borrar la actividad desde el detalle.
 
 ---
 

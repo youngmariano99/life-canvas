@@ -19,6 +19,7 @@ class CreateGoalDto {
     semester;
     status;
     targetDate;
+    subGoals;
 }
 exports.CreateGoalDto = CreateGoalDto;
 __decorate([
@@ -58,4 +59,8 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Date)
 ], CreateGoalDto.prototype, "targetDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateGoalDto.prototype, "subGoals", void 0);
 //# sourceMappingURL=create-goal.dto.js.map

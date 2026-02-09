@@ -16,6 +16,7 @@ class CreateRoleDto {
     icon;
     color;
     description;
+    imageUrl;
 }
 exports.CreateRoleDto = CreateRoleDto;
 __decorate([
@@ -37,4 +38,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateRoleDto.prototype, "description", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateRoleDto.prototype, "imageUrl", void 0);
 //# sourceMappingURL=create-role.dto.js.map
