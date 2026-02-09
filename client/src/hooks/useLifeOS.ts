@@ -57,10 +57,11 @@ export function useLifeOS() {
           calendarEvents,
           fitnessRoutines,
           yearSettings,
-          // If year settings exist (vision/mission), consider configured
-          isConfigured: !!yearSettings || s.isConfigured,
+          // If year settings exist OR if user has significant data (goals or roles), consider configured.
+          // This handles migration for existing users who haven't set up YearSettings yet.
+          isConfigured: !!yearSettings || (roles.length > 0 || goals.length > 0) || s.isConfigured,
           // If configured, ensure not in wizard mode unless explicitly editing
-          wizardStep: (!!yearSettings) && !s.isEditingWizard ? 0 : s.wizardStep
+          wizardStep: (!!yearSettings || (roles.length > 0 || goals.length > 0)) && !s.isEditingWizard ? 0 : s.wizardStep
         }));
       } catch (error) {
         console.error("Failed to load data from API", error);
