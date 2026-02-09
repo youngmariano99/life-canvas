@@ -55,6 +55,18 @@ export function YearWizard() {
             </div>
             <div className="flex items-center gap-4">
               <WizardProgress steps={STEPS} currentStep={currentStep} />
+
+              {!isEditing && currentStep === 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={completeWizard}
+                  className="gap-1 text-muted-foreground hover:text-foreground hidden sm:flex"
+                >
+                  Ya tengo un plan
+                </Button>
+              )}
+
               {isEditing && (
                 <Button variant="ghost" size="sm" onClick={cancelEditingWizard} className="gap-1">
                   <X className="w-4 h-4" />
@@ -93,6 +105,19 @@ export function YearWizard() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Mobile Skip Button */}
+        {!isEditing && currentStep === 1 && (
+          <div className="mt-8 flex justify-center sm:hidden">
+            <Button
+              variant="link"
+              onClick={completeWizard}
+              className="text-muted-foreground"
+            >
+              Ya tengo una planificación, ir al Dashboard
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );
