@@ -61,10 +61,12 @@ export function useLifeOS() {
           // This handles migration for existing users who haven't set up YearSettings yet.
           isConfigured: !!yearSettings || (roles.length > 0 || goals.length > 0) || s.isConfigured,
           // If configured, ensure not in wizard mode unless explicitly editing
-          wizardStep: (!!yearSettings || (roles.length > 0 || goals.length > 0)) && !s.isEditingWizard ? 0 : s.wizardStep
+          wizardStep: (!!yearSettings || (roles.length > 0 || goals.length > 0)) && !s.isEditingWizard ? 0 : s.wizardStep,
+          isLoading: false
         }));
       } catch (error) {
         console.error("Failed to load data from API", error);
+        setState(s => ({ ...s, isLoading: false }));
       }
     }
     loadData();

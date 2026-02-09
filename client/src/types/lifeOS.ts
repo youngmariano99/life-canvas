@@ -308,12 +308,15 @@ export interface LifeOSState {
   focusMode: boolean;
   selectedYear: number;
   isReadOnly: boolean;
+  isLoading: boolean;
 }
 
 // Default initial state
 export const initialState: LifeOSState = {
   isConfigured: false,
   wizardStep: 1,
+
+  isLoading: true, // Start in loading state
   isEditingWizard: false,
   yearSettings: null,
   roles: [],

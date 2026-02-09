@@ -3,15 +3,15 @@
  * Manages all app state with automatic persistence
  */
 
-import { 
-  LifeOSState, 
-  initialState, 
-  YearSettings, 
-  Role, 
-  Goal, 
-  Habit, 
-  HabitLog, 
-  Deviation, 
+import {
+  LifeOSState,
+  initialState,
+  YearSettings,
+  Role,
+  Goal,
+  Habit,
+  HabitLog,
+  Deviation,
   DailyStone,
   Project,
   ProjectActivity,
@@ -34,9 +34,10 @@ export function loadState(): LifeOSState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { 
-        ...initialState, 
+      return {
+        ...initialState,
         ...parsed,
+        isLoading: true, // Force loading state on startup
         projects: parsed.projects || [],
         projectActivities: parsed.projectActivities || [],
         fitnessActivities: parsed.fitnessActivities || [],
@@ -78,23 +79,23 @@ export function generateId(): string {
  * Update year settings
  */
 export function updateYearSettings(
-  state: LifeOSState, 
+  state: LifeOSState,
   settings: Partial<YearSettings>
 ): LifeOSState {
   const now = new Date().toISOString();
-  const yearSettings: YearSettings = state.yearSettings 
+  const yearSettings: YearSettings = state.yearSettings
     ? { ...state.yearSettings, ...settings, updatedAt: now }
     : {
-        year: 2026,
-        vision5Years: "",
-        mission: "",
-        h1Priority: "",
-        h2Priority: "",
-        createdAt: now,
-        updatedAt: now,
-        ...settings
-      };
-  
+      year: 2026,
+      vision5Years: "",
+      mission: "",
+      h1Priority: "",
+      h2Priority: "",
+      createdAt: now,
+      updatedAt: now,
+      ...settings
+    };
+
   return { ...state, yearSettings };
 }
 
@@ -114,8 +115,8 @@ export function addRole(state: LifeOSState, role: Omit<Role, "id">): LifeOSState
  * Update a role
  */
 export function updateRole(
-  state: LifeOSState, 
-  roleId: string, 
+  state: LifeOSState,
+  roleId: string,
   updates: Partial<Role>
 ): LifeOSState {
   return {
@@ -141,12 +142,12 @@ export function deleteRole(state: LifeOSState, roleId: string): LifeOSState {
  */
 export function addGoal(state: LifeOSState, goal: Omit<Goal, "id" | "createdAt" | "updatedAt" | "resources">): LifeOSState {
   const now = new Date().toISOString();
-  const newGoal: Goal = { 
-    ...goal, 
-    id: generateId(), 
+  const newGoal: Goal = {
+    ...goal,
+    id: generateId(),
     resources: [],
-    createdAt: now, 
-    updatedAt: now 
+    createdAt: now,
+    updatedAt: now
   };
   return { ...state, goals: [...state.goals, newGoal] };
 }
@@ -155,14 +156,14 @@ export function addGoal(state: LifeOSState, goal: Omit<Goal, "id" | "createdAt" 
  * Update a goal
  */
 export function updateGoal(
-  state: LifeOSState, 
-  goalId: string, 
+  state: LifeOSState,
+  goalId: string,
   updates: Partial<Goal>
 ): LifeOSState {
   const now = new Date().toISOString();
   return {
     ...state,
-    goals: state.goals.map(g => 
+    goals: state.goals.map(g =>
       g.id === goalId ? { ...g, ...updates, updatedAt: now } : g
     )
   };
@@ -190,8 +191,8 @@ export function addResourceToGoal(
   const newResource: Resource = { ...resource, id: generateId() };
   return {
     ...state,
-    goals: state.goals.map(g => 
-      g.id === goalId 
+    goals: state.goals.map(g =>
+      g.id === goalId
         ? { ...g, resources: [...(g.resources || []), newResource], updatedAt: new Date().toISOString() }
         : g
     )
@@ -209,15 +210,15 @@ export function updateResourceInGoal(
 ): LifeOSState {
   return {
     ...state,
-    goals: state.goals.map(g => 
-      g.id === goalId 
-        ? { 
-            ...g, 
-            resources: (g.resources || []).map(r => 
-              r.id === resourceId ? { ...r, ...updates } : r
-            ),
-            updatedAt: new Date().toISOString()
-          }
+    goals: state.goals.map(g =>
+      g.id === goalId
+        ? {
+          ...g,
+          resources: (g.resources || []).map(r =>
+            r.id === resourceId ? { ...r, ...updates } : r
+          ),
+          updatedAt: new Date().toISOString()
+        }
         : g
     )
   };
@@ -233,13 +234,13 @@ export function deleteResourceFromGoal(
 ): LifeOSState {
   return {
     ...state,
-    goals: state.goals.map(g => 
-      g.id === goalId 
-        ? { 
-            ...g, 
-            resources: (g.resources || []).filter(r => r.id !== resourceId),
-            updatedAt: new Date().toISOString()
-          }
+    goals: state.goals.map(g =>
+      g.id === goalId
+        ? {
+          ...g,
+          resources: (g.resources || []).filter(r => r.id !== resourceId),
+          updatedAt: new Date().toISOString()
+        }
         : g
     )
   };
@@ -257,8 +258,8 @@ export function addHabit(state: LifeOSState, habit: Omit<Habit, "id">): LifeOSSt
  * Update a habit
  */
 export function updateHabit(
-  state: LifeOSState, 
-  habitId: string, 
+  state: LifeOSState,
+  habitId: string,
   updates: Partial<Habit>
 ): LifeOSState {
   return {
@@ -282,9 +283,9 @@ export function deleteHabit(state: LifeOSState, habitId: string): LifeOSState {
  * Log habit completion
  */
 export function logHabit(
-  state: LifeOSState, 
-  habitId: string, 
-  date: string, 
+  state: LifeOSState,
+  habitId: string,
+  date: string,
   status: HabitLog["status"],
   note?: string
 ): LifeOSState {
@@ -292,13 +293,13 @@ export function logHabit(
   const existingIndex = state.habitLogs.findIndex(
     l => l.habitId === habitId && l.date === date
   );
-  
+
   if (existingIndex >= 0) {
     const logs = [...state.habitLogs];
     logs[existingIndex] = { ...logs[existingIndex], status, note };
     return { ...state, habitLogs: logs };
   }
-  
+
   const newLog: HabitLog = {
     id: generateId(),
     habitId,
@@ -313,7 +314,7 @@ export function logHabit(
  * Add a deviation (learning point)
  */
 export function addDeviation(
-  state: LifeOSState, 
+  state: LifeOSState,
   deviation: Omit<Deviation, "id" | "createdAt">
 ): LifeOSState {
   const newDeviation: Deviation = {
@@ -328,22 +329,22 @@ export function addDeviation(
  * Set daily stone
  */
 export function setDailyStone(
-  state: LifeOSState, 
-  date: string, 
-  title: string, 
+  state: LifeOSState,
+  date: string,
+  title: string,
   roleId?: string
 ): LifeOSState {
   const existing = state.dailyStones.find(s => s.date === date);
-  
+
   if (existing) {
     return {
       ...state,
-      dailyStones: state.dailyStones.map(s => 
+      dailyStones: state.dailyStones.map(s =>
         s.date === date ? { ...s, title, roleId } : s
       )
     };
   }
-  
+
   const newStone: DailyStone = {
     id: generateId(),
     date,
@@ -358,13 +359,13 @@ export function setDailyStone(
  * Complete daily stone
  */
 export function completeDailyStone(
-  state: LifeOSState, 
-  date: string, 
+  state: LifeOSState,
+  date: string,
   completed: boolean
 ): LifeOSState {
   return {
     ...state,
-    dailyStones: state.dailyStones.map(s => 
+    dailyStones: state.dailyStones.map(s =>
       s.date === date ? { ...s, completed } : s
     )
   };
@@ -376,7 +377,7 @@ export function completeDailyStone(
  * Add a project
  */
 export function addProject(
-  state: LifeOSState, 
+  state: LifeOSState,
   project: Omit<Project, "id" | "createdAt" | "updatedAt" | "statuses">
 ): LifeOSState {
   const now = new Date().toISOString();
@@ -400,8 +401,8 @@ export function updateProject(
 ): LifeOSState {
   return {
     ...state,
-    projects: state.projects.map(p => 
-      p.id === projectId 
+    projects: state.projects.map(p =>
+      p.id === projectId
         ? { ...p, ...updates, updatedAt: new Date().toISOString() }
         : p
     )
@@ -427,10 +428,10 @@ export function addProjectActivity(
   activity: Omit<ProjectActivity, "id" | "createdAt" | "order">
 ): LifeOSState {
   const projectActivities = state.projectActivities.filter(a => a.projectId === activity.projectId);
-  const maxOrder = projectActivities.length > 0 
-    ? Math.max(...projectActivities.map(a => a.order)) 
+  const maxOrder = projectActivities.length > 0
+    ? Math.max(...projectActivities.map(a => a.order))
     : 0;
-  
+
   const newActivity: ProjectActivity = {
     ...activity,
     id: generateId(),
@@ -450,7 +451,7 @@ export function updateProjectActivity(
 ): LifeOSState {
   return {
     ...state,
-    projectActivities: state.projectActivities.map(a => 
+    projectActivities: state.projectActivities.map(a =>
       a.id === activityId ? { ...a, ...updates } : a
     )
   };
@@ -482,7 +483,7 @@ export function reorderActivities(
     }
     return a;
   });
-  
+
   return { ...state, projectActivities: activities };
 }
 
