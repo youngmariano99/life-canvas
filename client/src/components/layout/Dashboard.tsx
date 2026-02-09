@@ -16,6 +16,7 @@ import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { NotesSection } from "@/components/notes/NotesSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MobileNav } from "./MobileNav";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -29,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const VIEWS = [
+export const VIEWS = [
   { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Roles" },
   { id: "semester", label: "Roadmap", icon: Calendar, description: "Objetivos" },
   { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
@@ -39,7 +40,7 @@ const VIEWS = [
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
 
-type ViewType = typeof VIEWS[number]["id"];
+export type ViewType = typeof VIEWS[number]["id"];
 
 export function Dashboard() {
   const { state, resetAll, startEditingWizard } = useLifeOSContext();
@@ -62,9 +63,9 @@ export function Dashboard() {
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary flex items-center justify-center">
                 <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
-              <div className="hidden sm:block">
+              <div>
                 <h1 className="font-semibold text-foreground">Life-OS 2026</h1>
-                <p className="text-xs text-muted-foreground">Superhábitos</p>
+                <p className="text-xs text-muted-foreground hidden sm:block">Superhábitos</p>
               </div>
             </div>
 
@@ -79,8 +80,8 @@ export function Dashboard() {
                     onClick={() => handleViewChange(view.id)}
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
+                      isActive
+                        ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
                   >
@@ -91,13 +92,13 @@ export function Dashboard() {
               })}
             </nav>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            {/* Actions (Desktop Only for some) */}
+            <div className="hidden lg:flex items-center gap-1 sm:gap-2">
               <ThemeToggle />
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
+
+              <Button
+                variant="ghost"
+                size="icon"
                 className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9"
                 onClick={startEditingWizard}
                 title="Modificar planificación"
@@ -126,60 +127,18 @@ export function Dashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </div>
 
-              {/* Mobile menu button */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="lg:hidden h-8 w-8 sm:h-9 sm:w-9"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
+            {/* Mobile Header Actions (Minimal) */}
+            <div className="flex lg:hidden items-center gap-2">
+              <ThemeToggle />
             </div>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.nav 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-t border-border bg-card overflow-hidden"
-            >
-              <div className="px-4 py-3 grid grid-cols-2 gap-2">
-                {VIEWS.map((view) => {
-                  const Icon = view.icon;
-                  const isActive = currentView === view.id;
-                  return (
-                    <button
-                      key={view.id}
-                      onClick={() => handleViewChange(view.id)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                        isActive 
-                          ? "bg-primary text-primary-foreground" 
-                          : "text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted"
-                      )}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <div className="text-left">
-                        <div>{view.label}</div>
-                        <div className="text-xs opacity-70">{view.description}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-8">
         <motion.div
           key={currentView}
           initial={{ opacity: 0, y: 10 }}
@@ -195,6 +154,9 @@ export function Dashboard() {
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>
       </main>
+
+      {/* Mobile Navigation */}
+      <MobileNav currentView={currentView} onViewChange={handleViewChange} />
     </div>
   );
 }
