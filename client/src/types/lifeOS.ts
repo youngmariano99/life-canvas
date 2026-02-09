@@ -306,6 +306,8 @@ export interface LifeOSState {
   selectedDate: string;
   showPastItems: boolean;
   focusMode: boolean;
+  selectedYear: number;
+  isReadOnly: boolean;
 }
 
 // Default initial state
@@ -333,4 +335,6 @@ export const initialState: LifeOSState = {
   selectedDate: new Date().toISOString().split('T')[0],
   showPastItems: false,
   focusMode: false,
+  selectedYear: new Date().getFullYear(),
+  isReadOnly: false,
 };

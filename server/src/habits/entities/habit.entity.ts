@@ -17,6 +17,9 @@ export class Habit {
     @Column({ length: 255 })
     name: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ default: 'daily', length: 20, nullable: true })
     frequency: string;
 

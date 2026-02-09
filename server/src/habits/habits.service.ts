@@ -21,9 +21,9 @@ export class HabitsService {
         return this.habitRepository.save(habit);
     }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.habitRepository.find({
-            where: { user: { id: userId } },
+            where: { user: { id: userId }, year },
             order: { createdAt: 'DESC' },
             relations: ['role', 'logs']
         });

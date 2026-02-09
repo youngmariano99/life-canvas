@@ -27,9 +27,10 @@ export class ProjectsService {
         return this.projectRepository.save(project);
     }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.projectRepository.find({
             where: {
+                year,
                 goal: {
                     user: { id: userId }
                 }

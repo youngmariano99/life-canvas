@@ -24,14 +24,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function WeeklyView() {
-  const { 
-    state, 
-    addProject, 
+  const {
+    state,
+    addProject,
     deleteProject,
     getRoleById,
-    toggleShowPastItems 
+    toggleShowPastItems
   } = useLifeOSContext();
-  
+
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
@@ -63,7 +63,7 @@ export function WeeklyView() {
     });
   }, [state.projects, state.goals, selectedRoleFilter, state.showPastItems, weekStart, weekEnd]);
 
-  const selectedProject = selectedProjectId 
+  const selectedProject = selectedProjectId
     ? state.projects.find(p => p.id === selectedProjectId)
     : null;
 
@@ -91,8 +91,8 @@ export function WeeklyView() {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Week Navigation */}
           <div className="flex items-center gap-1">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={() => setSelectedWeek(subWeeks(selectedWeek, 1))}
             >
@@ -105,8 +105,8 @@ export function WeeklyView() {
             >
               Esta semana
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={() => setSelectedWeek(addWeeks(selectedWeek, 1))}
             >
@@ -158,80 +158,82 @@ export function WeeklyView() {
             </Button>
 
             {/* Add Project */}
-            <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1">
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Proyecto</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Nuevo Proyecto</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <Input
-                    value={newProject.name}
-                    onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nombre del proyecto"
-                  />
-                  <Select 
-                    value={newProject.goalId} 
-                    onValueChange={(v) => setNewProject(prev => ({ ...prev, goalId: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Vincular a objetivo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {state.goals.map((goal) => {
-                        const role = getRoleById(goal.roleId);
-                        return (
-                          <SelectItem key={goal.id} value={goal.id}>
-                            <span className="flex items-center gap-2">
-                              <span className={cn(
-                                "w-2 h-2 rounded-full",
-                                role ? ROLE_COLORS[role.color].bg : "bg-muted"
-                              )} />
-                              {goal.title}
-                            </span>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Fecha límite (opcional)</label>
-                    <Input
-                      type="date"
-                      value={newProject.dueDate}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, dueDate: e.target.value }))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleAddProject} 
-                    disabled={!newProject.name.trim() || !newProject.goalId} 
-                    className="w-full"
-                  >
-                    Crear Proyecto
+            {!state.isReadOnly && (
+              <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1">
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Proyecto</span>
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nuevo Proyecto</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Input
+                      value={newProject.name}
+                      onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Nombre del proyecto"
+                    />
+                    <Select
+                      value={newProject.goalId}
+                      onValueChange={(v) => setNewProject(prev => ({ ...prev, goalId: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Vincular a objetivo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {state.goals.map((goal) => {
+                          const role = getRoleById(goal.roleId);
+                          return (
+                            <SelectItem key={goal.id} value={goal.id}>
+                              <span className="flex items-center gap-2">
+                                <span className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  role ? ROLE_COLORS[role.color].bg : "bg-muted"
+                                )} />
+                                {goal.title}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <div>
+                      <label className="text-sm text-muted-foreground">Fecha límite (opcional)</label>
+                      <Input
+                        type="date"
+                        value={newProject.dueDate}
+                        onChange={(e) => setNewProject(prev => ({ ...prev, dueDate: e.target.value }))}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleAddProject}
+                      disabled={!newProject.name.trim() || !newProject.goalId}
+                      className="w-full"
+                    >
+                      Crear Proyecto
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           {/* Project List or Kanban */}
           {selectedProject ? (
             <div className="space-y-4">
               {/* Back Button */}
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedProjectId(null)}
                 className="gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Volver a proyectos
               </Button>
-              
+
               {/* Project Header */}
               <div className="bg-card rounded-xl border border-border p-4">
                 <div className="flex items-start justify-between">
@@ -244,22 +246,24 @@ export function WeeklyView() {
                       </p>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => {
-                      deleteProject(selectedProject.id);
-                      setSelectedProjectId(null);
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                  {!state.isReadOnly && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        deleteProject(selectedProject.id);
+                        setSelectedProjectId(null);
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
 
               {/* Kanban Board */}
-              <KanbanBoard project={selectedProject} />
+              <KanbanBoard project={selectedProject} readOnly={state.isReadOnly} />
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -269,14 +273,16 @@ export function WeeklyView() {
                   <p className="text-muted-foreground">
                     No hay proyectos para esta semana. Crea uno para empezar a planificar.
                   </p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4 gap-1"
-                    onClick={() => setIsAddingProject(true)}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Crear proyecto
-                  </Button>
+                  {!state.isReadOnly && (
+                    <Button
+                      variant="outline"
+                      className="mt-4 gap-1"
+                      onClick={() => setIsAddingProject(true)}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Crear proyecto
+                    </Button>
+                  )}
                 </div>
               ) : (
                 filteredProjects.map((project) => {
@@ -307,7 +313,7 @@ export function WeeklyView() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="mt-4 flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
                           {completedActivities}/{activities.length} actividades
@@ -323,7 +329,7 @@ export function WeeklyView() {
                       {/* Progress */}
                       {activities.length > 0 && (
                         <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className={cn("h-full rounded-full transition-all", colors.bg)}
                             style={{ width: `${(completedActivities / activities.length) * 100}%` }}
                           />
@@ -339,7 +345,7 @@ export function WeeklyView() {
 
         {/* Calendar Tab */}
         <TabsContent value="calendar">
-          <EventCalendar />
+          <EventCalendar readOnly={state.isReadOnly} />
         </TabsContent>
       </Tabs>
     </div>

@@ -198,62 +198,64 @@ export function SemesterView() {
             {state.showPastItems ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </Button>
 
-          <Dialog open={isAddingGoal} onOpenChange={setIsAddingGoal}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1 ml-2">
-                <Plus className="w-4 h-4" />
-                Objetivo
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nuevo Objetivo</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <Input
-                  value={newGoalTitle}
-                  onChange={(e) => setNewGoalTitle(e.target.value)}
-                  placeholder="Título del objetivo"
-                />
-                <Select value={newGoalRole} onValueChange={setNewGoalRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {state.roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={newGoalQuarter.toString()}
-                  onValueChange={(v) => setNewGoalQuarter(parseInt(v) as 1 | 2 | 3 | 4)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {QUARTERS.map((q) => (
-                      <SelectItem key={q.id} value={q.id.toString()}>
-                        {q.label} ({q.months})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div>
-                  <label className="text-sm text-muted-foreground">Fecha exacta (opcional)</label>
-                  <Input
-                    type="date"
-                    value={newGoalDate}
-                    onChange={(e) => setNewGoalDate(e.target.value)}
-                  />
-                </div>
-                <Button onClick={handleAddGoal} disabled={!newGoalTitle.trim() || !newGoalRole} className="w-full">
-                  Agregar
+          {!state.isReadOnly && (
+            <Dialog open={isAddingGoal} onOpenChange={setIsAddingGoal}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1 ml-2">
+                  <Plus className="w-4 h-4" />
+                  Objetivo
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nuevo Objetivo</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <Input
+                    value={newGoalTitle}
+                    onChange={(e) => setNewGoalTitle(e.target.value)}
+                    placeholder="Título del objetivo"
+                  />
+                  <Select value={newGoalRole} onValueChange={setNewGoalRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {state.roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={newGoalQuarter.toString()}
+                    onValueChange={(v) => setNewGoalQuarter(parseInt(v) as 1 | 2 | 3 | 4)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUARTERS.map((q) => (
+                        <SelectItem key={q.id} value={q.id.toString()}>
+                          {q.label} ({q.months})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Fecha exacta (opcional)</label>
+                    <Input
+                      type="date"
+                      value={newGoalDate}
+                      onChange={(e) => setNewGoalDate(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleAddGoal} disabled={!newGoalTitle.trim() || !newGoalRole} className="w-full">
+                    Agregar
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -324,10 +326,12 @@ export function SemesterView() {
                               {goal.subGoals?.map(sg => (
                                 <div key={sg.id} className="flex items-start gap-2 group">
                                   <button
-                                    onClick={() => handleToggleSubGoal(goal.id, sg.id)}
+                                    onClick={() => !state.isReadOnly && handleToggleSubGoal(goal.id, sg.id)}
+                                    disabled={state.isReadOnly}
                                     className={cn(
                                       "mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                      sg.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary/50"
+                                      sg.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary/50",
+                                      state.isReadOnly && "opacity-50 cursor-not-allowed"
                                     )}
                                   >
                                     {sg.completed && <Check className="w-3 h-3" />}
@@ -338,37 +342,41 @@ export function SemesterView() {
                                   )}>
                                     {sg.title}
                                   </span>
-                                  <button
-                                    onClick={() => handleDeleteSubGoal(goal.id, sg.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
+                                  {!state.isReadOnly && (
+                                    <button
+                                      onClick={() => handleDeleteSubGoal(goal.id, sg.id)}
+                                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
 
-                              {/* Add Subgoal Input - Only show if goal is hovered or has subgoals, or just always show small input? 
-                                   Let's put it always but subtle.
-                               */}
-                              <div className="flex items-center gap-2 mt-2">
-                                <Input
-                                  className="h-6 text-xs bg-muted/30 border-none focus-visible:ring-1"
-                                  placeholder="+ Sub-objetivo"
-                                  value={subGoalInputs[goal.id] || ""}
-                                  onChange={(e) => setSubGoalInputs(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleAddSubGoal(goal.id);
-                                  }}
-                                />
-                              </div>
+                              {/* Add Subgoal Input */}
+                              {!state.isReadOnly && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Input
+                                    className="h-6 text-xs bg-muted/30 border-none focus-visible:ring-1"
+                                    placeholder="+ Sub-objetivo"
+                                    value={subGoalInputs[goal.id] || ""}
+                                    onChange={(e) => setSubGoalInputs(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleAddSubGoal(goal.id);
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => deleteGoal(goal.id)}
-                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          {!state.isReadOnly && (
+                            <button
+                              onClick={() => deleteGoal(goal.id)}
+                              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
 
                         {/* Status & Actions */}
@@ -376,6 +384,7 @@ export function SemesterView() {
                           <Select
                             value={goal.status}
                             onValueChange={(v) => handleStatusChange(goal.id, v as Goal["status"])}
+                            disabled={state.isReadOnly}
                           >
                             <SelectTrigger className={cn("h-7 text-xs w-auto", statusConfig.class)}>
                               <SelectValue />
@@ -390,6 +399,7 @@ export function SemesterView() {
                           <Select
                             value={goal.quarter.toString()}
                             onValueChange={(v) => handleMoveGoal(goal.id, parseInt(v) as 1 | 2 | 3 | 4)}
+                            disabled={state.isReadOnly}
                           >
                             <SelectTrigger className="h-7 text-xs w-auto bg-muted">
                               <SelectValue />
@@ -409,6 +419,7 @@ export function SemesterView() {
                             onChange={(e) => handleDateChange(goal.id, e.target.value)}
                             className="h-7 text-xs w-auto"
                             placeholder="Fecha"
+                            disabled={state.isReadOnly}
                           />
 
                           <Button
@@ -430,7 +441,11 @@ export function SemesterView() {
                             exit={{ opacity: 0, height: 0 }}
                             className="pt-3 border-t border-border"
                           >
-                            <ResourceManager goalId={goal.id} resources={goal.resources || []} />
+                            <ResourceManager
+                              goalId={goal.id}
+                              resources={goal.resources || []}
+                              readOnly={state.isReadOnly}
+                            />
                           </motion.div>
                         )}
                       </motion.div>

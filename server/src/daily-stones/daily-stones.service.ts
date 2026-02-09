@@ -11,9 +11,9 @@ export class DailyStonesService {
         private dailyStoneRepository: Repository<DailyStone>,
     ) { }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.dailyStoneRepository.find({
-            where: { user: { id: userId } },
+            where: { user: { id: userId }, year },
             order: { date: 'DESC' },
             take: 365,
             relations: ['role']
@@ -23,6 +23,7 @@ export class DailyStonesService {
     async upsert(dto: CreateDailyStoneDto, userId: string) {
         // Extract YYYY-MM-DD to avoid time zone issues
         const dateStr = dto.date.split('T')[0];
+        const year = new Date(dateStr).getFullYear();
 
         // Find by string date to ensure match
         let stone = await this.dailyStoneRepository.createQueryBuilder('stone')
@@ -35,6 +36,7 @@ export class DailyStonesService {
             stone.roleId = dto.roleId || null;
             stone.completed = dto.completed ?? false;
             stone.note = dto.note || '';
+            stone.year = year;
             // Don't update the date, keep the original
         } else {
             stone = this.dailyStoneRepository.create({
@@ -43,7 +45,8 @@ export class DailyStonesService {
                 title: dto.title,
                 roleId: dto.roleId || null,
                 completed: dto.completed || false,
-                note: dto.note || ''
+                note: dto.note || '',
+                year: year
             });
         }
         return this.dailyStoneRepository.save(stone);

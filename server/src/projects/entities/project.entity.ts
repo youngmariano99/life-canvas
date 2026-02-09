@@ -13,6 +13,9 @@ export class Project {
     @Column({ length: 255 })
     name: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ nullable: true })
     description: string;
 

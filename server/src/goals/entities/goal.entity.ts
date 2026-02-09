@@ -20,6 +20,9 @@ export class Goal {
     @Column({ length: 255 })
     title: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ nullable: true })
     description: string;
 

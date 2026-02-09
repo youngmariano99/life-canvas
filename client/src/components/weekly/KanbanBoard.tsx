@@ -16,13 +16,14 @@ import { es } from "date-fns/locale";
 
 interface KanbanBoardProps {
   project: Project;
+  readOnly?: boolean;
 }
 
-export function KanbanBoard({ project }: KanbanBoardProps) {
-  const { 
+export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
+  const {
     state,
-    addProjectActivity, 
-    updateProjectActivity, 
+    addProjectActivity,
+    updateProjectActivity,
     deleteProjectActivity,
     updateProject
   } = useLifeOSContext();
@@ -76,15 +77,15 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
     const newStatuses = [...project.statuses];
     const oldStatus = newStatuses[editingColumnIndex];
     newStatuses[editingColumnIndex] = editedColumnName.trim();
-    
+
     // Update project statuses
     updateProject(project.id, { statuses: newStatuses });
-    
+
     // Update all activities with old status
     activities
       .filter(a => a.status === oldStatus)
       .forEach(a => updateProjectActivity(a.id, { status: editedColumnName.trim() }));
-    
+
     setEditingColumnIndex(null);
     setEditedColumnName("");
   };
@@ -98,24 +99,26 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
     if (project.statuses.length <= 2) return; // Keep at least 2 columns
     const statusToDelete = project.statuses[index];
     const newStatuses = project.statuses.filter((_, i) => i !== index);
-    
+
     // Move activities to first column
     activities
       .filter(a => a.status === statusToDelete)
       .forEach(a => updateProjectActivity(a.id, { status: newStatuses[0] }));
-    
+
     updateProject(project.id, { statuses: newStatuses });
   };
 
   return (
     <div className="space-y-4">
       {/* Add Column Button */}
-      <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={handleAddColumn} className="gap-1">
-          <Plus className="w-4 h-4" />
-          Columna
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={handleAddColumn} className="gap-1">
+            <Plus className="w-4 h-4" />
+            Columna
+          </Button>
+        </div>
+      )}
 
       {/* Kanban Columns */}
       <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${project.statuses.length}, minmax(250px, 1fr))` }}>
@@ -131,8 +134,8 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
                 "bg-muted/30 rounded-xl p-3 min-h-[300px]",
                 draggedActivity && "ring-2 ring-dashed ring-primary/30"
               )}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(status)}
+              onDragOver={!readOnly ? handleDragOver : undefined}
+              onDrop={!readOnly ? () => handleDrop(status) : undefined}
             >
               {/* Column Header */}
               <div className="flex items-center justify-between mb-3">
@@ -156,26 +159,28 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
                         {columnActivities.length}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 text-muted-foreground"
-                        onClick={() => handleEditColumn(index)}
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                      {project.statuses.length > 2 && (
+                    {!readOnly && (
+                      <div className="flex items-center gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDeleteColumn(index)}
+                          className="h-6 w-6 text-muted-foreground"
+                          onClick={() => handleEditColumn(index)}
                         >
-                          <X className="w-3 h-3" />
+                          <Edit2 className="w-3 h-3" />
                         </Button>
-                      )}
-                    </div>
+                        {project.statuses.length > 2 && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteColumn(index)}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -186,16 +191,16 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
                   <motion.div
                     key={activity.id}
                     layout
-                    draggable
-                    onDragStart={() => handleDragStart(activity.id)}
+                    draggable={!readOnly}
+                    onDragStart={() => !readOnly && handleDragStart(activity.id)}
                     className={cn(
-                      "bg-card rounded-lg border border-border p-3 cursor-grab active:cursor-grabbing",
-                      "hover:shadow-sm transition-shadow",
+                      "bg-card rounded-lg border border-border p-3",
+                      !readOnly && "cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow",
                       draggedActivity === activity.id && "opacity-50"
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      {!readOnly && <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground">{activity.title}</p>
                         {activity.dueDate && (
@@ -205,64 +210,68 @@ export function KanbanBoard({ project }: KanbanBoardProps) {
                           </p>
                         )}
                       </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                        onClick={() => deleteProjectActivity(activity.id)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
+                      {!readOnly && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                          onClick={() => deleteProjectActivity(activity.id)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
 
                 {/* Add Activity */}
-                {addingToColumn === status ? (
-                  <div className="space-y-2">
-                    <Input
-                      value={newActivityTitle}
-                      onChange={(e) => setNewActivityTitle(e.target.value)}
-                      placeholder="Título de la actividad"
-                      className="h-8 text-sm"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleAddActivity(status);
-                        if (e.key === "Escape") setAddingToColumn(null);
-                      }}
-                    />
-                    <div className="flex gap-1">
-                      <Button 
-                        size="sm" 
-                        className="h-7 text-xs"
-                        onClick={() => handleAddActivity(status)}
-                        disabled={!newActivityTitle.trim()}
-                      >
-                        Agregar
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 text-xs"
-                        onClick={() => {
-                          setAddingToColumn(null);
-                          setNewActivityTitle("");
+                {!readOnly && (
+                  addingToColumn === status ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={newActivityTitle}
+                        onChange={(e) => setNewActivityTitle(e.target.value)}
+                        placeholder="Título de la actividad"
+                        className="h-8 text-sm"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddActivity(status);
+                          if (e.key === "Escape") setAddingToColumn(null);
                         }}
-                      >
-                        Cancelar
-                      </Button>
+                      />
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleAddActivity(status)}
+                          disabled={!newActivityTitle.trim()}
+                        >
+                          Agregar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            setAddingToColumn(null);
+                            setNewActivityTitle("");
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setAddingToColumn(status)}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Agregar actividad
-                  </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setAddingToColumn(status)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Agregar actividad
+                    </Button>
+                  )
                 )}
               </div>
             </div>

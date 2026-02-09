@@ -16,6 +16,9 @@ export class Deviation {
     @Column({ length: 255 })
     title: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ length: 255, nullable: true })
     reason: string;
 

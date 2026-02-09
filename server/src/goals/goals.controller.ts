@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { GoalsService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
@@ -15,8 +15,8 @@ export class GoalsController {
     }
 
     @Get()
-    findAll(@Request() req) {
-        return this.goalsService.findAll(req.user.id);
+    findAll(@Request() req, @Query('year') year?: number) {
+        return this.goalsService.findAll(req.user.id, year);
     }
 
     @Get(':id')

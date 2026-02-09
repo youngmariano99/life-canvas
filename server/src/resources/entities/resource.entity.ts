@@ -12,6 +12,9 @@ export class Resource {
     @Column({ length: 255 })
     name: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ name: 'quantity_have', type: 'numeric', default: 0 })
     quantityHave: number;
 

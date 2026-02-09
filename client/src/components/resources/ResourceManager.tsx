@@ -15,19 +15,22 @@ import { Progress } from "@/components/ui/progress";
 interface ResourceManagerProps {
   goalId: string;
   resources: Resource[];
+  readOnly?: boolean;
 }
 
 // Helper component for individual resource item to manage local editing state if needed
-function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string }) {
+function ResourceItem({ resource, goalId, readOnly }: { resource: Resource; goalId: string; readOnly?: boolean }) {
   const { updateResourceInGoal, deleteResourceFromGoal } = useLifeOSContext();
 
   const handleAdjust = (adjustment: number) => {
+    if (readOnly) return;
     const current = Number(resource.quantityHave) || 0;
     const newQuantity = Math.max(0, current + adjustment);
     updateResourceInGoal(goalId, resource.id, { quantityHave: newQuantity });
   };
 
   const handleChange = (val: string) => {
+    if (readOnly) return;
     const num = Number(val);
     if (!isNaN(num)) {
       updateResourceInGoal(goalId, resource.id, { quantityHave: num });
@@ -37,7 +40,7 @@ function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string
   const progress = resource.quantityNeeded > 0
     ? Math.min(100, (Number(resource.quantityHave) / Number(resource.quantityNeeded)) * 100)
     : 0;
-  const isComplete = Number(resource.quantityHave) >= Number(resource.quantityNeeded);
+  // const isComplete = Number(resource.quantityHave) >= Number(resource.quantityNeeded); // Unused
 
   return (
     <div className="bg-muted/30 rounded-lg p-2 space-y-1.5">
@@ -49,6 +52,7 @@ function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string
             size="icon"
             className="h-6 w-6"
             onClick={() => handleAdjust(-1)}
+            disabled={readOnly}
           >
             <Minus className="w-3 h-3" />
           </Button>
@@ -59,6 +63,7 @@ function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string
               className="h-6 w-16 text-center p-1 text-xs bg-background border-muted"
               value={resource.quantityHave}
               onChange={(e) => handleChange(e.target.value)}
+              disabled={readOnly}
             />
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               / {resource.quantityNeeded} {resource.unit || ''}
@@ -70,17 +75,20 @@ function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string
             size="icon"
             className="h-6 w-6"
             onClick={() => handleAdjust(1)}
+            disabled={readOnly}
           >
             <Plus className="w-3 h-3" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-destructive ml-1"
-            onClick={() => deleteResourceFromGoal(goalId, resource.id)}
-          >
-            <X className="w-3 h-3" />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive ml-1"
+              onClick={() => deleteResourceFromGoal(goalId, resource.id)}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          )}
         </div>
       </div>
       <Progress value={progress} className="h-1.5" />
@@ -88,7 +96,7 @@ function ResourceItem({ resource, goalId }: { resource: Resource; goalId: string
   );
 }
 
-export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
+export function ResourceManager({ goalId, resources, readOnly = false }: ResourceManagerProps) {
   const { addResourceToGoal } = useLifeOSContext();
   const [isAdding, setIsAdding] = useState(false);
   const [newResource, setNewResource] = useState({ name: "", quantityHave: 0, quantityNeeded: 0, unit: "" });
@@ -104,17 +112,18 @@ export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
     setNewResource({ name: "", quantityHave: 0, quantityNeeded: 0, unit: "" });
     setIsAdding(false);
   };
-  // ... rest is same until return ...
+
+  // ... rest of the component logic ...
 
   return (
     <div className="space-y-3">
-      {/* ... Header ... */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Package className="w-4 h-4" />
           Recursos
         </div>
-        {!isAdding && (
+        {!isAdding && !readOnly && (
           <Button variant="ghost" size="sm" onClick={() => setIsAdding(true)} className="h-7 text-xs">
             <Plus className="w-3 h-3 mr-1" />
             Agregar
@@ -124,6 +133,7 @@ export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
 
       {isAdding && (
         <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+          {/* Form fields ... */}
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={newResource.name}
@@ -176,7 +186,7 @@ export function ResourceManager({ goalId, resources }: ResourceManagerProps) {
       ) : (
         <div className="space-y-2">
           {resources.map((resource) => (
-            <ResourceItem key={resource.id} resource={resource} goalId={goalId} />
+            <ResourceItem key={resource.id} resource={resource} goalId={goalId} readOnly={readOnly} />
           ))}
         </div>
       )}

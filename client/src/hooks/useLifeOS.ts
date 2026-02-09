@@ -16,16 +16,17 @@ export function useLifeOS() {
   useEffect(() => {
     async function loadData() {
       try {
+        const year = state.selectedYear;
         const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines] = await Promise.all([
           api.roles.getAll(),
-          api.goals.getAll(),
-          api.habits.getAll(),
+          api.goals.getAll(year),
+          api.habits.getAll(year),
           api.habitLogs.getAll(),
-          api.projects.getAll(),
+          api.projects.getAll(year),
           api.projectActivities.getAll(),
-          api.dailyStones.getAll(),
+          api.dailyStones.getAll(year),
           api.fitness.getAll(),
-          api.deviations.getAll(),
+          api.deviations.getAll(year),
           api.noteFolders.getAll(),
           api.notes.getAll(),
           api.calendar.getAll(),
@@ -33,7 +34,7 @@ export function useLifeOS() {
         ]);
 
         // Fetch Resources separately
-        const resources = await api.resources.getAll();
+        const resources = await api.resources.getAll(year);
         const goalsWithResources = goals.map(g => ({
           ...g,
           resources: resources.filter(r => r.goalId === g.id)
@@ -60,7 +61,7 @@ export function useLifeOS() {
       }
     }
     loadData();
-  }, []);
+  }, [state.selectedYear]);
 
   // Persist to localStorage on every state change (Keeping this as backup for now, but usually we would remove it for connected parts)
   useEffect(() => {
@@ -74,6 +75,10 @@ export function useLifeOS() {
 
   const setSelectedDate = useCallback((date: string) => {
     setState(s => ({ ...s, selectedDate: date }));
+  }, []);
+
+  const setSelectedYear = useCallback((year: number) => {
+    setState(s => ({ ...s, selectedYear: year }));
   }, []);
 
   const toggleShowPastItems = useCallback(() => {
@@ -686,8 +691,10 @@ export function useLifeOS() {
   return {
     state,
     // Navigation
+    isReadOnly: state.selectedYear < new Date().getFullYear(),
     setView,
     setSelectedDate,
+    setSelectedYear,
     toggleShowPastItems,
     toggleFocusMode,
     // Wizard

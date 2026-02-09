@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { ResourcesService } from './resources.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
@@ -15,8 +15,8 @@ export class ResourcesController {
     }
 
     @Get()
-    findAll(@Request() req) {
-        return this.resourcesService.findAll(req.user.id);
+    findAll(@Request() req, @Query('year') year?: number) {
+        return this.resourcesService.findAll(req.user.id, year);
     }
 
     @Get(':id')

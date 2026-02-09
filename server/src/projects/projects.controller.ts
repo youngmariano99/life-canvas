@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -15,8 +15,8 @@ export class ProjectsController {
     }
 
     @Get()
-    findAll(@Request() req) {
-        return this.projectsService.findAll(req.user.id);
+    findAll(@Request() req, @Query('year') year?: number) {
+        return this.projectsService.findAll(req.user.id, year);
     }
 
     @Get(':id')

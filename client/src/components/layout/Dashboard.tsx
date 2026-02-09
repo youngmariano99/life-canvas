@@ -17,6 +17,7 @@ import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { NotesSection } from "@/components/notes/NotesSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "./MobileNav";
+import { YearSelector } from "./YearSelector";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -64,9 +65,10 @@ export function Dashboard() {
                 <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-semibold text-foreground">Life-OS 2026</h1>
+                <h1 className="font-semibold text-foreground">Life-OS {state.selectedYear}</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">Superhábitos</p>
               </div>
+              <YearSelector />
             </div>
 
             {/* Desktop Navigation */}

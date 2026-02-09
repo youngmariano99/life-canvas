@@ -13,6 +13,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { Separator } from "@/components/ui/separator";
+import { YearSelector } from "./YearSelector";
 
 interface MobileNavProps {
     currentView: ViewType;
@@ -100,6 +101,11 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
 
                                 {/* Actions */}
                                 <div className="space-y-2">
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                        <span className="text-sm font-medium">Año</span>
+                                        <YearSelector />
+                                    </div>
+
                                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                                         <span className="text-sm font-medium">Tema</span>
                                         <ThemeToggle />

@@ -29,9 +29,9 @@ export class GoalsService {
         return this.goalRepository.save(goal);
     }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.goalRepository.find({
-            where: { user: { id: userId } },
+            where: { user: { id: userId }, year },
             relations: ['projects', 'resources', 'subGoals'],
             order: { quarter: 'ASC', createdAt: 'DESC' }
         });

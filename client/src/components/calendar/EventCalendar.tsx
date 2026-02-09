@@ -47,7 +47,11 @@ const TAG_LABELS: Record<CalendarEventTag, string> = {
 
 type ViewMode = "week" | "month";
 
-export function EventCalendar() {
+interface EventCalendarProps {
+  readOnly?: boolean;
+}
+
+export function EventCalendar({ readOnly = false }: EventCalendarProps) {
   const { state, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent } = useLifeOSContext();
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -193,82 +197,84 @@ export function EventCalendar() {
             </TabsList>
           </Tabs>
 
-          <Dialog open={isAddingEvent} onOpenChange={setIsAddingEvent}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1">
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Evento</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle>Nuevo Evento</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <Input
-                  value={newEvent.title}
-                  onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Título del evento"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-muted-foreground">Fecha</label>
-                    <Input
-                      type="date"
-                      value={newEvent.date}
-                      onChange={(e) => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">Hora (opcional)</label>
-                    <Input
-                      type="time"
-                      value={newEvent.time}
-                      onChange={(e) => setNewEvent(prev => ({ ...prev, time: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <Select
-                  value={newEvent.tag}
-                  onValueChange={(v) => setNewEvent(prev => ({ ...prev, tag: v as CalendarEventTag }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de evento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(TAG_LABELS).map(([key, label]) => {
-                      const Icon = TAG_ICONS[key as CalendarEventTag];
-                      const colors = EVENT_TAG_COLORS[key as CalendarEventTag];
-                      return (
-                        <SelectItem key={key} value={key}>
-                          <span className="flex items-center gap-2">
-                            <div className={cn("w-2 h-2 rounded-full", colors.bg)} />
-                            {label}
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                {newEvent.tag === "custom" && (
-                  <Input
-                    value={newEvent.customTagLabel}
-                    onChange={(e) => setNewEvent(prev => ({ ...prev, customTagLabel: e.target.value }))}
-                    placeholder="Etiqueta personalizada"
-                  />
-                )}
-                <Textarea
-                  value={newEvent.description}
-                  onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descripción (opcional)"
-                  rows={2}
-                />
-                <Button onClick={handleAddEvent} disabled={!newEvent.title.trim() || !newEvent.date} className="w-full">
-                  Agregar Evento
+          {!readOnly && (
+            <Dialog open={isAddingEvent} onOpenChange={setIsAddingEvent}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Evento</span>
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Nuevo Evento</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <Input
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Título del evento"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-muted-foreground">Fecha</label>
+                      <Input
+                        type="date"
+                        value={newEvent.date}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Hora (opcional)</label>
+                      <Input
+                        type="time"
+                        value={newEvent.time}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, time: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <Select
+                    value={newEvent.tag}
+                    onValueChange={(v) => setNewEvent(prev => ({ ...prev, tag: v as CalendarEventTag }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de evento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(TAG_LABELS).map(([key, label]) => {
+                        const Icon = TAG_ICONS[key as CalendarEventTag];
+                        const colors = EVENT_TAG_COLORS[key as CalendarEventTag];
+                        return (
+                          <SelectItem key={key} value={key}>
+                            <span className="flex items-center gap-2">
+                              <div className={cn("w-2 h-2 rounded-full", colors.bg)} />
+                              {label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {newEvent.tag === "custom" && (
+                    <Input
+                      value={newEvent.customTagLabel}
+                      onChange={(e) => setNewEvent(prev => ({ ...prev, customTagLabel: e.target.value }))}
+                      placeholder="Etiqueta personalizada"
+                    />
+                  )}
+                  <Textarea
+                    value={newEvent.description}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Descripción (opcional)"
+                    rows={2}
+                  />
+                  <Button onClick={handleAddEvent} disabled={!newEvent.title.trim() || !newEvent.date} className="w-full">
+                    Agregar Evento
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -287,8 +293,8 @@ export function EventCalendar() {
                   "min-h-[140px] sm:min-h-[180px] bg-card rounded-xl border border-border p-2 transition-colors",
                   isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                 )}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, dateStr)}
+                onDragOver={!readOnly ? handleDragOver : undefined}
+                onDrop={!readOnly ? (e) => handleDrop(e, dateStr) : undefined}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-center">
@@ -302,14 +308,16 @@ export function EventCalendar() {
                       {format(day, "d")}
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-50 hover:opacity-100"
-                    onClick={() => openAddEventForDate(day)}
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-50 hover:opacity-100"
+                      onClick={() => openAddEventForDate(day)}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -324,22 +332,25 @@ export function EventCalendar() {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
-                          draggable
-                          onDragStart={() => handleDragStart(event.id)}
+                          draggable={!readOnly}
+                          onDragStart={() => !readOnly && handleDragStart(event.id)}
                           className={cn(
-                            "group flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-move transition-colors",
+                            "group flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                            !readOnly && "cursor-move",
                             colors.bg,
                             "text-white hover:opacity-90"
                           )}
                         >
                           <Icon className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate flex-1">{event.title}</span>
-                          <button
-                            onClick={() => deleteCalendarEvent(event.id)}
-                            className="opacity-0 group-hover:opacity-100 hover:bg-white/20 rounded p-0.5"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
+                          {!readOnly && (
+                            <button
+                              onClick={() => deleteCalendarEvent(event.id)}
+                              className="opacity-0 group-hover:opacity-100 hover:bg-white/20 rounded p-0.5"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          )}
                         </motion.div>
                       );
                     })}
@@ -381,13 +392,14 @@ export function EventCalendar() {
                 <div
                   key={dateStr}
                   className={cn(
-                    "aspect-square p-1 rounded-lg transition-colors cursor-pointer hover:bg-muted",
+                    "aspect-square p-1 rounded-lg transition-colors",
+                    !readOnly && "cursor-pointer hover:bg-muted",
                     isToday && "ring-2 ring-primary",
                     !isSameMonth(day, currentDate) && "opacity-40"
                   )}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, dateStr)}
-                  onClick={() => openAddEventForDate(day)}
+                  onDragOver={!readOnly ? handleDragOver : undefined}
+                  onDrop={!readOnly ? (e) => handleDrop(e, dateStr) : undefined}
+                  onClick={() => !readOnly && openAddEventForDate(day)}
                 >
                   <p className={cn(
                     "text-xs text-center mb-0.5",

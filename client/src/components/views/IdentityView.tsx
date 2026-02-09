@@ -48,8 +48,8 @@ export function IdentityView() {
   if (selectedRole) {
     return (
       <div className="space-y-4">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => setSelectedRole(null)}
           className="gap-2"
         >
@@ -62,22 +62,46 @@ export function IdentityView() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       className="space-y-8"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground">Tu Norte Estratégico</h2>
-        <p className="text-muted-foreground">La base que guía todas tus decisiones</p>
+      <motion.div variants={itemVariants} className="text-center space-y-4">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-foreground">Tu Norte Estratégico {state.selectedYear}</h2>
+          <p className="text-muted-foreground">La base que guía todas tus decisiones</p>
+        </div>
+
+        {/* Year Summary Stats */}
+        <div className="flex justify-center gap-8 text-sm">
+          <div className="flex flex-col items-center">
+            <span className="font-bold text-2xl text-primary">{state.goals.length}</span>
+            <span className="text-muted-foreground">Objetivos</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="font-bold text-2xl text-green-500">
+              {state.goals.length > 0
+                ? Math.round((state.goals.filter(g => g.status === 'completed').length / state.goals.length) * 100)
+                : 0}%
+            </span>
+            <span className="text-muted-foreground">Progreso Anual</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="font-bold text-2xl text-blue-500">
+              {state.habits.length}
+            </span>
+            <span className="text-muted-foreground">Hábitos</span>
+          </div>
+        </div>
       </motion.div>
 
       {/* Vision & Mission Cards */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Vision Card */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="bg-card rounded-2xl border border-border p-6 shadow-card"
         >
@@ -98,7 +122,7 @@ export function IdentityView() {
         </motion.div>
 
         {/* Mission Card */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="bg-card rounded-2xl border border-border p-6 shadow-card"
         >
@@ -121,7 +145,7 @@ export function IdentityView() {
 
       {/* Semester Focus */}
       {(yearSettings?.h1Priority || yearSettings?.h2Priority) && (
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-border p-6"
         >
@@ -174,19 +198,19 @@ export function IdentityView() {
         </p>
         <div className={cn(
           "grid gap-4",
-          viewMode === "compact" 
-            ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+          viewMode === "compact"
+            ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             : "sm:grid-cols-2 lg:grid-cols-3"
         )}>
           {roles.map((role, index) => {
             const goals = getGoalsByRole(role.id);
             const completedGoals = goals.filter(g => g.status === "completed").length;
             const progress = goals.length > 0 ? (completedGoals / goals.length) * 100 : 0;
-            
+
             return (
-              <RoleCard 
-                key={role.id} 
-                role={role} 
+              <RoleCard
+                key={role.id}
+                role={role}
                 goalsCount={goals.length}
                 progress={progress}
                 delay={index * 0.05}

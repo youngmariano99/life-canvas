@@ -21,11 +21,11 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function DailyView() {
-  const { 
-    state, 
-    getDailyStone, 
-    setDailyStone, 
-    completeDailyStone, 
+  const {
+    state,
+    getDailyStone,
+    setDailyStone,
+    completeDailyStone,
     getActivitiesForDate,
     getRoleById,
     updateProjectActivity,
@@ -46,15 +46,15 @@ export function DailyView() {
   // Get activities for this date, grouped by role
   const activitiesForDate = useMemo(() => {
     const activities = getActivitiesForDate(dateStr);
-    
+
     // Filter by role if selected
-    const filtered = selectedRoleFilter === "all" 
-      ? activities 
+    const filtered = selectedRoleFilter === "all"
+      ? activities
       : activities.filter(a => a.roleId === selectedRoleFilter);
 
     // Group by role
     const grouped: Record<string, typeof activities> = {};
-    
+
     filtered.forEach(activity => {
       const roleId = activity.roleId || "no-role";
       if (!grouped[roleId]) grouped[roleId] = [];
@@ -96,8 +96,8 @@ export function DailyView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             onClick={() => setSelectedDate(subDays(selectedDate, 1))}
           >
@@ -111,8 +111,8 @@ export function DailyView() {
             <Calendar className="w-4 h-4 mr-2" />
             Hoy
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             onClick={() => setSelectedDate(addDays(selectedDate, 1))}
           >
@@ -127,15 +127,15 @@ export function DailyView() {
           const dayStone = getDailyStone(format(day, "yyyy-MM-dd"));
           const isSelected = isSameDay(day, selectedDate);
           const isDayToday = isSameDay(day, new Date());
-          
+
           return (
             <button
               key={day.toISOString()}
               onClick={() => setSelectedDate(day)}
               className={cn(
                 "flex flex-col items-center min-w-[60px] py-3 px-4 rounded-xl transition-all",
-                isSelected 
-                  ? "bg-primary text-primary-foreground shadow-card" 
+                isSelected
+                  ? "bg-primary text-primary-foreground shadow-card"
                   : "bg-card hover:bg-secondary border border-border",
                 isDayToday && !isSelected && "ring-2 ring-accent ring-offset-2 ring-offset-background"
               )}
@@ -152,8 +152,8 @@ export function DailyView() {
               {dayStone && (
                 <div className={cn(
                   "w-2 h-2 rounded-full mt-1",
-                  dayStone.completed 
-                    ? "bg-success" 
+                  dayStone.completed
+                    ? "bg-success"
                     : isSelected ? "bg-primary-foreground/50" : "bg-accent"
                 )} />
               )}
@@ -163,13 +163,13 @@ export function DailyView() {
       </div>
 
       {/* Daily Stone */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
           "rounded-2xl p-6 border-2",
-          dailyStone?.completed 
-            ? "bg-success/10 border-success/30" 
+          dailyStone?.completed
+            ? "bg-success/10 border-success/30"
             : "bg-gradient-to-br from-accent/20 to-accent/5 border-accent/30"
         )}
       >
@@ -192,11 +192,13 @@ export function DailyView() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleToggleStone}
+                  disabled={state.isReadOnly}
                   className={cn(
                     "w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all",
-                    dailyStone.completed 
-                      ? "bg-success border-success text-white" 
-                      : "border-accent hover:bg-accent/20"
+                    dailyStone.completed
+                      ? "bg-success border-success text-white"
+                      : "border-accent hover:bg-accent/20",
+                    state.isReadOnly && "cursor-not-allowed opacity-50"
                   )}
                 >
                   {dailyStone.completed && <Check className="w-4 h-4" />}
@@ -209,18 +211,20 @@ export function DailyView() {
                 </span>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <Input
-                  value={stoneInput}
-                  onChange={(e) => setStoneInput(e.target.value)}
-                  placeholder="¿Cuál es tu piedra hoy?"
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && handleSetStone()}
-                />
-                <Button onClick={handleSetStone} disabled={!stoneInput.trim()}>
-                  Establecer
-                </Button>
-              </div>
+              !state.isReadOnly && (
+                <div className="flex gap-2">
+                  <Input
+                    value={stoneInput}
+                    onChange={(e) => setStoneInput(e.target.value)}
+                    placeholder="¿Cuál es tu piedra hoy?"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && handleSetStone()}
+                  />
+                  <Button onClick={handleSetStone} disabled={!stoneInput.trim()}>
+                    Establecer
+                  </Button>
+                </div>
+              )
             )}
           </div>
         </div>
@@ -263,17 +267,19 @@ export function DailyView() {
                     {activities.map((activity) => {
                       const isCompleted = activity.status === "Completada";
                       return (
-                        <div 
-                          key={activity.id} 
+                        <div
+                          key={activity.id}
                           className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
                         >
                           <button
-                            onClick={() => handleToggleActivity(activity.id, activity.status)}
+                            onClick={() => !state.isReadOnly && handleToggleActivity(activity.id, activity.status)}
+                            disabled={state.isReadOnly}
                             className={cn(
                               "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
-                              isCompleted 
-                                ? "bg-success border-success text-white" 
-                                : "border-border hover:border-primary"
+                              isCompleted
+                                ? "bg-success border-success text-white"
+                                : "border-border hover:border-primary",
+                              state.isReadOnly && "cursor-not-allowed opacity-50"
                             )}
                           >
                             {isCompleted && <Check className="w-3 h-3" />}
@@ -299,7 +305,7 @@ export function DailyView() {
       )}
 
       {/* Habit Tracker */}
-      <HabitTracker selectedDate={dateStr} />
+      <HabitTracker selectedDate={dateStr} readOnly={state.isReadOnly} />
     </div>
   );
 }

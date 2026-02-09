@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { 
+import {
   X, Check, Target, Calendar, Repeat, FolderKanban,
   GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users
 } from "lucide-react";
@@ -27,10 +27,10 @@ interface RoleSummaryViewProps {
 }
 
 export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSummaryViewProps) {
-  const { 
-    state, 
-    getGoalsByRole, 
-    getHabitsByRole, 
+  const {
+    state,
+    getGoalsByRole,
+    getHabitsByRole,
     getActivitiesForDate,
     getHabitLogsForDate,
     logHabit,
@@ -102,9 +102,9 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
             </div>
           </div>
           {variant === "modal" && onClose && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="text-white/70 hover:text-white hover:bg-white/20"
               onClick={onClose}
             >
@@ -127,17 +127,19 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
               {todayActivities.map((activity) => {
                 const isCompleted = activity.status === "Completada";
                 return (
-                  <div 
+                  <div
                     key={activity.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <button
-                      onClick={() => handleToggleActivity(activity.id, activity.status)}
+                      onClick={() => !state.isReadOnly && handleToggleActivity(activity.id, activity.status)}
+                      disabled={state.isReadOnly}
                       className={cn(
                         "w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0",
-                        isCompleted 
-                          ? "bg-success border-success text-white" 
-                          : "border-border hover:border-primary"
+                        isCompleted
+                          ? "bg-success border-success text-white"
+                          : "border-border hover:border-primary",
+                        state.isReadOnly && "opacity-50 cursor-not-allowed"
                       )}
                     >
                       {isCompleted && <Check className="w-3 h-3" />}
@@ -171,17 +173,19 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
                 const log = todayHabitLogs.find(l => l.habitId === habit.id);
                 const isCompleted = log?.status === "completed";
                 return (
-                  <div 
+                  <div
                     key={habit.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <button
-                      onClick={() => handleToggleHabit(habit.id)}
+                      onClick={() => !state.isReadOnly && handleToggleHabit(habit.id)}
+                      disabled={state.isReadOnly}
                       className={cn(
                         "w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0",
-                        isCompleted 
-                          ? "bg-success border-success text-white" 
-                          : "border-border hover:border-primary"
+                        isCompleted
+                          ? "bg-success border-success text-white"
+                          : "border-border hover:border-primary",
+                        state.isReadOnly && "opacity-50 cursor-not-allowed"
                       )}
                     >
                       {isCompleted && <Check className="w-3 h-3" />}
@@ -242,12 +246,12 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
                 const activities = state.projectActivities.filter(a => a.projectId === project.id);
                 const completed = activities.filter(a => a.status === "Completada").length;
                 const progress = activities.length > 0 ? (completed / activities.length) * 100 : 0;
-                
+
                 return (
                   <div key={project.id} className="p-3 rounded-xl bg-muted/50">
                     <p className="text-sm font-medium">{project.name}</p>
                     <div className="mt-2 h-1.5 bg-background rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={cn("h-full rounded-full transition-all", colors.bg)}
                         style={{ width: `${progress}%` }}
                       />

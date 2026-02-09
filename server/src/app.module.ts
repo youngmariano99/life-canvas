@@ -20,6 +20,7 @@ import { CalendarModule } from './calendar/calendar.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { YearsModule } from './years/years.module';
 
 // Entities
 import { User } from './database/entities/user.entity';

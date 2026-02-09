@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { DeviationsService } from './deviations.service';
 import { CreateDeviationDto } from './dto/create-deviation.dto';
 import { UpdateDeviationDto } from './dto/update-deviation.dto';
@@ -15,8 +15,8 @@ export class DeviationsController {
     }
 
     @Get()
-    findAll(@Request() req) {
-        return this.deviationsService.findAll(req.user.id);
+    findAll(@Request() req, @Query('year') year?: number) {
+        return this.deviationsService.findAll(req.user.id, year);
     }
 
     @Get(':id')

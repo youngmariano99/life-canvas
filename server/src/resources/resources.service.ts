@@ -21,9 +21,10 @@ export class ResourcesService {
         return this.resourceRepository.save(resource);
     }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.resourceRepository.find({
             where: {
+                year,
                 goal: { user: { id: userId } }
             },
             order: { createdAt: 'DESC' }

@@ -17,6 +17,9 @@ export class DailyStone {
     @Column({ length: 255 })
     title: string;
 
+    @Column({ type: 'smallint', default: 2026 })
+    year: number;
+
     @Column({ name: 'role_id', nullable: true })
     roleId: string | null;
 

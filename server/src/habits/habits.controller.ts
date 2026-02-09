@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { HabitsService } from './habits.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
@@ -15,8 +15,8 @@ export class HabitsController {
     }
 
     @Get()
-    findAll(@Request() req) {
-        return this.habitsService.findAll(req.user.id);
+    findAll(@Request() req, @Query('year') year?: number) {
+        return this.habitsService.findAll(req.user.id, year);
     }
 
     @Get(':id')

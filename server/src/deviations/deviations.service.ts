@@ -17,18 +17,21 @@ export class DeviationsService {
             ? new Date(createDto.date)
             : createDto.date;
 
+        const year = deviationDate.getFullYear();
+
         const deviation = this.deviationRepository.create({
             ...createDto,
             date: deviationDate,
+            year: year,
             user: { id: userId } as any,
             goal: createDto.goalId ? { id: createDto.goalId } as any : null
         });
         return this.deviationRepository.save(deviation);
     }
 
-    async findAll(userId: string) {
+    async findAll(userId: string, year: number = 2026) {
         return this.deviationRepository.find({
-            where: { user: { id: userId } },
+            where: { user: { id: userId }, year },
             order: { date: 'DESC' },
             relations: ['goal']
         });
@@ -48,7 +51,11 @@ export class DeviationsService {
         const data: any = { ...updateDto };
         if (data.date && typeof data.date === 'string') {
             data.date = new Date(data.date);
+            data.year = data.date.getFullYear();
+        } else if (data.date) {
+            data.year = data.date.getFullYear();
         }
+
         await this.deviationRepository.update(id, data);
         return this.findOne(id, userId);
     }

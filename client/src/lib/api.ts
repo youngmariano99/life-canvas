@@ -67,19 +67,19 @@ export const api = {
         }
     },
     roles: {
-        getAll: async (): Promise<Role[]> => fetchWithAuth('/roles'),
+        getAll: async (year?: number): Promise<Role[]> => fetchWithAuth('/roles'),
         create: async (role: Omit<Role, "id">): Promise<Role> => fetchWithAuth('/roles', { method: 'POST', body: JSON.stringify(role) }),
         update: async (id: string, updates: Partial<Role>): Promise<Role> => fetchWithAuth(`/roles/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/roles/${id}`, { method: 'DELETE' }),
     },
     goals: {
-        getAll: async (): Promise<Goal[]> => fetchWithAuth('/goals'),
+        getAll: async (year?: number): Promise<Goal[]> => fetchWithAuth(`/goals${year ? `?year=${year}` : ''}`),
         create: async (goal: Omit<Goal, "id" | "createdAt" | "updatedAt" | "resources" | "projects" | "deviations" | "user" | "role">): Promise<Goal> => fetchWithAuth('/goals', { method: 'POST', body: JSON.stringify(goal) }),
         update: async (id: string, updates: Partial<Goal>): Promise<Goal> => fetchWithAuth(`/goals/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/goals/${id}`, { method: 'DELETE' }),
     },
     habits: {
-        getAll: async (): Promise<Habit[]> => fetchWithAuth('/habits'),
+        getAll: async (year?: number): Promise<Habit[]> => fetchWithAuth(`/habits${year ? `?year=${year}` : ''}`),
         create: async (habit: Omit<Habit, "id" | "createdAt" | "logs" | "deviations" | "user" | "role">): Promise<Habit> => fetchWithAuth('/habits', { method: 'POST', body: JSON.stringify(habit) }),
         update: async (id: string, updates: Partial<Habit>): Promise<Habit> => fetchWithAuth(`/habits/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/habits/${id}`, { method: 'DELETE' }),
@@ -89,7 +89,7 @@ export const api = {
         upsert: async (log: { habitId: string; date: string; status: string; note?: string }): Promise<HabitLog> => fetchWithAuth('/habit-logs', { method: 'POST', body: JSON.stringify(log) }),
     },
     projects: {
-        getAll: async (): Promise<Project[]> => fetchWithAuth('/projects'),
+        getAll: async (year?: number): Promise<Project[]> => fetchWithAuth(`/projects${year ? `?year=${year}` : ''}`),
         create: async (project: Omit<Project, "id" | "createdAt" | "updatedAt" | "activities" | "goal" | "statuses">): Promise<Project> => fetchWithAuth('/projects', { method: 'POST', body: JSON.stringify(project) }),
         update: async (id: string, updates: Partial<Project>): Promise<Project> => fetchWithAuth(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/projects/${id}`, { method: 'DELETE' }),
@@ -97,11 +97,11 @@ export const api = {
     projectActivities: {
         getAll: async (): Promise<ProjectActivity[]> => fetchWithAuth('/project-activities'),
         create: async (activity: Omit<ProjectActivity, "id" | "createdAt" | "order">): Promise<ProjectActivity> => fetchWithAuth('/project-activities', { method: 'POST', body: JSON.stringify(activity) }),
-        update: async (id: string, updates: Partial<ProjectActivity>): Promise<ProjectActivity> => fetchWithAuth(`/project-activities/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+        update: async (id: string, updates: Partial<ProjectActivity>): Promise<ProjectActivity> => fetchWithAuth('/project-activities', { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/project-activities/${id}`, { method: 'DELETE' }),
     },
     dailyStones: {
-        getAll: async (): Promise<DailyStone[]> => fetchWithAuth('/daily-stones'),
+        getAll: async (year?: number): Promise<DailyStone[]> => fetchWithAuth(`/daily-stones${year ? `?year=${year}` : ''}`),
         upsert: async (stone: { date: string; title: string, roleId?: string; completed?: boolean; note?: string }): Promise<DailyStone> => fetchWithAuth('/daily-stones', { method: 'POST', body: JSON.stringify(stone) }),
     },
     fitness: {
@@ -115,13 +115,13 @@ export const api = {
         deleteRoutine: async (id: string): Promise<void> => fetchWithAuth(`/fitness/routines/${id}`, { method: 'DELETE' }),
     },
     deviations: {
-        getAll: async (): Promise<Deviation[]> => fetchWithAuth('/deviations'),
+        getAll: async (year?: number): Promise<Deviation[]> => fetchWithAuth(`/deviations${year ? `?year=${year}` : ''}`),
         create: async (deviation: Omit<Deviation, "id" | "createdAt">): Promise<Deviation> => fetchWithAuth('/deviations', { method: 'POST', body: JSON.stringify(deviation) }),
         update: async (id: string, updates: Partial<Deviation>): Promise<Deviation> => fetchWithAuth(`/deviations/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/deviations/${id}`, { method: 'DELETE' }),
     },
     resources: {
-        getAll: async (): Promise<Resource[]> => fetchWithAuth('/resources'),
+        getAll: async (year?: number): Promise<Resource[]> => fetchWithAuth(`/resources${year ? `?year=${year}` : ''}`),
         create: async (resource: Omit<Resource, "id">): Promise<Resource> => fetchWithAuth('/resources', { method: 'POST', body: JSON.stringify(resource) }),
         update: async (id: string, updates: Partial<Resource>): Promise<Resource> => fetchWithAuth(`/resources/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/resources/${id}`, { method: 'DELETE' }),
@@ -143,5 +143,8 @@ export const api = {
         create: async (event: Omit<CalendarEvent, "id" | "createdAt">): Promise<CalendarEvent> => fetchWithAuth('/calendar', { method: 'POST', body: JSON.stringify(event) }),
         update: async (id: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent> => fetchWithAuth(`/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
         delete: async (id: string): Promise<void> => fetchWithAuth(`/calendar/${id}`, { method: 'DELETE' }),
+    },
+    years: {
+        close: async (year: number): Promise<any> => fetchWithAuth('/years/close', { method: 'POST', body: JSON.stringify({ year }) }),
     }
 };

@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 interface HabitTrackerProps {
   selectedDate: string;
+  readOnly?: boolean;
 }
 
 const STATUS_ICONS = {
@@ -31,7 +32,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
 };
 
-export function HabitTracker({ selectedDate }: HabitTrackerProps) {
+export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerProps) {
   const { state, addHabit, logHabit, getRoleById } = useLifeOSContext();
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
@@ -55,7 +56,7 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
   // Group habits by role
   const habitsByRole = useMemo(() => {
     const grouped: Record<string, typeof state.habits> = {};
-    
+
     state.habits.forEach(habit => {
       const roleId = habit.roleId || "no-role";
       if (!grouped[roleId]) grouped[roleId] = [];
@@ -82,7 +83,7 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
     const currentIndex = currentStatus ? statusOrder.indexOf(currentStatus) : -1;
     const nextIndex = (currentIndex + 1) % statusOrder.length;
     const nextStatus = statusOrder[nextIndex];
-    
+
     logHabit(habitId, date, nextStatus);
   };
 
@@ -96,41 +97,43 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
             Semana del {format(weekStart, "d 'de' MMMM", { locale: es })}
           </p>
         </div>
-        <Dialog open={isAddingHabit} onOpenChange={setIsAddingHabit}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
-              <Plus className="w-4 h-4" />
-              Hábito
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo Hábito</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <Input
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                placeholder="Nombre del hábito"
-                onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
-              />
-              <Select value={newHabitRole} onValueChange={setNewHabitRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Asociar a rol (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin rol</SelectItem>
-                  {state.roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddHabit} disabled={!newHabitName.trim()} className="w-full">
-                Agregar
+        {!readOnly && (
+          <Dialog open={isAddingHabit} onOpenChange={setIsAddingHabit}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Plus className="w-4 h-4" />
+                Hábito
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo Hábito</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                  placeholder="Nombre del hábito"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
+                />
+                <Select value={newHabitRole} onValueChange={setNewHabitRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Asociar a rol (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin rol</SelectItem>
+                    {state.roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddHabit} disabled={!newHabitName.trim()} className="w-full">
+                  Agregar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Legend */}
@@ -151,14 +154,16 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
           <p className="text-muted-foreground">
             No hay hábitos definidos. Agrega tu primer hábito para comenzar a trackear.
           </p>
-          <Button 
-            variant="outline" 
-            className="mt-4 gap-1"
-            onClick={() => setIsAddingHabit(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Agregar hábito
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="outline"
+              className="mt-4 gap-1"
+              onClick={() => setIsAddingHabit(true)}
+            >
+              <Plus className="w-4 h-4" />
+              Agregar hábito
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -188,8 +193,8 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
                           const isToday = isSameDay(day, new Date());
                           const isSelected = format(day, "yyyy-MM-dd") === selectedDate;
                           return (
-                            <th 
-                              key={day.toISOString()} 
+                            <th
+                              key={day.toISOString()}
                               className={cn(
                                 "text-center px-2 py-2 font-medium min-w-[45px]",
                                 isToday && "bg-primary/10",
@@ -222,10 +227,10 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
                             const statusConfig = log ? STATUS_ICONS[log.status] : null;
                             const isToday = isSameDay(day, new Date());
                             const isSelected = dayStr === selectedDate;
-                            
+
                             return (
-                              <td 
-                                key={day.toISOString()} 
+                              <td
+                                key={day.toISOString()}
                                 className={cn(
                                   "text-center px-2 py-2",
                                   isToday && "bg-primary/10",
@@ -233,12 +238,14 @@ export function HabitTracker({ selectedDate }: HabitTrackerProps) {
                                 )}
                               >
                                 <button
-                                  onClick={() => handleToggleStatus(habit.id, dayStr, log?.status)}
+                                  onClick={() => !readOnly && handleToggleStatus(habit.id, dayStr, log?.status)}
+                                  disabled={readOnly}
                                   className={cn(
                                     "w-7 h-7 rounded-lg mx-auto flex items-center justify-center transition-all",
-                                    statusConfig 
-                                      ? statusConfig.class 
-                                      : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/10"
+                                    statusConfig
+                                      ? statusConfig.class
+                                      : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/10",
+                                    readOnly && "cursor-not-allowed opacity-50"
                                   )}
                                 >
                                   {statusConfig && <statusConfig.icon className="w-3 h-3" />}
