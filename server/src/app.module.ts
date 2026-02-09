@@ -41,7 +41,7 @@ import { Goal } from './goals/entities/goal.entity';
       synchronize: true, // Auto-create tables (Dev only)
       logging: true,
     }),
-    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule, AuthModule, UsersModule
+    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule, AuthModule, UsersModule, YearsModule
   ],
   controllers: [AppController],
   providers: [AppService],

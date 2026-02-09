@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Goal } from '../goals/entities/goal.entity';
 import { Habit } from '../habits/entities/habit.entity';
+import { YearSettings } from './entities/year-settings.entity';
 
 @Injectable()
 export class YearsService {
@@ -11,7 +12,32 @@ export class YearsService {
         private goalRepository: Repository<Goal>,
         @InjectRepository(Habit)
         private habitRepository: Repository<Habit>,
+        @InjectRepository(YearSettings)
+        private settingsRepository: Repository<YearSettings>,
     ) { }
+
+    async getSettings(year: number, userId: string) {
+        return this.settingsRepository.findOne({
+            where: { year, user: { id: userId } }
+        });
+    }
+
+    async updateSettings(year: number, userId: string, settings: Partial<YearSettings>) {
+        const existing = await this.getSettings(year, userId);
+        if (existing) {
+            return this.settingsRepository.save({
+                ...existing,
+                ...settings
+            });
+        }
+
+        const newSettings = this.settingsRepository.create({
+            ...settings,
+            year,
+            user: { id: userId } as any
+        });
+        return this.settingsRepository.save(newSettings);
+    }
 
     async closeYear(year: number, userId: string) {
         const nextYear = year + 1;
@@ -91,6 +117,8 @@ export class YearsService {
                 await this.habitRepository.save(newHabit);
             }
         }
+
+        // 3. Migrate Settings? Maybe optional. For now, let's start fresh or user can manually copy.
 
         return {
             success: true,

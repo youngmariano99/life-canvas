@@ -145,6 +145,8 @@ export const api = {
         delete: async (id: string): Promise<void> => fetchWithAuth(`/calendar/${id}`, { method: 'DELETE' }),
     },
     years: {
+        getSettings: async (year: number): Promise<any> => fetchWithAuth(`/years/settings?year=${year}`),
+        updateSettings: async (year: number, settings: any): Promise<any> => fetchWithAuth('/years/settings', { method: 'POST', body: JSON.stringify({ year, settings }) }),
         close: async (year: number): Promise<any> => fetchWithAuth('/years/close', { method: 'POST', body: JSON.stringify({ year }) }),
     }
 };

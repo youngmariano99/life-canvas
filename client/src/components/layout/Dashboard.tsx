@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText } from "lucide-react";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
@@ -110,7 +110,7 @@ export function Dashboard() {
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9" title="Reiniciar">
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
@@ -129,6 +129,21 @@ export function Dashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground h-8 w-8 sm:h-9 sm:w-9"
+                onClick={() => {
+                  if (confirm("¿Cerrar sesión?")) {
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                  }
+                }}
+                title="Cerrar Sesión"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
 
             {/* Mobile Header Actions (Minimal) */}

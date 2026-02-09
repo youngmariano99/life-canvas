@@ -1,5 +1,5 @@
 
-import { Home, Calendar, Dumbbell, FileText, Menu, Settings, RotateCcw } from "lucide-react";
+import { Home, Calendar, Dumbbell, FileText, Menu, Settings, RotateCcw, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewType, VIEWS } from "./Dashboard";
 import { Button } from "@/components/ui/button";
@@ -129,6 +129,20 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
                                     >
                                         <RotateCcw className="w-4 h-4" />
                                         Reiniciar Todo
+                                    </Button>
+
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2 h-12 text-muted-foreground hover:text-foreground"
+                                        onClick={() => {
+                                            if (confirm("¿Cerrar sesión?")) {
+                                                localStorage.removeItem('token');
+                                                window.location.reload();
+                                            }
+                                        }}
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        Cerrar Sesión
                                     </Button>
                                 </div>
                             </div>

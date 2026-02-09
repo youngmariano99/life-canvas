@@ -17,7 +17,7 @@ export function useLifeOS() {
     async function loadData() {
       try {
         const year = state.selectedYear;
-        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines] = await Promise.all([
+        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines, yearSettings] = await Promise.all([
           api.roles.getAll(),
           api.goals.getAll(year),
           api.habits.getAll(year),
@@ -30,7 +30,8 @@ export function useLifeOS() {
           api.noteFolders.getAll(),
           api.notes.getAll(),
           api.calendar.getAll(),
-          api.fitness.getAllRoutines()
+          api.fitness.getAllRoutines(),
+          api.years.getSettings(year),
         ]);
 
         // Fetch Resources separately
@@ -54,7 +55,12 @@ export function useLifeOS() {
           noteFolders,
           notes,
           calendarEvents,
-          fitnessRoutines
+          fitnessRoutines,
+          yearSettings,
+          // If year settings exist (vision/mission), consider configured
+          isConfigured: !!yearSettings || s.isConfigured,
+          // If configured, ensure not in wizard mode unless explicitly editing
+          wizardStep: (!!yearSettings) && !s.isEditingWizard ? 0 : s.wizardStep
         }));
       } catch (error) {
         console.error("Failed to load data from API", error);
@@ -107,9 +113,17 @@ export function useLifeOS() {
   }, []);
 
   // Year Settings
-  const updateYearSettings = useCallback((settings: Partial<YearSettings>) => {
-    setState(s => store.updateYearSettings(s, settings));
-  }, []);
+  const updateYearSettings = useCallback(async (settings: Partial<YearSettings>) => {
+    try {
+      // Optimistic update
+      setState(s => store.updateYearSettings(s, settings));
+
+      // API Call
+      await api.years.updateSettings(state.selectedYear, settings);
+    } catch (error) {
+      console.error("Failed to update year settings", error);
+    }
+  }, [state.selectedYear]);
 
   // Roles (Connected to API)
   const addRole = useCallback(async (role: Omit<Role, "id">) => {
