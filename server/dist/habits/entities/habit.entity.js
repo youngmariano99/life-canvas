@@ -16,6 +16,7 @@ let Habit = class Habit {
     userId;
     roleId;
     name;
+    year;
     frequency;
     customDays;
     createdAt;
@@ -40,6 +41,10 @@ __decorate([
     (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
 ], Habit.prototype, "name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'smallint', default: 2026 }),
+    __metadata("design:type", Number)
+], Habit.prototype, "year", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 'daily', length: 20, nullable: true }),
     __metadata("design:type", String)

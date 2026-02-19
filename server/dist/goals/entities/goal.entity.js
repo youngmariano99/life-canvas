@@ -16,6 +16,7 @@ let Goal = class Goal {
     userId;
     roleId;
     title;
+    year;
     description;
     quarter;
     semester;
@@ -47,6 +48,10 @@ __decorate([
     (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
 ], Goal.prototype, "title", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'smallint', default: 2026 }),
+    __metadata("design:type", Number)
+], Goal.prototype, "year", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)

@@ -17,94 +17,104 @@ const common_1 = require("@nestjs/common");
 const notes_service_1 = require("./notes.service");
 const create_note_dto_1 = require("./dto/create-note.dto");
 const update_note_dto_1 = require("./dto/update-note.dto");
+const passport_1 = require("@nestjs/passport");
 let NotesController = class NotesController {
     notesService;
     constructor(notesService) {
         this.notesService = notesService;
     }
-    findAllFolders() {
-        return this.notesService.findAllFolders();
+    findAllFolders(req) {
+        return this.notesService.findAllFolders(req.user.id);
     }
-    createFolder(createDto) {
-        return this.notesService.createFolder(createDto);
+    createFolder(createDto, req) {
+        return this.notesService.createFolder(createDto, req.user.id);
     }
-    updateFolder(id, updateDto) {
-        return this.notesService.updateFolder(id, updateDto);
+    updateFolder(id, updateDto, req) {
+        return this.notesService.updateFolder(id, updateDto, req.user.id);
     }
-    removeFolder(id) {
-        return this.notesService.removeFolder(id);
+    removeFolder(id, req) {
+        return this.notesService.removeFolder(id, req.user.id);
     }
-    findAllNotes() {
-        return this.notesService.findAllNotes();
+    findAllNotes(req) {
+        return this.notesService.findAllNotes(req.user.id);
     }
-    createNote(createDto) {
-        return this.notesService.createNote(createDto);
+    createNote(createDto, req) {
+        return this.notesService.createNote(createDto, req.user.id);
     }
-    updateNote(id, updateDto) {
-        return this.notesService.updateNote(id, updateDto);
+    updateNote(id, updateDto, req) {
+        return this.notesService.updateNote(id, updateDto, req.user.id);
     }
-    removeNote(id) {
-        return this.notesService.removeNote(id);
+    removeNote(id, req) {
+        return this.notesService.removeNote(id, req.user.id);
     }
 };
 exports.NotesController = NotesController;
 __decorate([
     (0, common_1.Get)('folders'),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "findAllFolders", null);
 __decorate([
     (0, common_1.Post)('folders'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_note_dto_1.CreateNoteFolderDto]),
+    __metadata("design:paramtypes", [create_note_dto_1.CreateNoteFolderDto, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "createFolder", null);
 __decorate([
     (0, common_1.Patch)('folders/:id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_note_dto_1.UpdateNoteFolderDto]),
+    __metadata("design:paramtypes", [String, update_note_dto_1.UpdateNoteFolderDto, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "updateFolder", null);
 __decorate([
     (0, common_1.Delete)('folders/:id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "removeFolder", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "findAllNotes", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_note_dto_1.CreateNoteDto]),
+    __metadata("design:paramtypes", [create_note_dto_1.CreateNoteDto, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "createNote", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_note_dto_1.UpdateNoteDto]),
+    __metadata("design:paramtypes", [String, update_note_dto_1.UpdateNoteDto, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "updateNote", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], NotesController.prototype, "removeNote", null);
 exports.NotesController = NotesController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('notes'),
     __metadata("design:paramtypes", [notes_service_1.NotesService])
 ], NotesController);

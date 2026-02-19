@@ -1,7 +1,7 @@
 /**
  * API Client for interacting with the NestJS Backend
  */
-import { Role, Goal, Habit, HabitLog, Project, ProjectActivity, DailyStone, FitnessActivity, Deviation, Resource, NoteFolder, Note, CalendarEvent, FitnessRoutine, User } from "@/types/lifeOS";
+import { Role, Goal, Habit, HabitLog, Project, ProjectActivity, DailyStone, FitnessActivity, Deviation, Resource, NoteFolder, Note, CalendarEvent, FitnessRoutine, User, PomodoroSession } from "@/types/lifeOS";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/api";
 
@@ -158,5 +158,10 @@ export const api = {
         getSettings: async (year: number): Promise<any> => fetchWithAuth(`/years/settings?year=${year}`),
         updateSettings: async (year: number, settings: any): Promise<any> => fetchWithAuth('/years/settings', { method: 'POST', body: JSON.stringify({ year, settings }) }),
         close: async (year: number): Promise<any> => fetchWithAuth('/years/close', { method: 'POST', body: JSON.stringify({ year }) }),
+    },
+    pomodoro: {
+        getAll: async (): Promise<PomodoroSession[]> => fetchWithAuth('/pomodoros'),
+        create: async (session: Omit<PomodoroSession, "id" | "createdAt">): Promise<PomodoroSession> => fetchWithAuth('/pomodoros', { method: 'POST', body: JSON.stringify(session) }),
+        delete: async (id: string): Promise<void> => fetchWithAuth(`/pomodoros/${id}`, { method: 'DELETE' }),
     }
 };

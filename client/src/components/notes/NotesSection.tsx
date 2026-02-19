@@ -5,14 +5,15 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FolderPlus, 
-  Plus, 
-  Search, 
-  FileText, 
-  PenTool, 
-  FileImage, 
-  ChevronRight, 
+import {
+  FolderPlus,
+  Plus,
+  Search,
+  FileText,
+  PenTool,
+  FileImage,
+  ChevronRight,
+  ChevronLeft,
   ChevronDown,
   Folder,
   FolderOpen,
@@ -28,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -50,10 +51,10 @@ import { DocumentManager } from "./DocumentManager";
 import { cn } from "@/lib/utils";
 
 export function NotesSection() {
-  const { 
-    state, 
-    addNoteFolder, 
-    updateNoteFolder, 
+  const {
+    state,
+    addNoteFolder,
+    updateNoteFolder,
     deleteNoteFolder,
     addNote,
     updateNote,
@@ -82,7 +83,7 @@ export function NotesSection() {
   // Build folder tree structure
   const folderTree = useMemo(() => {
     const rootFolders = state.noteFolders.filter(f => f.parentId === null);
-    
+
     const buildTree = (parentId: string | null): (NoteFolder & { children: any[] })[] => {
       return state.noteFolders
         .filter(f => f.parentId === parentId)
@@ -91,21 +92,21 @@ export function NotesSection() {
           children: buildTree(folder.id)
         }));
     };
-    
+
     return buildTree(null);
   }, [state.noteFolders]);
 
   // Filter notes by folder and search
   const filteredNotes = useMemo(() => {
     let notes = state.notes;
-    
+
     if (selectedFolderId) {
       notes = notes.filter(n => n.folderId === selectedFolderId);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      notes = notes.filter(n => 
+      notes = notes.filter(n =>
         n.title.toLowerCase().includes(query) ||
         n.content.toLowerCase().includes(query)
       );
@@ -114,7 +115,7 @@ export function NotesSection() {
     if (selectedTagFilter) {
       notes = notes.filter(n => n.tags.includes(selectedTagFilter));
     }
-    
+
     // Sort: pinned first, then by updated date
     return notes.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
@@ -126,7 +127,7 @@ export function NotesSection() {
   // Generate auto tags from roles, goals, projects
   const availableTags = useMemo(() => {
     const tags: NoteTag[] = [...state.noteTags];
-    
+
     // Add role tags
     state.roles.forEach(role => {
       if (!tags.find(t => t.type === "role" && t.referenceId === role.id)) {
@@ -139,7 +140,7 @@ export function NotesSection() {
         });
       }
     });
-    
+
     // Add goal tags
     state.goals.forEach(goal => {
       if (!tags.find(t => t.type === "goal" && t.referenceId === goal.id)) {
@@ -153,7 +154,7 @@ export function NotesSection() {
         });
       }
     });
-    
+
     // Add project tags
     state.projects.forEach(project => {
       if (!tags.find(t => t.type === "project" && t.referenceId === project.id)) {
@@ -166,7 +167,7 @@ export function NotesSection() {
         });
       }
     });
-    
+
     return tags;
   }, [state.noteTags, state.roles, state.goals, state.projects, getRoleById]);
 
@@ -195,9 +196,9 @@ export function NotesSection() {
       // Create default folder if none exists
       addNoteFolder({ name: "Mis Apuntes", parentId: null });
     }
-    
+
     const folderId = selectedFolderId || state.noteFolders[0]?.id || "";
-    
+
     addNote({
       folderId,
       type,
@@ -206,7 +207,7 @@ export function NotesSection() {
       tags: [],
       isPinned: false
     });
-    
+
     setShowNewNoteDialog(false);
   };
 
@@ -221,7 +222,7 @@ export function NotesSection() {
       const isSelected = selectedFolderId === folder.id;
       const hasChildren = folder.children.length > 0;
       const notesCount = state.notes.filter(n => n.folderId === folder.id).length;
-      
+
       return (
         <div key={folder.id}>
           <div
@@ -236,7 +237,7 @@ export function NotesSection() {
             }}
           >
             {hasChildren ? (
-              <button 
+              <button
                 className="p-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -252,21 +253,21 @@ export function NotesSection() {
             ) : (
               <span className="w-5" />
             )}
-            
+
             {isExpanded ? (
               <FolderOpen className="w-4 h-4 text-amber-500" />
             ) : (
               <Folder className="w-4 h-4 text-amber-500" />
             )}
-            
+
             <span className="flex-1 truncate text-sm">{folder.name}</span>
-            
+
             {notesCount > 0 && (
               <Badge variant="secondary" className="h-5 px-1.5 text-xs">
                 {notesCount}
               </Badge>
             )}
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -284,7 +285,7 @@ export function NotesSection() {
                   Renombrar
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => deleteNoteFolder(folder.id)}
                 >
@@ -294,7 +295,7 @@ export function NotesSection() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           {isExpanded && hasChildren && (
             <div>{renderFolderTree(folder.children, depth + 1)}</div>
           )}
@@ -325,7 +326,7 @@ export function NotesSection() {
             className="pl-8 h-9"
           />
         </div>
-        
+
         <div className="flex gap-1.5">
           <Button
             variant="outline"
@@ -363,7 +364,7 @@ export function NotesSection() {
             Todos
           </button>
         </div>
-        
+
         <ScrollArea className="h-40">
           {folderTree.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
@@ -415,7 +416,7 @@ export function NotesSection() {
             Apuntes ({filteredNotes.length})
           </span>
         </div>
-        
+
         <ScrollArea className="h-[calc(100%-28px)]">
           <div className="p-2 space-y-1">
             {filteredNotes.length === 0 ? (
@@ -428,8 +429,8 @@ export function NotesSection() {
                   key={note.id}
                   className={cn(
                     "p-2 rounded-lg cursor-pointer transition-colors group",
-                    selectedNoteId === note.id 
-                      ? "bg-primary/10 border border-primary/20" 
+                    selectedNoteId === note.id
+                      ? "bg-primary/10 border border-primary/20"
                       : "hover:bg-muted border border-transparent"
                   )}
                   onClick={() => handleSelectNote(note.id)}
@@ -457,14 +458,14 @@ export function NotesSection() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => updateNote(note.id, { isPinned: !note.isPinned })}
                         >
                           <Pin className="w-4 h-4 mr-2" />
                           {note.isPinned ? "Desfijar" : "Fijar"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => {
                             deleteNote(note.id);
@@ -489,60 +490,36 @@ export function NotesSection() {
   );
 
   return (
-    <div className="h-[calc(100vh-120px)] flex">
-      {/* Mobile Toggle */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="lg:hidden fixed bottom-4 left-4 z-30 shadow-lg"
-        onClick={() => setShowMobileSidebar(true)}
-      >
-        <Folder className="w-4 h-4 mr-2" />
-        Carpetas
-      </Button>
+    <div className="h-[calc(100dvh-120px)] flex">
 
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {showMobileSidebar && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
-              onClick={() => setShowMobileSidebar(false)}
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 w-80 bg-card border-r border-border z-50 flex flex-col"
-            >
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <h3 className="font-semibold">Apuntes</h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowMobileSidebar(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-72 border-r border-border bg-card/50 flex-col">
+      <aside className={cn(
+        "w-full lg:w-72 border-r border-border bg-card/50 flex-col",
+        // Mobile: Show sidebar only if NO note selected
+        !selectedNote ? "flex" : "hidden lg:flex"
+      )}>
         {sidebarContent}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-background">
+      <main className={cn(
+        "flex-1 flex flex-col overflow-hidden bg-background",
+        // Mobile: Show main content only if note selected, otherwise hidden (showing sidebar)
+        "fixed inset-0 z-40 lg:static lg:flex",
+        !selectedNote && "hidden lg:flex"
+      )}>
         {selectedNote ? (
           <>
+            {/* Mobile Back Button */}
+            <div className="lg:hidden flex items-center gap-2 p-2 border-b border-border bg-background/80 backdrop-blur-md">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedNoteId(null)}>
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Volver
+              </Button>
+              <span className="font-medium truncate">{selectedNote.title}</span>
+            </div>
+
             {selectedNote.type === "note" && (
               <NoteEditor
                 note={selectedNote}
@@ -627,7 +604,7 @@ export function NotesSection() {
                 Estilo Notion
               </span>
             </button>
-            
+
             <button
               className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-colors"
               onClick={() => handleCreateNote("whiteboard")}
@@ -640,7 +617,7 @@ export function NotesSection() {
                 Excalidraw
               </span>
             </button>
-            
+
             <button
               className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-colors"
               onClick={() => handleCreateNote("document")}

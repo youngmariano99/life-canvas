@@ -48,14 +48,17 @@ export function IdentityView() {
   if (selectedRole) {
     return (
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => setSelectedRole(null)}
-          className="gap-2"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Volver a roles
-        </Button>
+        {/* Mobile Header with Sticky Back Button */}
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-2 -mt-4 pt-4">
+          <Button
+            variant="ghost"
+            onClick={() => setSelectedRole(null)}
+            className="gap-2 pl-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span className="text-lg font-medium">Volver a roles</span>
+          </Button>
+        </div>
         <RoleSummaryView role={selectedRole} />
       </div>
     );
@@ -76,24 +79,24 @@ export function IdentityView() {
         </div>
 
         {/* Year Summary Stats */}
-        <div className="flex justify-center gap-8 text-sm">
-          <div className="flex flex-col items-center">
+        <div className="grid grid-cols-3 gap-4 text-sm max-w-md mx-auto">
+          <div className="flex flex-col items-center p-2 bg-card rounded-lg border border-border">
             <span className="font-bold text-2xl text-primary">{state.goals.length}</span>
-            <span className="text-muted-foreground">Objetivos</span>
+            <span className="text-xs text-muted-foreground">Objetivos</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center p-2 bg-card rounded-lg border border-border">
             <span className="font-bold text-2xl text-green-500">
               {state.goals.length > 0
                 ? Math.round((state.goals.filter(g => g.status === 'completed').length / state.goals.length) * 100)
                 : 0}%
             </span>
-            <span className="text-muted-foreground">Progreso Anual</span>
+            <span className="text-xs text-muted-foreground">Progreso</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center p-2 bg-card rounded-lg border border-border">
             <span className="font-bold text-2xl text-blue-500">
               {state.habits.length}
             </span>
-            <span className="text-muted-foreground">Hábitos</span>
+            <span className="text-xs text-muted-foreground">Hábitos</span>
           </div>
         </div>
       </motion.div>

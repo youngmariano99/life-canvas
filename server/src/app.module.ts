@@ -21,6 +21,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { YearsModule } from './years/years.module';
+import { PomodoroModule } from './pomodoro/pomodoro.module';
+import { ActivePauseModule } from './active-pauses/active-pauses.module';
 
 // Entities
 import { User } from './database/entities/user.entity';
@@ -40,8 +42,26 @@ import { Goal } from './goals/entities/goal.entity';
       autoLoadEntities: true,
       synchronize: true, // Auto-create tables (Dev only)
       logging: true,
+      ssl: (process.env.DATABASE_URL?.includes('127.0.0.1') || process.env.DATABASE_URL?.includes('localhost')) ? false : { rejectUnauthorized: false }, // Disable SSL for local, enable for Neon
     }),
-    RolesModule, GoalsModule, HabitsModule, HabitLogsModule, ProjectsModule, ProjectActivitiesModule, DailyStonesModule, FitnessModule, DeviationsModule, ResourcesModule, NotesModule, CalendarModule, CloudinaryModule, AuthModule, UsersModule, YearsModule
+    RolesModule,
+    GoalsModule,
+    HabitsModule,
+    HabitLogsModule,
+    ProjectsModule,
+    ProjectActivitiesModule,
+    DailyStonesModule,
+    FitnessModule,
+    DeviationsModule,
+    ResourcesModule,
+    NotesModule,
+    CalendarModule,
+    CloudinaryModule,
+    AuthModule,
+    UsersModule,
+    YearsModule,
+    PomodoroModule,
+    ActivePauseModule
   ],
   controllers: [AppController],
   providers: [AppService],

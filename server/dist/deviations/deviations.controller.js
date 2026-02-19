@@ -17,64 +17,72 @@ const common_1 = require("@nestjs/common");
 const deviations_service_1 = require("./deviations.service");
 const create_deviation_dto_1 = require("./dto/create-deviation.dto");
 const update_deviation_dto_1 = require("./dto/update-deviation.dto");
+const passport_1 = require("@nestjs/passport");
 let DeviationsController = class DeviationsController {
     deviationsService;
     constructor(deviationsService) {
         this.deviationsService = deviationsService;
     }
-    create(createDto) {
-        return this.deviationsService.create(createDto);
+    create(createDto, req) {
+        return this.deviationsService.create(createDto, req.user.id);
     }
-    findAll() {
-        return this.deviationsService.findAll();
+    findAll(req, year) {
+        return this.deviationsService.findAll(req.user.id, year);
     }
-    findOne(id) {
-        return this.deviationsService.findOne(id);
+    findOne(id, req) {
+        return this.deviationsService.findOne(id, req.user.id);
     }
-    update(id, updateDto) {
-        return this.deviationsService.update(id, updateDto);
+    update(id, updateDto, req) {
+        return this.deviationsService.update(id, updateDto, req.user.id);
     }
-    remove(id) {
-        return this.deviationsService.remove(id);
+    remove(id, req) {
+        return this.deviationsService.remove(id, req.user.id);
     }
 };
 exports.DeviationsController = DeviationsController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_deviation_dto_1.CreateDeviationDto]),
+    __metadata("design:paramtypes", [create_deviation_dto_1.CreateDeviationDto, Object]),
     __metadata("design:returntype", void 0)
 ], DeviationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], DeviationsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], DeviationsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_deviation_dto_1.UpdateDeviationDto]),
+    __metadata("design:paramtypes", [String, update_deviation_dto_1.UpdateDeviationDto, Object]),
     __metadata("design:returntype", void 0)
 ], DeviationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], DeviationsController.prototype, "remove", null);
 exports.DeviationsController = DeviationsController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('deviations'),
     __metadata("design:paramtypes", [deviations_service_1.DeviationsService])
 ], DeviationsController);

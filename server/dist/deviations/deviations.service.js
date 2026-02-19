@@ -17,71 +17,62 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const deviation_entity_1 = require("./entities/deviation.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let DeviationsService = class DeviationsService {
     deviationRepository;
-    userRepository;
-    constructor(deviationRepository, userRepository) {
+    constructor(deviationRepository) {
         this.deviationRepository = deviationRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createDto) {
-        const user = await this.getDemoUser();
+    async create(createDto, userId) {
         const deviationDate = typeof createDto.date === 'string'
             ? new Date(createDto.date)
             : createDto.date;
+        const year = deviationDate.getFullYear();
         const deviation = this.deviationRepository.create({
             ...createDto,
             date: deviationDate,
-            user,
+            year: year,
+            user: { id: userId },
             goal: createDto.goalId ? { id: createDto.goalId } : null
         });
         return this.deviationRepository.save(deviation);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId, year = 2026) {
         return this.deviationRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId }, year },
             order: { date: 'DESC' },
             relations: ['goal']
         });
     }
-    async findOne(id) {
+    async findOne(id, userId) {
         return this.deviationRepository.findOne({
-            where: { id },
+            where: { id, user: { id: userId } },
             relations: ['goal']
         });
     }
-    async update(id, updateDto) {
+    async update(id, updateDto, userId) {
+        const deviation = await this.findOne(id, userId);
+        if (!deviation)
+            throw new Error(`Deviation ${id} not found`);
         const data = { ...updateDto };
         if (data.date && typeof data.date === 'string') {
             data.date = new Date(data.date);
+            data.year = data.date.getFullYear();
+        }
+        else if (data.date) {
+            data.year = data.date.getFullYear();
         }
         await this.deviationRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
-    async remove(id) {
-        await this.deviationRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const result = await this.deviationRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.DeviationsService = DeviationsService;
 exports.DeviationsService = DeviationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(deviation_entity_1.Deviation)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], DeviationsService);
 //# sourceMappingURL=deviations.service.js.map

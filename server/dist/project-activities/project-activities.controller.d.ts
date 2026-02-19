@@ -4,11 +4,11 @@ import { UpdateProjectActivityDto } from './dto/update-project-activity.dto';
 export declare class ProjectActivitiesController {
     private readonly projectActivitiesService;
     constructor(projectActivitiesService: ProjectActivitiesService);
-    create(createDto: CreateProjectActivityDto): Promise<import("./entities/project-activity.entity").ProjectActivity[]>;
-    findAll(): Promise<import("./entities/project-activity.entity").ProjectActivity[]>;
-    findOne(id: string): Promise<import("./entities/project-activity.entity").ProjectActivity | null>;
-    update(id: string, updateDto: UpdateProjectActivityDto): Promise<import("./entities/project-activity.entity").ProjectActivity | null>;
-    remove(id: string): Promise<{
+    create(createDto: CreateProjectActivityDto, req: any): Promise<import("./entities/project-activity.entity").ProjectActivity[]>;
+    findAll(req: any): Promise<import("./entities/project-activity.entity").ProjectActivity[]>;
+    findOne(id: string, req: any): Promise<import("./entities/project-activity.entity").ProjectActivity | null>;
+    update(id: string, updateDto: UpdateProjectActivityDto, req: any): Promise<import("./entities/project-activity.entity").ProjectActivity | null>;
+    remove(id: string, req: any): Promise<{
         deleted: boolean;
     }>;
 }

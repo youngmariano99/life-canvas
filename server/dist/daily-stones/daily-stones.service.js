@@ -17,39 +17,24 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const daily_stone_entity_1 = require("./entities/daily-stone.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let DailyStonesService = class DailyStonesService {
     dailyStoneRepository;
-    userRepository;
-    constructor(dailyStoneRepository, userRepository) {
+    constructor(dailyStoneRepository) {
         this.dailyStoneRepository = dailyStoneRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId, year = 2026) {
         return this.dailyStoneRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId }, year },
             order: { date: 'DESC' },
             take: 365,
             relations: ['role']
         });
     }
-    async upsert(dto) {
-        const user = await this.getDemoUser();
+    async upsert(dto, userId) {
         const dateStr = dto.date.split('T')[0];
+        const year = new Date(dateStr).getFullYear();
         let stone = await this.dailyStoneRepository.createQueryBuilder('stone')
-            .where('stone.user_id = :userId', { userId: user.id })
+            .where('stone.user_id = :userId', { userId: userId })
             .andWhere('stone.date = :date', { date: dateStr })
             .getOne();
         if (stone) {
@@ -57,15 +42,17 @@ let DailyStonesService = class DailyStonesService {
             stone.roleId = dto.roleId || null;
             stone.completed = dto.completed ?? false;
             stone.note = dto.note || '';
+            stone.year = year;
         }
         else {
             stone = this.dailyStoneRepository.create({
-                user,
+                user: { id: userId },
                 date: dateStr,
                 title: dto.title,
                 roleId: dto.roleId || null,
                 completed: dto.completed || false,
-                note: dto.note || ''
+                note: dto.note || '',
+                year: year
             });
         }
         return this.dailyStoneRepository.save(stone);
@@ -75,8 +62,6 @@ exports.DailyStonesService = DailyStonesService;
 exports.DailyStonesService = DailyStonesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(daily_stone_entity_1.DailyStone)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], DailyStonesService);
 //# sourceMappingURL=daily-stones.service.js.map

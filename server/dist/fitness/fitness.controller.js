@@ -18,93 +18,103 @@ const fitness_service_1 = require("./fitness.service");
 const create_fitness_activity_dto_1 = require("./dto/create-fitness-activity.dto");
 const create_fitness_routine_dto_1 = require("./dto/create-fitness-routine.dto");
 const update_fitness_activity_dto_1 = require("./dto/update-fitness-activity.dto");
+const passport_1 = require("@nestjs/passport");
 let FitnessController = class FitnessController {
     fitnessService;
     constructor(fitnessService) {
         this.fitnessService = fitnessService;
     }
-    createRoutine(createDto) {
-        return this.fitnessService.createRoutine(createDto);
+    createRoutine(createDto, req) {
+        return this.fitnessService.createRoutine(createDto, req.user.id);
     }
-    findAllRoutines() {
-        return this.fitnessService.findAllRoutines();
+    findAllRoutines(req) {
+        return this.fitnessService.findAllRoutines(req.user.id);
     }
-    deleteRoutine(id) {
-        return this.fitnessService.deleteRoutine(id);
+    deleteRoutine(id, req) {
+        return this.fitnessService.deleteRoutine(id, req.user.id);
     }
-    create(createDto) {
-        return this.fitnessService.create(createDto);
+    create(createDto, req) {
+        return this.fitnessService.create(createDto, req.user.id);
     }
-    findAll() {
-        return this.fitnessService.findAll();
+    findAll(req) {
+        return this.fitnessService.findAll(req.user.id);
     }
-    findOne(id) {
-        return this.fitnessService.findOne(id);
+    findOne(id, req) {
+        return this.fitnessService.findOne(id, req.user.id);
     }
-    update(id, updateDto) {
-        return this.fitnessService.update(id, updateDto);
+    update(id, updateDto, req) {
+        return this.fitnessService.update(id, updateDto, req.user.id);
     }
-    remove(id) {
-        return this.fitnessService.remove(id);
+    remove(id, req) {
+        return this.fitnessService.remove(id, req.user.id);
     }
 };
 exports.FitnessController = FitnessController;
 __decorate([
     (0, common_1.Post)('routines'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_fitness_routine_dto_1.CreateFitnessRoutineDto]),
+    __metadata("design:paramtypes", [create_fitness_routine_dto_1.CreateFitnessRoutineDto, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "createRoutine", null);
 __decorate([
     (0, common_1.Get)('routines'),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "findAllRoutines", null);
 __decorate([
     (0, common_1.Delete)('routines/:id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "deleteRoutine", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_fitness_activity_dto_1.CreateFitnessActivityDto]),
+    __metadata("design:paramtypes", [create_fitness_activity_dto_1.CreateFitnessActivityDto, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_fitness_activity_dto_1.UpdateFitnessActivityDto]),
+    __metadata("design:paramtypes", [String, update_fitness_activity_dto_1.UpdateFitnessActivityDto, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], FitnessController.prototype, "remove", null);
 exports.FitnessController = FitnessController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('fitness'),
     __metadata("design:paramtypes", [fitness_service_1.FitnessService])
 ], FitnessController);

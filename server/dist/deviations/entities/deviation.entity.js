@@ -16,6 +16,7 @@ let Deviation = class Deviation {
     userId;
     goalId;
     title;
+    year;
     reason;
     correction;
     date;
@@ -40,6 +41,10 @@ __decorate([
     (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
 ], Deviation.prototype, "title", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'smallint', default: 2026 }),
+    __metadata("design:type", Number)
+], Deviation.prototype, "year", void 0);
 __decorate([
     (0, typeorm_1.Column)({ length: 255, nullable: true }),
     __metadata("design:type", String)

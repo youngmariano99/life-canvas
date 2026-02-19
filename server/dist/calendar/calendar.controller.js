@@ -17,64 +17,71 @@ const common_1 = require("@nestjs/common");
 const calendar_service_1 = require("./calendar.service");
 const create_calendar_event_dto_1 = require("./dto/create-calendar-event.dto");
 const update_calendar_event_dto_1 = require("./dto/update-calendar-event.dto");
+const passport_1 = require("@nestjs/passport");
 let CalendarController = class CalendarController {
     calendarService;
     constructor(calendarService) {
         this.calendarService = calendarService;
     }
-    create(createDto) {
-        return this.calendarService.create(createDto);
+    create(createDto, req) {
+        return this.calendarService.create(createDto, req.user.id);
     }
-    findAll() {
-        return this.calendarService.findAll();
+    findAll(req) {
+        return this.calendarService.findAll(req.user.id);
     }
-    findOne(id) {
-        return this.calendarService.findOne(id);
+    findOne(id, req) {
+        return this.calendarService.findOne(id, req.user.id);
     }
-    update(id, updateDto) {
-        return this.calendarService.update(id, updateDto);
+    update(id, updateDto, req) {
+        return this.calendarService.update(id, updateDto, req.user.id);
     }
-    remove(id) {
-        return this.calendarService.remove(id);
+    remove(id, req) {
+        return this.calendarService.remove(id, req.user.id);
     }
 };
 exports.CalendarController = CalendarController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_calendar_event_dto_1.CreateCalendarEventDto]),
+    __metadata("design:paramtypes", [create_calendar_event_dto_1.CreateCalendarEventDto, Object]),
     __metadata("design:returntype", void 0)
 ], CalendarController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], CalendarController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CalendarController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_calendar_event_dto_1.UpdateCalendarEventDto]),
+    __metadata("design:paramtypes", [String, update_calendar_event_dto_1.UpdateCalendarEventDto, Object]),
     __metadata("design:returntype", void 0)
 ], CalendarController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CalendarController.prototype, "remove", null);
 exports.CalendarController = CalendarController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('calendar'),
     __metadata("design:paramtypes", [calendar_service_1.CalendarService])
 ], CalendarController);

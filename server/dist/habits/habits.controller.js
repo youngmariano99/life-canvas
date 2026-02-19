@@ -17,64 +17,72 @@ const common_1 = require("@nestjs/common");
 const habits_service_1 = require("./habits.service");
 const create_habit_dto_1 = require("./dto/create-habit.dto");
 const update_habit_dto_1 = require("./dto/update-habit.dto");
+const passport_1 = require("@nestjs/passport");
 let HabitsController = class HabitsController {
     habitsService;
     constructor(habitsService) {
         this.habitsService = habitsService;
     }
-    create(createHabitDto) {
-        return this.habitsService.create(createHabitDto);
+    create(createHabitDto, req) {
+        return this.habitsService.create(createHabitDto, req.user.id);
     }
-    findAll() {
-        return this.habitsService.findAll();
+    findAll(req, year) {
+        return this.habitsService.findAll(req.user.id, year);
     }
-    findOne(id) {
-        return this.habitsService.findOne(id);
+    findOne(id, req) {
+        return this.habitsService.findOne(id, req.user.id);
     }
-    update(id, updateHabitDto) {
-        return this.habitsService.update(id, updateHabitDto);
+    update(id, updateHabitDto, req) {
+        return this.habitsService.update(id, updateHabitDto, req.user.id);
     }
-    remove(id) {
-        return this.habitsService.remove(id);
+    remove(id, req) {
+        return this.habitsService.remove(id, req.user.id);
     }
 };
 exports.HabitsController = HabitsController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_habit_dto_1.CreateHabitDto]),
+    __metadata("design:paramtypes", [create_habit_dto_1.CreateHabitDto, Object]),
     __metadata("design:returntype", void 0)
 ], HabitsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], HabitsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], HabitsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_habit_dto_1.UpdateHabitDto]),
+    __metadata("design:paramtypes", [String, update_habit_dto_1.UpdateHabitDto, Object]),
     __metadata("design:returntype", void 0)
 ], HabitsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], HabitsController.prototype, "remove", null);
 exports.HabitsController = HabitsController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('habits'),
     __metadata("design:paramtypes", [habits_service_1.HabitsService])
 ], HabitsController);

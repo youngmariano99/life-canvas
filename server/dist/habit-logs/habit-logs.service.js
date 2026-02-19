@@ -17,40 +17,27 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const habit_log_entity_1 = require("./entities/habit-log.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let HabitLogsService = class HabitLogsService {
     habitLogRepository;
-    userRepository;
-    constructor(habitLogRepository, userRepository) {
+    constructor(habitLogRepository) {
         this.habitLogRepository = habitLogRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId) {
         return this.habitLogRepository.find({
             where: {
-                habit: { user: { id: user.id } }
+                habit: { user: { id: userId } }
             },
             order: { date: 'DESC' }
         });
     }
-    async upsert(createHabitLogDto) {
+    async upsert(createHabitLogDto, userId) {
         const { habitId, date, status, note } = createHabitLogDto;
         const dateStr = typeof date === 'string' ? date.split('T')[0] : date.toISOString().split('T')[0];
         let log = await this.habitLogRepository.createQueryBuilder('log')
+            .leftJoinAndSelect('log.habit', 'habit')
             .where('log.habit_id = :habitId', { habitId })
             .andWhere('log.date = :date', { date: dateStr })
+            .andWhere('habit.user_id = :userId', { userId })
             .getOne();
         if (log) {
             if (status)
@@ -73,8 +60,6 @@ exports.HabitLogsService = HabitLogsService;
 exports.HabitLogsService = HabitLogsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(habit_log_entity_1.HabitLog)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], HabitLogsService);
 //# sourceMappingURL=habit-logs.service.js.map

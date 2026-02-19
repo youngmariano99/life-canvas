@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument } from "@/types/lifeOS";
+import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument, PomodoroSession, PomodoroSettings, ActivePauseRoutine, ActivePauseEntry } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 import { api } from "@/lib/api";
@@ -17,7 +17,7 @@ export function useLifeOS() {
     async function loadData() {
       try {
         const year = state.selectedYear;
-        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines, yearSettings] = await Promise.all([
+        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines, pomodoroSessions, yearSettings] = await Promise.all([
           api.roles.getAll(),
           api.goals.getAll(year),
           api.habits.getAll(year),
@@ -31,6 +31,7 @@ export function useLifeOS() {
           api.notes.getAll(),
           api.calendar.getAll(),
           api.fitness.getAllRoutines(),
+          api.pomodoro.getAll(),
           api.years.getSettings(year),
         ]);
 
@@ -56,6 +57,7 @@ export function useLifeOS() {
           notes,
           calendarEvents,
           fitnessRoutines,
+          pomodoroSessions,
           yearSettings,
           // If year settings exist OR if user has significant data (goals or roles), consider configured.
           // This handles migration for existing users who haven't set up YearSettings yet.
@@ -776,6 +778,49 @@ export function useLifeOS() {
     deleteNoteTag,
     addNoteDocument,
     deleteNoteDocument,
+    // Pomodoro
+    addPomodoroSession: useCallback(async (session: Omit<PomodoroSession, "id" | "createdAt">) => {
+      try {
+        const newSession = await api.pomodoro.create(session);
+        setState(s => ({ ...s, pomodoroSessions: [newSession, ...s.pomodoroSessions] }));
+      } catch (error) {
+        console.error("Failed to create pomodoro session", error);
+      }
+    }, []),
+
+    deletePomodoroSession: useCallback(async (sessionId: string) => {
+      try {
+        await api.pomodoro.delete(sessionId);
+        setState(s => ({
+          ...s,
+          pomodoroSessions: s.pomodoroSessions.filter(s => s.id !== sessionId)
+        }));
+      } catch (error) {
+        console.error("Failed to delete pomodoro session", error);
+      }
+    }, [state.pomodoroSessions]),
+
+    // Active Pause
+    addActivePauseRoutine: useCallback((routine: Omit<ActivePauseRoutine, "id">) => {
+      setState(s => store.addActivePauseRoutine(s, routine));
+    }, []),
+
+    updateActivePauseRoutine: useCallback((id: string, updates: Partial<ActivePauseRoutine>) => {
+      setState(s => store.updateActivePauseRoutine(s, id, updates));
+    }, []),
+
+    deleteActivePauseRoutine: useCallback((id: string) => {
+      setState(s => store.deleteActivePauseRoutine(s, id));
+    }, []),
+
+    logActivePause: useCallback((entry: Omit<ActivePauseEntry, "id">) => {
+      setState(s => store.logActivePause(s, entry));
+    }, []),
+
+    updatePomodoroSettings: useCallback((settings: Partial<PomodoroSettings>) => {
+      setState(s => store.updatePomodoroSettings(s, settings));
+    }, []),
+
     // Reset
     resetAll,
     // Helpers

@@ -9,6 +9,7 @@ export declare class Goal {
     userId: string;
     roleId: string;
     title: string;
+    year: number;
     description: string;
     quarter: number;
     semester: number;

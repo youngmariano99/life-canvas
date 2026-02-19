@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const app_service_1 = require("./app.service");
 const cloudinary_service_1 = require("./cloudinary/cloudinary.service");
+const passport_1 = require("@nestjs/passport");
 let AppController = class AppController {
     appService;
     cloudinaryService;
@@ -52,6 +53,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getHealth", null);
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Post)('upload'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         limits: { fileSize: 50 * 1024 * 1024 }

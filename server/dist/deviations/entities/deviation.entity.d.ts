@@ -5,6 +5,7 @@ export declare class Deviation {
     userId: string;
     goalId: string;
     title: string;
+    year: number;
     reason: string;
     correction: string;
     date: Date;

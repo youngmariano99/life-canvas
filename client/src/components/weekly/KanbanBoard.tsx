@@ -121,162 +121,164 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
       )}
 
       {/* Kanban Columns */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${project.statuses.length}, minmax(250px, 1fr))` }}>
-        {project.statuses.map((status, index) => {
-          const columnActivities = getActivitiesForStatus(status);
-          const isFirst = index === 0;
-          const isLast = index === project.statuses.length - 1;
+      <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0">
+        <div className="grid gap-4 min-w-[max(100%,_800px)]" style={{ gridTemplateColumns: `repeat(${project.statuses.length}, minmax(280px, 1fr))` }}>
+          {project.statuses.map((status, index) => {
+            const columnActivities = getActivitiesForStatus(status);
+            const isFirst = index === 0;
+            const isLast = index === project.statuses.length - 1;
 
-          return (
-            <div
-              key={status}
-              className={cn(
-                "bg-muted/30 rounded-xl p-3 min-h-[300px]",
-                draggedActivity && "ring-2 ring-dashed ring-primary/30"
-              )}
-              onDragOver={!readOnly ? handleDragOver : undefined}
-              onDrop={!readOnly ? () => handleDrop(status) : undefined}
-            >
-              {/* Column Header */}
-              <div className="flex items-center justify-between mb-3">
-                {editingColumnIndex === index ? (
-                  <div className="flex items-center gap-1 flex-1">
-                    <Input
-                      value={editedColumnName}
-                      onChange={(e) => setEditedColumnName(e.target.value)}
-                      className="h-7 text-sm"
-                      onKeyDown={(e) => e.key === "Enter" && handleSaveColumn()}
-                    />
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveColumn}>
-                      <Check className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-foreground text-sm">{status}</h4>
-                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                        {columnActivities.length}
-                      </span>
+            return (
+              <div
+                key={status}
+                className={cn(
+                  "bg-muted/30 rounded-xl p-3 min-h-[300px]",
+                  draggedActivity && "ring-2 ring-dashed ring-primary/30"
+                )}
+                onDragOver={!readOnly ? handleDragOver : undefined}
+                onDrop={!readOnly ? () => handleDrop(status) : undefined}
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between mb-3">
+                  {editingColumnIndex === index ? (
+                    <div className="flex items-center gap-1 flex-1">
+                      <Input
+                        value={editedColumnName}
+                        onChange={(e) => setEditedColumnName(e.target.value)}
+                        className="h-7 text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveColumn()}
+                      />
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveColumn}>
+                        <Check className="w-3 h-3" />
+                      </Button>
                     </div>
-                    {!readOnly && (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-muted-foreground"
-                          onClick={() => handleEditColumn(index)}
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </Button>
-                        {project.statuses.length > 2 && (
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-foreground text-sm">{status}</h4>
+                        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {columnActivities.length}
+                        </span>
+                      </div>
+                      {!readOnly && (
+                        <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => handleDeleteColumn(index)}
+                            className="h-6 w-6 text-muted-foreground"
+                            onClick={() => handleEditColumn(index)}
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                          {project.statuses.length > 2 && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDeleteColumn(index)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Activities */}
+                <div className="space-y-2">
+                  {columnActivities.map((activity) => (
+                    <motion.div
+                      key={activity.id}
+                      layout
+                      draggable={!readOnly}
+                      onDragStart={() => !readOnly && handleDragStart(activity.id)}
+                      className={cn(
+                        "bg-card rounded-lg border border-border p-3",
+                        !readOnly && "cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow",
+                        draggedActivity === activity.id && "opacity-50"
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        {!readOnly && <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground">{activity.title}</p>
+                          {activity.dueDate && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(parseISO(activity.dueDate), "d MMM", { locale: es })}
+                            </p>
+                          )}
+                        </div>
+                        {!readOnly && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                            onClick={() => deleteProjectActivity(activity.id)}
                           >
                             <X className="w-3 h-3" />
                           </Button>
                         )}
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    </motion.div>
+                  ))}
 
-              {/* Activities */}
-              <div className="space-y-2">
-                {columnActivities.map((activity) => (
-                  <motion.div
-                    key={activity.id}
-                    layout
-                    draggable={!readOnly}
-                    onDragStart={() => !readOnly && handleDragStart(activity.id)}
-                    className={cn(
-                      "bg-card rounded-lg border border-border p-3",
-                      !readOnly && "cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow",
-                      draggedActivity === activity.id && "opacity-50"
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      {!readOnly && <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground">{activity.title}</p>
-                        {activity.dueDate && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                            <Calendar className="w-3 h-3" />
-                            {format(parseISO(activity.dueDate), "d MMM", { locale: es })}
-                          </p>
-                        )}
-                      </div>
-                      {!readOnly && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={() => deleteProjectActivity(activity.id)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-
-                {/* Add Activity */}
-                {!readOnly && (
-                  addingToColumn === status ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={newActivityTitle}
-                        onChange={(e) => setNewActivityTitle(e.target.value)}
-                        placeholder="Título de la actividad"
-                        className="h-8 text-sm"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddActivity(status);
-                          if (e.key === "Escape") setAddingToColumn(null);
-                        }}
-                      />
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => handleAddActivity(status)}
-                          disabled={!newActivityTitle.trim()}
-                        >
-                          Agregar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => {
-                            setAddingToColumn(null);
-                            setNewActivityTitle("");
+                  {/* Add Activity */}
+                  {!readOnly && (
+                    addingToColumn === status ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={newActivityTitle}
+                          onChange={(e) => setNewActivityTitle(e.target.value)}
+                          placeholder="Título de la actividad"
+                          className="h-8 text-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddActivity(status);
+                            if (e.key === "Escape") setAddingToColumn(null);
                           }}
-                        >
-                          Cancelar
-                        </Button>
+                        />
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => handleAddActivity(status)}
+                            disabled={!newActivityTitle.trim()}
+                          >
+                            Agregar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setAddingToColumn(null);
+                              setNewActivityTitle("");
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => setAddingToColumn(status)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Agregar actividad
-                    </Button>
-                  )
-                )}
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setAddingToColumn(status)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Agregar actividad
+                      </Button>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

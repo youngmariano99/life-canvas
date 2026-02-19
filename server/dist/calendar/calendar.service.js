@@ -17,27 +17,12 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const calendar_event_entity_1 = require("./entities/calendar-event.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let CalendarService = class CalendarService {
     calendarRepository;
-    userRepository;
-    constructor(calendarRepository, userRepository) {
+    constructor(calendarRepository) {
         this.calendarRepository = calendarRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createDto) {
-        const user = await this.getDemoUser();
+    async create(createDto, userId) {
         const rawStartDate = createDto.startDate || createDto.date;
         if (!rawStartDate) {
             throw new Error('Start date or date is required');
@@ -52,22 +37,24 @@ let CalendarService = class CalendarService {
             ...createDto,
             startDate,
             endDate,
-            user
+            user: { id: userId }
         });
         return this.calendarRepository.save(event);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId) {
         return this.calendarRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { startDate: 'ASC' },
             take: 200
         });
     }
-    async findOne(id) {
-        return this.calendarRepository.findOneBy({ id });
+    async findOne(id, userId) {
+        return this.calendarRepository.findOne({ where: { id, user: { id: userId } } });
     }
-    async update(id, updateDto) {
+    async update(id, updateDto, userId) {
+        const event = await this.findOne(id, userId);
+        if (!event)
+            throw new Error(`Event ${id} not found`);
         const data = { ...updateDto };
         if (data.startDate && typeof data.startDate === 'string') {
             data.startDate = new Date(data.startDate);
@@ -76,19 +63,17 @@ let CalendarService = class CalendarService {
             data.endDate = new Date(data.endDate);
         }
         await this.calendarRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
-    async remove(id) {
-        await this.calendarRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const result = await this.calendarRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.CalendarService = CalendarService;
 exports.CalendarService = CalendarService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(calendar_event_entity_1.CalendarEvent)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], CalendarService);
 //# sourceMappingURL=calendar.service.js.map

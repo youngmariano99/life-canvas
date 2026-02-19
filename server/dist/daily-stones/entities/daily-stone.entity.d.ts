@@ -5,6 +5,7 @@ export declare class DailyStone {
     userId: string;
     date: Date;
     title: string;
+    year: number;
     roleId: string | null;
     completed: boolean;
     note: string | null;

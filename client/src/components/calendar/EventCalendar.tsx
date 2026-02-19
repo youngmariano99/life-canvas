@@ -280,90 +280,92 @@ export function EventCalendar({ readOnly = false }: EventCalendarProps) {
 
       {/* Calendar Grid */}
       {viewMode === "week" ? (
-        <div className="grid grid-cols-7 gap-2">
-          {days.map((day) => {
-            const dateStr = format(day, "yyyy-MM-dd");
-            const dayEvents = eventsByDate[dateStr] || [];
-            const isToday = isSameDay(day, new Date());
+        <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0">
+          <div className="grid grid-cols-7 gap-2 min-w-[800px]">
+            {days.map((day) => {
+              const dateStr = format(day, "yyyy-MM-dd");
+              const dayEvents = eventsByDate[dateStr] || [];
+              const isToday = isSameDay(day, new Date());
 
-            return (
-              <div
-                key={dateStr}
-                className={cn(
-                  "min-h-[140px] sm:min-h-[180px] bg-card rounded-xl border border-border p-2 transition-colors",
-                  isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                )}
-                onDragOver={!readOnly ? handleDragOver : undefined}
-                onDrop={!readOnly ? (e) => handleDrop(e, dateStr) : undefined}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase">
-                      {format(day, "EEE", { locale: es })}
-                    </p>
-                    <p className={cn(
-                      "text-lg font-semibold",
-                      isToday && "text-primary"
-                    )}>
-                      {format(day, "d")}
-                    </p>
+              return (
+                <div
+                  key={dateStr}
+                  className={cn(
+                    "min-h-[140px] sm:min-h-[180px] bg-card rounded-xl border border-border p-2 transition-colors",
+                    isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                  )}
+                  onDragOver={!readOnly ? handleDragOver : undefined}
+                  onDrop={!readOnly ? (e) => handleDrop(e, dateStr) : undefined}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground uppercase">
+                        {format(day, "EEE", { locale: es })}
+                      </p>
+                      <p className={cn(
+                        "text-lg font-semibold",
+                        isToday && "text-primary"
+                      )}>
+                        {format(day, "d")}
+                      </p>
+                    </div>
+                    {!readOnly && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-50 hover:opacity-100"
+                        onClick={() => openAddEventForDate(day)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
-                  {!readOnly && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-50 hover:opacity-100"
-                      onClick={() => openAddEventForDate(day)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  )}
-                </div>
 
-                <div className="space-y-1">
-                  <AnimatePresence mode="popLayout">
-                    {dayEvents.slice(0, 4).map((event) => {
-                      const eventTag = event.tag || "personal";
-                      const Icon = TAG_ICONS[eventTag] || TAG_ICONS.personal;
-                      const colors = EVENT_TAG_COLORS[eventTag] || EVENT_TAG_COLORS.personal;
-                      return (
-                        <motion.div
-                          key={event.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          draggable={!readOnly}
-                          onDragStart={() => !readOnly && handleDragStart(event.id)}
-                          className={cn(
-                            "group flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
-                            !readOnly && "cursor-move",
-                            colors.bg,
-                            "text-white hover:opacity-90"
-                          )}
-                        >
-                          <Icon className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate flex-1">{event.title}</span>
-                          {!readOnly && (
-                            <button
-                              onClick={() => deleteCalendarEvent(event.id)}
-                              className="opacity-0 group-hover:opacity-100 hover:bg-white/20 rounded p-0.5"
-                            >
-                              <X className="w-2.5 h-2.5" />
-                            </button>
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                  {dayEvents.length > 4 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{dayEvents.length - 4} más
-                    </p>
-                  )}
+                  <div className="space-y-1">
+                    <AnimatePresence mode="popLayout">
+                      {dayEvents.slice(0, 4).map((event) => {
+                        const eventTag = event.tag || "personal";
+                        const Icon = TAG_ICONS[eventTag] || TAG_ICONS.personal;
+                        const colors = EVENT_TAG_COLORS[eventTag] || EVENT_TAG_COLORS.personal;
+                        return (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            draggable={!readOnly}
+                            onDragStart={() => !readOnly && handleDragStart(event.id)}
+                            className={cn(
+                              "group flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                              !readOnly && "cursor-move",
+                              colors.bg,
+                              "text-white hover:opacity-90"
+                            )}
+                          >
+                            <Icon className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate flex-1">{event.title}</span>
+                            {!readOnly && (
+                              <button
+                                onClick={() => deleteCalendarEvent(event.id)}
+                                className="opacity-0 group-hover:opacity-100 hover:bg-white/20 rounded p-0.5"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                    {dayEvents.length > 4 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{dayEvents.length - 4} más
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="bg-card rounded-2xl border border-border p-4">

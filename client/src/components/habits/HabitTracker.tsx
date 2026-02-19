@@ -4,17 +4,19 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { format, addDays, startOfWeek, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, Check, X, Minus, MoreHorizontal, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users } from "lucide-react";
+import { Plus, Check, X, Minus, MoreHorizontal, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLifeOSContext } from "@/context/LifeOSContext";
-import { HabitLog, ROLE_COLORS } from "@/types/lifeOS";
+import { HabitLog, ROLE_COLORS, Habit } from "@/types/lifeOS";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 interface HabitTrackerProps {
   selectedDate: string;
@@ -33,10 +35,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerProps) {
-  const { state, addHabit, logHabit, getRoleById } = useLifeOSContext();
+  const { state, addHabit, logHabit, updateHabit, deleteHabit, getRoleById } = useLifeOSContext();
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitRole, setNewHabitRole] = useState("");
+
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [editHabitName, setEditHabitName] = useState("");
+  const [editHabitRole, setEditHabitRole] = useState("");
+
+  const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
   // Get week days
   const selectedDateObj = parseISO(selectedDate);
@@ -78,6 +86,28 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
     setIsAddingHabit(false);
   };
 
+  const startEditing = (habit: Habit) => {
+    setEditingHabit(habit);
+    setEditHabitName(habit.name);
+    setEditHabitRole(habit.roleId || "none");
+  };
+
+  const handleUpdateHabit = () => {
+    if (!editingHabit || !editHabitName.trim()) return;
+    updateHabit(editingHabit.id, {
+      name: editHabitName.trim(),
+      roleId: editHabitRole === "none" ? undefined : editHabitRole || undefined,
+    });
+    setEditingHabit(null);
+  };
+
+  const handleDeleteHabit = () => {
+    if (deletingHabit) {
+      deleteHabit(deletingHabit.id);
+      setDeletingHabit(null);
+    }
+  };
+
   const handleToggleStatus = (habitId: string, date: string, currentStatus?: HabitLog["status"]) => {
     const statusOrder: HabitLog["status"][] = ["completed", "missed", "day_off"];
     const currentIndex = currentStatus ? statusOrder.indexOf(currentStatus) : -1;
@@ -110,23 +140,29 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
                 <DialogTitle>Nuevo Hábito</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
-                <Input
-                  value={newHabitName}
-                  onChange={(e) => setNewHabitName(e.target.value)}
-                  placeholder="Nombre del hábito"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
-                />
-                <Select value={newHabitRole} onValueChange={setNewHabitRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Asociar a rol (opcional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin rol</SelectItem>
-                    {state.roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label>Nombre</Label>
+                  <Input
+                    value={newHabitName}
+                    onChange={(e) => setNewHabitName(e.target.value)}
+                    placeholder="Ej: Leer 30 minutos"
+                    onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Rol (Opcional)</Label>
+                  <Select value={newHabitRole} onValueChange={setNewHabitRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin rol</SelectItem>
+                      {state.roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button onClick={handleAddHabit} disabled={!newHabitName.trim()} className="w-full">
                   Agregar
                 </Button>
@@ -217,9 +253,28 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
                     </thead>
                     <tbody className="divide-y divide-border">
                       {habits.map((habit) => (
-                        <tr key={habit.id} className="hover:bg-muted/30">
-                          <td className="px-4 py-2">
-                            <span className="text-foreground text-sm">{habit.name}</span>
+                        <tr key={habit.id} className="hover:bg-muted/30 group">
+                          <td className="px-4 py-2 relative">
+                            <div className="flex items-center justify-between">
+                              <span className="text-foreground text-sm">{habit.name}</span>
+                              {!readOnly && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start">
+                                    <DropdownMenuItem onClick={() => startEditing(habit)}>
+                                      <Pencil className="mr-2 h-4 w-4" /> Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setDeletingHabit(habit)} className="text-destructive focus:text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
                           </td>
                           {weekDays.map((day) => {
                             const dayStr = format(day, "yyyy-MM-dd");
@@ -263,6 +318,62 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
           })}
         </div>
       )}
+
+      {/* Edit Habit Dialog */}
+      <Dialog open={!!editingHabit} onOpenChange={(open) => !open && setEditingHabit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Hábito</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Nombre</Label>
+              <Input
+                value={editHabitName}
+                onChange={(e) => setEditHabitName(e.target.value)}
+                placeholder="Nombre del hábito"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Rol</Label>
+              <Select value={editHabitRole} onValueChange={setEditHabitRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin rol</SelectItem>
+                  {state.roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingHabit(null)}>Cancelar</Button>
+              <Button onClick={handleUpdateHabit} disabled={!editHabitName.trim()}>Guardar</Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={!!deletingHabit} onOpenChange={(open) => !open && setDeletingHabit(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el hábito
+              <strong> "{deletingHabit?.name}"</strong> y todo su historial de seguimiento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteHabit} className="bg-destructive hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

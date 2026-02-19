@@ -126,13 +126,10 @@ src/
 
 Para información más detallada, consulta los siguientes documentos:
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitectura detallada y patrones de diseño
-- **[DATA_MODELS.md](./DATA_MODELS.md)** - Modelos de datos y tipos TypeScript
-- **[COMPONENTS.md](./COMPONENTS.md)** - Documentación de componentes
-- **[STATE_MANAGEMENT.md](./STATE_MANAGEMENT.md)** - Gestión de estado y persistencia
-- **[FEATURES.md](./FEATURES.md)** - Funcionalidades y flujos de usuario
-- **[STYLING.md](./STYLING.md)** - Sistema de diseño y temas
-- **[DATABASE.md](./DATABASE.md)** - Schema SQL para migración a Supabase
+- **[MANUAL_TECNICO.md](./MANUAL_TECNICO.md)** - Arquitectura, Base de Datos, Componentes y Estilos.
+- **[GUIA_FUNCIONAL.md](./GUIA_FUNCIONAL.md)** - Guía de usuario y descripción de funcionalidades.
+- **[HISTORIA_Y_EVOLUCION.md](./HISTORIA_Y_EVOLUCION.md)** - Historia del proyecto, migraciones y soluciones técnicas.
+- **[GUIA_DESPLIEGUE.md](./GUIA_DESPLIEGUE.md)** - Guía para despliegue local y en la nube (Neon/Render/Netlify).
 
 ---
 

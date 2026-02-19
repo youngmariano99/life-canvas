@@ -119,6 +119,9 @@
     --sidebar-accent-foreground: 40 20% 90%;
     --sidebar-border: 30 12% 18%;
     --sidebar-ring: 158 45% 50%;
+
+    /* Dark Mode Gradients */
+    --gradient-canvas: linear-gradient(180deg, hsl(30 15% 8%), hsl(30 12% 10%));
   }
 }
 
@@ -139,17 +142,39 @@
 }
 
 @layer components {
+
   /* Role badge colors */
-  .role-student { @apply bg-role-student text-white; }
-  .role-athlete { @apply bg-role-athlete text-white; }
-  .role-entrepreneur { @apply bg-role-entrepreneur text-white; }
-  .role-creative { @apply bg-role-creative text-white; }
-  .role-family { @apply bg-role-family text-white; }
-  .role-spiritual { @apply bg-role-spiritual text-white; }
-  .role-social { @apply bg-role-social text-white; }
+  .role-student {
+    @apply bg-role-student text-white;
+  }
+
+  .role-athlete {
+    @apply bg-role-athlete text-white;
+  }
+
+  .role-entrepreneur {
+    @apply bg-role-entrepreneur text-white;
+  }
+
+  .role-creative {
+    @apply bg-role-creative text-white;
+  }
+
+  .role-family {
+    @apply bg-role-family text-white;
+  }
+
+  .role-spiritual {
+    @apply bg-role-spiritual text-white;
+  }
+
+  .role-social {
+    @apply bg-role-social text-white;
+  }
 }
 
 @layer utilities {
+
   /* Glass effect */
   .glass {
     @apply bg-card/80 backdrop-blur-md;
@@ -167,5 +192,17 @@
   .stone-highlight {
     background: var(--gradient-gold);
     box-shadow: 0 0 20px hsl(40 70% 55% / 0.3);
+  }
+
+  /* Mobile Safe Area */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer base {
+  body {
+    min-height: 100dvh;
+    /* Use dynamic viewport height for mobile browsers */
   }
 }

@@ -17,64 +17,72 @@ const common_1 = require("@nestjs/common");
 const goals_service_1 = require("./goals.service");
 const create_goal_dto_1 = require("./dto/create-goal.dto");
 const update_goal_dto_1 = require("./dto/update-goal.dto");
+const passport_1 = require("@nestjs/passport");
 let GoalsController = class GoalsController {
     goalsService;
     constructor(goalsService) {
         this.goalsService = goalsService;
     }
-    create(createGoalDto) {
-        return this.goalsService.create(createGoalDto);
+    create(createGoalDto, req) {
+        return this.goalsService.create(createGoalDto, req.user.id);
     }
-    findAll() {
-        return this.goalsService.findAll();
+    findAll(req, year) {
+        return this.goalsService.findAll(req.user.id, year);
     }
-    findOne(id) {
-        return this.goalsService.findOne(id);
+    findOne(id, req) {
+        return this.goalsService.findOne(id, req.user.id);
     }
-    update(id, updateGoalDto) {
-        return this.goalsService.update(id, updateGoalDto);
+    update(id, updateGoalDto, req) {
+        return this.goalsService.update(id, updateGoalDto, req.user.id);
     }
-    remove(id) {
-        return this.goalsService.remove(id);
+    remove(id, req) {
+        return this.goalsService.remove(id, req.user.id);
     }
 };
 exports.GoalsController = GoalsController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_goal_dto_1.CreateGoalDto]),
+    __metadata("design:paramtypes", [create_goal_dto_1.CreateGoalDto, Object]),
     __metadata("design:returntype", void 0)
 ], GoalsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], GoalsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], GoalsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_goal_dto_1.UpdateGoalDto]),
+    __metadata("design:paramtypes", [String, update_goal_dto_1.UpdateGoalDto, Object]),
     __metadata("design:returntype", void 0)
 ], GoalsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], GoalsController.prototype, "remove", null);
 exports.GoalsController = GoalsController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('goals'),
     __metadata("design:paramtypes", [goals_service_1.GoalsService])
 ], GoalsController);

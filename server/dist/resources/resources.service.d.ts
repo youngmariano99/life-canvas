@@ -2,17 +2,14 @@ import { Repository } from 'typeorm';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { Resource } from './entities/resource.entity';
-import { User } from '../database/entities/user.entity';
 export declare class ResourcesService {
     private resourceRepository;
-    private userRepository;
-    constructor(resourceRepository: Repository<Resource>, userRepository: Repository<User>);
-    private getDemoUser;
-    create(createDto: CreateResourceDto): Promise<Resource>;
-    findAll(): Promise<Resource[]>;
-    findOne(id: string): Promise<Resource | null>;
-    update(id: string, updateDto: UpdateResourceDto): Promise<Resource | null>;
-    remove(id: string): Promise<{
+    constructor(resourceRepository: Repository<Resource>);
+    create(createDto: CreateResourceDto, userId: string): Promise<Resource>;
+    findAll(userId: string, year?: number): Promise<Resource[]>;
+    findOne(id: string, userId: string): Promise<Resource | null>;
+    update(id: string, updateDto: UpdateResourceDto, userId: string): Promise<Resource | null>;
+    remove(id: string, userId: string): Promise<{
         deleted: boolean;
     }>;
 }

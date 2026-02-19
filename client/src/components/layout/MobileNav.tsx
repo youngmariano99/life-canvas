@@ -30,7 +30,7 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
         { id: "notes", label: "Notas", icon: FileText },
     ];
 
-    const secondaryViewIds = ["identity", "semester", "deviations"];
+    const secondaryViewIds = ["identity", "semester", "deviations", "pomodoro"];
     const secondaryViews = VIEWS.filter(v => secondaryViewIds.includes(v.id));
 
     return (

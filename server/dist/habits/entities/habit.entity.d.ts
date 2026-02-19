@@ -6,6 +6,7 @@ export declare class Habit {
     userId: string;
     roleId: string;
     name: string;
+    year: number;
     frequency: string;
     customDays: number[];
     createdAt: Date;

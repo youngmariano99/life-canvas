@@ -21,7 +21,10 @@ import {
   NoteFolder,
   Note,
   NoteTag,
-  NoteDocument
+  NoteDocument,
+  PomodoroSettings,
+  ActivePauseRoutine,
+  ActivePauseEntry
 } from "@/types/lifeOS";
 
 const STORAGE_KEY = "life-os-2026";
@@ -41,6 +44,8 @@ export function loadState(): LifeOSState {
         projects: parsed.projects || [],
         projectActivities: parsed.projectActivities || [],
         fitnessActivities: parsed.fitnessActivities || [],
+        activePauseRoutines: parsed.activePauseRoutines || [],
+        activePauseHistory: parsed.activePauseHistory || [],
         calendarEvents: parsed.calendarEvents || [],
         noteFolders: parsed.noteFolders || [],
         notes: parsed.notes || [],
@@ -688,4 +693,63 @@ export function addNoteDocument(
 
 export function deleteNoteDocument(state: LifeOSState, docId: string): LifeOSState {
   return { ...state, noteDocuments: state.noteDocuments.filter(d => d.id !== docId) };
+}
+
+// ==================== POMODORO FUNCTIONS ====================
+
+export function updatePomodoroSettings(
+  state: LifeOSState,
+  settings: Partial<PomodoroSettings>
+): LifeOSState {
+  return {
+    ...state,
+    pomodoroSettings: { ...state.pomodoroSettings, ...settings }
+  };
+}
+
+// ==================== ACTIVE PAUSE FUNCTIONS ====================
+
+export function addActivePauseRoutine(
+  state: LifeOSState,
+  routine: Omit<ActivePauseRoutine, "id">
+): LifeOSState {
+  const newRoutine: ActivePauseRoutine = {
+    ...routine,
+    id: generateId()
+  };
+  return { ...state, activePauseRoutines: [...state.activePauseRoutines, newRoutine] };
+}
+
+export function updateActivePauseRoutine(
+  state: LifeOSState,
+  id: string,
+  updates: Partial<ActivePauseRoutine>
+): LifeOSState {
+  return {
+    ...state,
+    activePauseRoutines: state.activePauseRoutines.map(r =>
+      r.id === id ? { ...r, ...updates } : r
+    )
+  };
+}
+
+export function deleteActivePauseRoutine(
+  state: LifeOSState,
+  id: string
+): LifeOSState {
+  return {
+    ...state,
+    activePauseRoutines: state.activePauseRoutines.filter(r => r.id !== id)
+  };
+}
+
+export function logActivePause(
+  state: LifeOSState,
+  entry: Omit<ActivePauseEntry, "id">
+): LifeOSState {
+  const newEntry: ActivePauseEntry = {
+    ...entry,
+    id: generateId()
+  };
+  return { ...state, activePauseHistory: [...state.activePauseHistory, newEntry] };
 }

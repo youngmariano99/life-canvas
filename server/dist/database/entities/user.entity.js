@@ -15,6 +15,7 @@ let User = class User {
     id;
     email;
     name;
+    password;
     createdAt;
     updatedAt;
     roles;
@@ -41,6 +42,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ select: false, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "password", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

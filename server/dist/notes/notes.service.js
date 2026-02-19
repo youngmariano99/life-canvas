@@ -19,74 +19,62 @@ const typeorm_2 = require("typeorm");
 const note_entity_1 = require("./entities/note.entity");
 const note_folder_entity_1 = require("./entities/note-folder.entity");
 const note_tag_entity_1 = require("./entities/note-tag.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let NotesService = class NotesService {
     noteRepository;
     folderRepository;
     tagRepository;
-    userRepository;
-    constructor(noteRepository, folderRepository, tagRepository, userRepository) {
+    constructor(noteRepository, folderRepository, tagRepository) {
         this.noteRepository = noteRepository;
         this.folderRepository = folderRepository;
         this.tagRepository = tagRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async findAllFolders() {
-        const user = await this.getDemoUser();
+    async findAllFolders(userId) {
         return this.folderRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { name: 'ASC' }
         });
     }
-    async createFolder(createDto) {
-        const user = await this.getDemoUser();
+    async createFolder(createDto, userId) {
         const folder = this.folderRepository.create({
             ...createDto,
-            user,
+            user: { id: userId },
             parent: createDto.parentId ? { id: createDto.parentId } : null
         });
         return this.folderRepository.save(folder);
     }
-    async updateFolder(id, updateDto) {
+    async updateFolder(id, updateDto, userId) {
+        const folder = await this.folderRepository.findOne({ where: { id, user: { id: userId } } });
+        if (!folder)
+            throw new Error(`Folder ${id} not found`);
         await this.folderRepository.update(id, updateDto);
         return this.folderRepository.findOneBy({ id });
     }
-    async removeFolder(id) {
-        await this.folderRepository.delete(id);
-        return { deleted: true };
+    async removeFolder(id, userId) {
+        const result = await this.folderRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
-    async findAllNotes() {
-        const user = await this.getDemoUser();
+    async findAllNotes(userId) {
         return this.noteRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { updatedAt: 'DESC' },
             relations: ['tags', 'folder']
         });
     }
-    async createNote(createDto) {
-        const user = await this.getDemoUser();
+    async createNote(createDto, userId) {
         const note = this.noteRepository.create({
             title: createDto.title,
             type: createDto.type || 'note',
             content: createDto.content,
             isFavorite: createDto.isFavorite,
             folder: createDto.folderId ? { id: createDto.folderId } : null,
-            user
+            user: { id: userId }
         });
         return this.noteRepository.save(note);
     }
-    async updateNote(id, updateDto) {
+    async updateNote(id, updateDto, userId) {
+        const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
+        if (!note)
+            throw new Error(`Note ${id} not found`);
         const { tags, ...data } = updateDto;
         await this.noteRepository.update(id, data);
         return this.noteRepository.findOne({
@@ -94,9 +82,9 @@ let NotesService = class NotesService {
             relations: ['tags', 'folder']
         });
     }
-    async removeNote(id) {
-        await this.noteRepository.delete(id);
-        return { deleted: true };
+    async removeNote(id, userId) {
+        const result = await this.noteRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.NotesService = NotesService;
@@ -105,9 +93,7 @@ exports.NotesService = NotesService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(note_entity_1.Note)),
     __param(1, (0, typeorm_1.InjectRepository)(note_folder_entity_1.NoteFolder)),
     __param(2, (0, typeorm_1.InjectRepository)(note_tag_entity_1.NoteTag)),
-    __param(3, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository])
 ], NotesService);

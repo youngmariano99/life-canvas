@@ -203,6 +203,61 @@ export interface FitnessRoutine {
 
 
 
+// ==================== ACTIVE PAUSE SYSTEM ====================
+
+export interface ActivePauseRoutine {
+  id: string;
+  nombre: string;
+  duracion: string;
+  pasos: string[];
+  nivel: "principiante" | "intermedio" | "avanzado";
+  zona: string[];
+}
+
+export interface ActivePauseEntry {
+  id: string;
+  date: string; // ISO string
+  routineId: string;
+  completed: boolean;
+  waterIntake: boolean;
+  eyeCare: boolean;
+}
+
+// ==================== POMODORO SYSTEM ====================
+
+export type PomodoroMode = "timer" | "stopwatch";
+
+export interface PomodoroSettings {
+  workDuration: number;
+  shortBreakDuration: number;
+  longBreakDuration: number;
+  longBreakInterval: number; // Renamed from cyclesBeforeLongBreak or added if missing
+  cyclesBeforeLongBreak: number; // Keeping for backward compatibility or removing if unused
+  autoStartBreaks: boolean;
+  autoStartWork: boolean;
+  soundEnabled: boolean;
+  notificationsEnabled: boolean;
+}
+
+export interface PomodoroSession {
+  id: string;
+  type: PomodoroMode;
+  startTime: string;
+  endTime: string;
+  duration: number; // in minutes
+  plannedDuration?: number; // in minutes, for timer mode
+  activityName: string;
+  notes?: string;
+
+  // Associations
+  roleId?: string;
+  projectId?: string;
+  habitId?: string;
+  goalId?: string;
+
+  createdAt: string;
+}
+
 // ==================== CALENDAR EVENTS ====================
 
 export type CalendarEventTag =
@@ -297,6 +352,10 @@ export interface LifeOSState {
   projectActivities: ProjectActivity[];
   fitnessActivities: FitnessActivity[];
   fitnessRoutines: FitnessRoutine[];
+  pomodoroSessions: PomodoroSession[];
+  pomodoroSettings: PomodoroSettings;
+  activePauseRoutines: ActivePauseRoutine[];
+  activePauseHistory: ActivePauseEntry[];
   calendarEvents: CalendarEvent[];
   noteFolders: NoteFolder[];
   notes: Note[];
@@ -329,6 +388,20 @@ export const initialState: LifeOSState = {
   projectActivities: [],
   fitnessActivities: [],
   fitnessRoutines: [],
+  pomodoroSessions: [],
+  pomodoroSettings: {
+    workDuration: 25,
+    shortBreakDuration: 5,
+    longBreakDuration: 15,
+    cyclesBeforeLongBreak: 4,
+    longBreakInterval: 4,
+    autoStartBreaks: false,
+    autoStartWork: false,
+    soundEnabled: true,
+    notificationsEnabled: true,
+  },
+  activePauseRoutines: [],
+  activePauseHistory: [],
   calendarEvents: [],
   noteFolders: [],
   notes: [],

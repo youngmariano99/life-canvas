@@ -16,33 +16,37 @@ exports.HabitLogsController = void 0;
 const common_1 = require("@nestjs/common");
 const habit_logs_service_1 = require("./habit-logs.service");
 const create_habit_log_dto_1 = require("./dto/create-habit-log.dto");
+const passport_1 = require("@nestjs/passport");
 let HabitLogsController = class HabitLogsController {
     habitLogsService;
     constructor(habitLogsService) {
         this.habitLogsService = habitLogsService;
     }
-    findAll() {
-        return this.habitLogsService.findAll();
+    findAll(req) {
+        return this.habitLogsService.findAll(req.user.id);
     }
-    upsert(createHabitLogDto) {
-        return this.habitLogsService.upsert(createHabitLogDto);
+    upsert(createHabitLogDto, req) {
+        return this.habitLogsService.upsert(createHabitLogDto, req.user.id);
     }
 };
 exports.HabitLogsController = HabitLogsController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], HabitLogsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_habit_log_dto_1.CreateHabitLogDto]),
+    __metadata("design:paramtypes", [create_habit_log_dto_1.CreateHabitLogDto, Object]),
     __metadata("design:returntype", void 0)
 ], HabitLogsController.prototype, "upsert", null);
 exports.HabitLogsController = HabitLogsController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('habit-logs'),
     __metadata("design:paramtypes", [habit_logs_service_1.HabitLogsService])
 ], HabitLogsController);

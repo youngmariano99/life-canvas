@@ -17,63 +17,49 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const habit_entity_1 = require("./entities/habit.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let HabitsService = class HabitsService {
     habitRepository;
-    userRepository;
-    constructor(habitRepository, userRepository) {
+    constructor(habitRepository) {
         this.habitRepository = habitRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createHabitDto) {
-        const user = await this.getDemoUser();
+    async create(createHabitDto, userId) {
         const habit = this.habitRepository.create({
             ...createHabitDto,
-            user,
+            user: { id: userId },
             role: createHabitDto.roleId ? { id: createHabitDto.roleId } : null
         });
         return this.habitRepository.save(habit);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId, year = 2026) {
         return this.habitRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId }, year },
             order: { createdAt: 'DESC' },
             relations: ['role', 'logs']
         });
     }
-    async findOne(id) {
+    async findOne(id, userId) {
         return this.habitRepository.findOne({
-            where: { id },
+            where: { id, user: { id: userId } },
             relations: ['logs']
         });
     }
-    async update(id, updateHabitDto) {
+    async update(id, updateHabitDto, userId) {
+        const habit = await this.findOne(id, userId);
+        if (!habit) {
+            throw new Error(`Habit ${id} not found`);
+        }
         await this.habitRepository.update(id, updateHabitDto);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
-    async remove(id) {
-        await this.habitRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const result = await this.habitRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.HabitsService = HabitsService;
 exports.HabitsService = HabitsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(habit_entity_1.Habit)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], HabitsService);
 //# sourceMappingURL=habits.service.js.map

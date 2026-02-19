@@ -17,26 +17,12 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const project_activity_entity_1 = require("./entities/project-activity.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let ProjectActivitiesService = class ProjectActivitiesService {
     projectActivityRepository;
-    userRepository;
-    constructor(projectActivityRepository, userRepository) {
+    constructor(projectActivityRepository) {
         this.projectActivityRepository = projectActivityRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createDto) {
+    async create(createDto, userId) {
         const data = { ...createDto };
         if (typeof data.dueDate === 'string') {
             data.dueDate = new Date(data.dueDate);
@@ -48,39 +34,48 @@ let ProjectActivitiesService = class ProjectActivitiesService {
         });
         return this.projectActivityRepository.save(activity);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId) {
         return this.projectActivityRepository.find({
             where: {
                 project: {
-                    goal: { user: { id: user.id } }
+                    goal: { user: { id: userId } }
                 }
             },
             order: { sortOrder: 'ASC' }
         });
     }
-    async findOne(id) {
-        return this.projectActivityRepository.findOneBy({ id });
+    async findOne(id, userId) {
+        return this.projectActivityRepository.findOne({
+            where: {
+                id,
+                project: { goal: { user: { id: userId } } }
+            }
+        });
     }
-    async update(id, updateDto) {
+    async update(id, updateDto, userId) {
+        const activity = await this.findOne(id, userId);
+        if (!activity)
+            throw new Error(`Activity ${id} not found`);
         const data = { ...updateDto };
         if (data.dueDate && typeof data.dueDate === 'string') {
             data.dueDate = new Date(data.dueDate);
         }
         await this.projectActivityRepository.update(id, data);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
-    async remove(id) {
-        await this.projectActivityRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const activity = await this.findOne(id, userId);
+        if (activity) {
+            await this.projectActivityRepository.delete(id);
+            return { deleted: true };
+        }
+        return { deleted: false };
     }
 };
 exports.ProjectActivitiesService = ProjectActivitiesService;
 exports.ProjectActivitiesService = ProjectActivitiesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(project_activity_entity_1.ProjectActivity)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], ProjectActivitiesService);
 //# sourceMappingURL=project-activities.service.js.map

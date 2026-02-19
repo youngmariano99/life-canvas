@@ -4,6 +4,7 @@ export declare class Project {
     id: string;
     goalId: string;
     name: string;
+    year: number;
     description: string;
     dueDate: Date;
     statuses: string[];

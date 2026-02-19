@@ -5,16 +5,16 @@ import { UpdateFitnessActivityDto } from './dto/update-fitness-activity.dto';
 export declare class FitnessController {
     private readonly fitnessService;
     constructor(fitnessService: FitnessService);
-    createRoutine(createDto: CreateFitnessRoutineDto): Promise<import("./entities/fitness-routine.entity").FitnessRoutine>;
-    findAllRoutines(): Promise<import("./entities/fitness-routine.entity").FitnessRoutine[]>;
-    deleteRoutine(id: string): Promise<{
+    createRoutine(createDto: CreateFitnessRoutineDto, req: any): Promise<import("./entities/fitness-routine.entity").FitnessRoutine>;
+    findAllRoutines(req: any): Promise<import("./entities/fitness-routine.entity").FitnessRoutine[]>;
+    deleteRoutine(id: string, req: any): Promise<{
         deleted: boolean;
     }>;
-    create(createDto: CreateFitnessActivityDto): Promise<import("./entities/fitness-activity.entity").FitnessActivity>;
-    findAll(): Promise<import("./entities/fitness-activity.entity").FitnessActivity[]>;
-    findOne(id: string): Promise<import("./entities/fitness-activity.entity").FitnessActivity | null>;
-    update(id: string, updateDto: UpdateFitnessActivityDto): Promise<import("./entities/fitness-activity.entity").FitnessActivity | null>;
-    remove(id: string): Promise<{
+    create(createDto: CreateFitnessActivityDto, req: any): Promise<import("./entities/fitness-activity.entity").FitnessActivity>;
+    findAll(req: any): Promise<import("./entities/fitness-activity.entity").FitnessActivity[]>;
+    findOne(id: string, req: any): Promise<import("./entities/fitness-activity.entity").FitnessActivity | null>;
+    update(id: string, updateDto: UpdateFitnessActivityDto, req: any): Promise<import("./entities/fitness-activity.entity").FitnessActivity | null>;
+    remove(id: string, req: any): Promise<{
         deleted: boolean;
     }>;
 }

@@ -16,33 +16,38 @@ exports.DailyStonesController = void 0;
 const common_1 = require("@nestjs/common");
 const daily_stones_service_1 = require("./daily-stones.service");
 const create_daily_stone_dto_1 = require("./dto/create-daily-stone.dto");
+const passport_1 = require("@nestjs/passport");
 let DailyStonesController = class DailyStonesController {
     dailyStonesService;
     constructor(dailyStonesService) {
         this.dailyStonesService = dailyStonesService;
     }
-    findAll() {
-        return this.dailyStonesService.findAll();
+    findAll(req, year) {
+        return this.dailyStonesService.findAll(req.user.id, year);
     }
-    upsert(createDailyStoneDto) {
-        return this.dailyStonesService.upsert(createDailyStoneDto);
+    upsert(createDailyStoneDto, req) {
+        return this.dailyStonesService.upsert(createDailyStoneDto, req.user.id);
     }
 };
 exports.DailyStonesController = DailyStonesController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], DailyStonesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_daily_stone_dto_1.CreateDailyStoneDto]),
+    __metadata("design:paramtypes", [create_daily_stone_dto_1.CreateDailyStoneDto, Object]),
     __metadata("design:returntype", void 0)
 ], DailyStonesController.prototype, "upsert", null);
 exports.DailyStonesController = DailyStonesController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('daily-stones'),
     __metadata("design:paramtypes", [daily_stones_service_1.DailyStonesService])
 ], DailyStonesController);

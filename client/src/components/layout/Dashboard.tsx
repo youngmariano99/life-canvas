@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText, LogOut } from "lucide-react";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText, LogOut, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
@@ -15,6 +15,7 @@ import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { NotesSection } from "@/components/notes/NotesSection";
+import { PomodoroView } from "@/components/views/PomodoroView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "./MobileNav";
 import { YearSelector } from "./YearSelector";
@@ -30,6 +31,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const VIEWS = [
   { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Roles" },
@@ -37,11 +46,14 @@ export const VIEWS = [
   { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
   { id: "daily", label: "Ejecución", icon: Target, description: "Hoy" },
   { id: "fitness", label: "Fitness", icon: Dumbbell, description: "Actividad" },
+  { id: "pomodoro", label: "Enfoque", icon: BrainCircuit, description: "Pomodoro" },
   { id: "notes", label: "Apuntes", icon: FileText, description: "Notas e ideas" },
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
 
 export type ViewType = typeof VIEWS[number]["id"];
+
+const SECONDARY_VIEWS = ["fitness", "notes", "deviations"];
 
 export function Dashboard() {
   const { state, resetAll, startEditingWizard } = useLifeOSContext();
@@ -73,7 +85,7 @@ export function Dashboard() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
-              {VIEWS.map((view) => {
+              {VIEWS.filter(v => !SECONDARY_VIEWS.includes(v.id)).map((view) => {
                 const Icon = view.icon;
                 const isActive = currentView === view.id;
                 return (
@@ -92,6 +104,33 @@ export function Dashboard() {
                   </button>
                 );
               })}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                    SECONDARY_VIEWS.includes(currentView)
+                      ? "bg-primary/10 text-primary hover:bg-primary/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}>
+                    <Menu className="w-4 h-4" />
+                    Menú
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Más Herramientas</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {VIEWS.filter(v => SECONDARY_VIEWS.includes(v.id)).map((view) => {
+                    const Icon = view.icon;
+                    return (
+                      <DropdownMenuItem key={view.id} onClick={() => handleViewChange(view.id)}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{view.label}</span>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
 
             {/* Actions (Desktop Only for some) */}
@@ -155,7 +194,7 @@ export function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32 lg:pb-8">
         <motion.div
           key={currentView}
           initial={{ opacity: 0, y: 10 }}
@@ -167,6 +206,7 @@ export function Dashboard() {
           {currentView === "weekly" && <WeeklyView />}
           {currentView === "daily" && <DailyView />}
           {currentView === "fitness" && <FitnessArea />}
+          {currentView === "pomodoro" && <PomodoroView />}
           {currentView === "notes" && <NotesSection />}
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>

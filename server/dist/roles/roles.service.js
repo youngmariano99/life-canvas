@@ -17,63 +17,44 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const role_entity_1 = require("./entities/role.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let RolesService = class RolesService {
     roleRepository;
-    userRepository;
-    constructor(roleRepository, userRepository) {
+    constructor(roleRepository) {
         this.roleRepository = roleRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createRoleDto) {
-        const user = await this.getDemoUser();
+    async create(createRoleDto, userId) {
         const role = this.roleRepository.create({
             ...createRoleDto,
-            user,
+            user: { id: userId },
         });
         return this.roleRepository.save(role);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId) {
         return this.roleRepository.find({
-            where: { user: { id: user.id } },
+            where: { user: { id: userId } },
             order: { createdAt: 'DESC' },
         });
     }
-    async findOne(id) {
-        return this.roleRepository.findOneBy({ id });
+    async findOne(id, userId) {
+        return this.roleRepository.findOne({ where: { id, user: { id: userId } } });
     }
-    async update(id, updateRoleDto) {
-        console.log(`Updating role ${id} with:`, updateRoleDto);
-        const role = await this.findOne(id);
+    async update(id, updateRoleDto, userId) {
+        const role = await this.findOne(id, userId);
         if (!role) {
             throw new Error(`Role ${id} not found`);
         }
         const updated = this.roleRepository.merge(role, updateRoleDto);
         return this.roleRepository.save(updated);
     }
-    async remove(id) {
-        await this.roleRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const result = await this.roleRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.RolesService = RolesService;
 exports.RolesService = RolesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], RolesService);
 //# sourceMappingURL=roles.service.js.map

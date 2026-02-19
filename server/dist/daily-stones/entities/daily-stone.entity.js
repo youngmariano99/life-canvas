@@ -16,6 +16,7 @@ let DailyStone = class DailyStone {
     userId;
     date;
     title;
+    year;
     roleId;
     completed;
     note;
@@ -39,6 +40,10 @@ __decorate([
     (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
 ], DailyStone.prototype, "title", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'smallint', default: 2026 }),
+    __metadata("design:type", Number)
+], DailyStone.prototype, "year", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'role_id', nullable: true }),
     __metadata("design:type", Object)

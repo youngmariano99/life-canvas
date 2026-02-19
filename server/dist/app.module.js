@@ -27,6 +27,11 @@ const resources_module_1 = require("./resources/resources.module");
 const notes_module_1 = require("./notes/notes.module");
 const calendar_module_1 = require("./calendar/calendar.module");
 const cloudinary_module_1 = require("./cloudinary/cloudinary.module");
+const auth_module_1 = require("./auth/auth.module");
+const users_module_1 = require("./users/users.module");
+const years_module_1 = require("./years/years.module");
+const pomodoro_module_1 = require("./pomodoro/pomodoro.module");
+const active_pauses_module_1 = require("./active-pauses/active-pauses.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -44,8 +49,26 @@ exports.AppModule = AppModule = __decorate([
                 autoLoadEntities: true,
                 synchronize: true,
                 logging: true,
+                ssl: (process.env.DATABASE_URL?.includes('127.0.0.1') || process.env.DATABASE_URL?.includes('localhost')) ? false : { rejectUnauthorized: false },
             }),
-            roles_module_1.RolesModule, goals_module_1.GoalsModule, habits_module_1.HabitsModule, habit_logs_module_1.HabitLogsModule, projects_module_1.ProjectsModule, project_activities_module_1.ProjectActivitiesModule, daily_stones_module_1.DailyStonesModule, fitness_module_1.FitnessModule, deviations_module_1.DeviationsModule, resources_module_1.ResourcesModule, notes_module_1.NotesModule, calendar_module_1.CalendarModule, cloudinary_module_1.CloudinaryModule
+            roles_module_1.RolesModule,
+            goals_module_1.GoalsModule,
+            habits_module_1.HabitsModule,
+            habit_logs_module_1.HabitLogsModule,
+            projects_module_1.ProjectsModule,
+            project_activities_module_1.ProjectActivitiesModule,
+            daily_stones_module_1.DailyStonesModule,
+            fitness_module_1.FitnessModule,
+            deviations_module_1.DeviationsModule,
+            resources_module_1.ResourcesModule,
+            notes_module_1.NotesModule,
+            calendar_module_1.CalendarModule,
+            cloudinary_module_1.CloudinaryModule,
+            auth_module_1.AuthModule,
+            users_module_1.UsersModule,
+            years_module_1.YearsModule,
+            pomodoro_module_1.PomodoroModule,
+            active_pauses_module_1.ActivePauseModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

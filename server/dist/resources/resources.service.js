@@ -17,59 +17,52 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const resource_entity_1 = require("./entities/resource.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 let ResourcesService = class ResourcesService {
     resourceRepository;
-    userRepository;
-    constructor(resourceRepository, userRepository) {
+    constructor(resourceRepository) {
         this.resourceRepository = resourceRepository;
-        this.userRepository = userRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createDto) {
+    async create(createDto, userId) {
         const resource = this.resourceRepository.create({
             ...createDto,
             goal: createDto.goalId ? { id: createDto.goalId } : undefined,
         });
         return this.resourceRepository.save(resource);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId, year = 2026) {
         return this.resourceRepository.find({
             where: {
-                goal: { user: { id: user.id } }
+                year,
+                goal: { user: { id: userId } }
             },
             order: { createdAt: 'DESC' }
         });
     }
-    async findOne(id) {
-        return this.resourceRepository.findOneBy({ id });
+    async findOne(id, userId) {
+        return this.resourceRepository.findOne({
+            where: { id, goal: { user: { id: userId } } }
+        });
     }
-    async update(id, updateDto) {
+    async update(id, updateDto, userId) {
+        const resource = await this.findOne(id, userId);
+        if (!resource)
+            throw new Error(`Resource ${id} not found`);
         await this.resourceRepository.update(id, updateDto);
-        return this.findOne(id);
+        return this.findOne(id, userId);
     }
-    async remove(id) {
-        await this.resourceRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const resource = await this.findOne(id, userId);
+        if (resource) {
+            await this.resourceRepository.delete(id);
+            return { deleted: true };
+        }
+        return { deleted: false };
     }
 };
 exports.ResourcesService = ResourcesService;
 exports.ResourcesService = ResourcesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(resource_entity_1.Resource)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], ResourcesService);
 //# sourceMappingURL=resources.service.js.map

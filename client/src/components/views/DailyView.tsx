@@ -194,17 +194,17 @@ export function DailyView() {
                   onClick={handleToggleStone}
                   disabled={state.isReadOnly}
                   className={cn(
-                    "w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all",
+                    "w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0",
                     dailyStone.completed
                       ? "bg-success border-success text-white"
                       : "border-accent hover:bg-accent/20",
                     state.isReadOnly && "cursor-not-allowed opacity-50"
                   )}
                 >
-                  {dailyStone.completed && <Check className="w-4 h-4" />}
+                  {dailyStone.completed && <Check className="w-6 h-6" />}
                 </button>
                 <span className={cn(
-                  "text-lg font-medium",
+                  "text-lg font-medium leading-tight",
                   dailyStone.completed && "line-through text-muted-foreground"
                 )}>
                   {dailyStone.title}
@@ -217,10 +217,10 @@ export function DailyView() {
                     value={stoneInput}
                     onChange={(e) => setStoneInput(e.target.value)}
                     placeholder="¿Cuál es tu piedra hoy?"
-                    className="flex-1"
+                    className="flex-1 h-12 text-base"
                     onKeyDown={(e) => e.key === "Enter" && handleSetStone()}
                   />
-                  <Button onClick={handleSetStone} disabled={!stoneInput.trim()}>
+                  <Button onClick={handleSetStone} disabled={!stoneInput.trim()} size="lg" className="px-6">
                     Establecer
                   </Button>
                 </div>
@@ -269,20 +269,20 @@ export function DailyView() {
                       return (
                         <div
                           key={activity.id}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                          className="flex items-center gap-4 px-4 py-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => !state.isReadOnly && handleToggleActivity(activity.id, activity.status)}
                         >
                           <button
-                            onClick={() => !state.isReadOnly && handleToggleActivity(activity.id, activity.status)}
                             disabled={state.isReadOnly}
                             className={cn(
-                              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
+                              "w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0",
                               isCompleted
                                 ? "bg-success border-success text-white"
                                 : "border-border hover:border-primary",
                               state.isReadOnly && "cursor-not-allowed opacity-50"
                             )}
                           >
-                            {isCompleted && <Check className="w-3 h-3" />}
+                            {isCompleted && <Check className="w-5 h-5" />}
                           </button>
                           <span className={cn(
                             "flex-1",

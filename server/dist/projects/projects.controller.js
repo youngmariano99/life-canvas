@@ -17,64 +17,72 @@ const common_1 = require("@nestjs/common");
 const projects_service_1 = require("./projects.service");
 const create_project_dto_1 = require("./dto/create-project.dto");
 const update_project_dto_1 = require("./dto/update-project.dto");
+const passport_1 = require("@nestjs/passport");
 let ProjectsController = class ProjectsController {
     projectsService;
     constructor(projectsService) {
         this.projectsService = projectsService;
     }
-    create(createProjectDto) {
-        return this.projectsService.create(createProjectDto);
+    create(createProjectDto, req) {
+        return this.projectsService.create(createProjectDto, req.user.id);
     }
-    findAll() {
-        return this.projectsService.findAll();
+    findAll(req, year) {
+        return this.projectsService.findAll(req.user.id, year);
     }
-    findOne(id) {
-        return this.projectsService.findOne(id);
+    findOne(id, req) {
+        return this.projectsService.findOne(id, req.user.id);
     }
-    update(id, updateProjectDto) {
-        return this.projectsService.update(id, updateProjectDto);
+    update(id, updateProjectDto, req) {
+        return this.projectsService.update(id, updateProjectDto, req.user.id);
     }
-    remove(id) {
-        return this.projectsService.remove(id);
+    remove(id, req) {
+        return this.projectsService.remove(id, req.user.id);
     }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_project_dto_1.CreateProjectDto]),
+    __metadata("design:paramtypes", [create_project_dto_1.CreateProjectDto, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_project_dto_1.UpdateProjectDto]),
+    __metadata("design:paramtypes", [String, update_project_dto_1.UpdateProjectDto, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "remove", null);
 exports.ProjectsController = ProjectsController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('projects'),
     __metadata("design:paramtypes", [projects_service_1.ProjectsService])
 ], ProjectsController);

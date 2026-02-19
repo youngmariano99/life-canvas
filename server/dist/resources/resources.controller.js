@@ -17,64 +17,72 @@ const common_1 = require("@nestjs/common");
 const resources_service_1 = require("./resources.service");
 const create_resource_dto_1 = require("./dto/create-resource.dto");
 const update_resource_dto_1 = require("./dto/update-resource.dto");
+const passport_1 = require("@nestjs/passport");
 let ResourcesController = class ResourcesController {
     resourcesService;
     constructor(resourcesService) {
         this.resourcesService = resourcesService;
     }
-    create(createDto) {
-        return this.resourcesService.create(createDto);
+    create(createDto, req) {
+        return this.resourcesService.create(createDto, req.user.id);
     }
-    findAll() {
-        return this.resourcesService.findAll();
+    findAll(req, year) {
+        return this.resourcesService.findAll(req.user.id, year);
     }
-    findOne(id) {
-        return this.resourcesService.findOne(id);
+    findOne(id, req) {
+        return this.resourcesService.findOne(id, req.user.id);
     }
-    update(id, updateDto) {
-        return this.resourcesService.update(id, updateDto);
+    update(id, updateDto, req) {
+        return this.resourcesService.update(id, updateDto, req.user.id);
     }
-    remove(id) {
-        return this.resourcesService.remove(id);
+    remove(id, req) {
+        return this.resourcesService.remove(id, req.user.id);
     }
 };
 exports.ResourcesController = ResourcesController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_resource_dto_1.CreateResourceDto]),
+    __metadata("design:paramtypes", [create_resource_dto_1.CreateResourceDto, Object]),
     __metadata("design:returntype", void 0)
 ], ResourcesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", void 0)
 ], ResourcesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ResourcesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_resource_dto_1.UpdateResourceDto]),
+    __metadata("design:paramtypes", [String, update_resource_dto_1.UpdateResourceDto, Object]),
     __metadata("design:returntype", void 0)
 ], ResourcesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ResourcesController.prototype, "remove", null);
 exports.ResourcesController = ResourcesController = __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('resources'),
     __metadata("design:paramtypes", [resources_service_1.ResourcesService])
 ], ResourcesController);

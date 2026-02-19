@@ -17,66 +17,50 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const goal_entity_1 = require("./entities/goal.entity");
-const user_entity_1 = require("../database/entities/user.entity");
 const sub_goal_entity_1 = require("./entities/sub-goal.entity");
 let GoalsService = class GoalsService {
     goalRepository;
-    userRepository;
     subGoalRepository;
-    constructor(goalRepository, userRepository, subGoalRepository) {
+    constructor(goalRepository, subGoalRepository) {
         this.goalRepository = goalRepository;
-        this.userRepository = userRepository;
         this.subGoalRepository = subGoalRepository;
     }
-    async getDemoUser() {
-        let user = await this.userRepository.findOne({ where: { email: 'demo@lifecanvas.com' } });
-        if (!user) {
-            user = this.userRepository.create({
-                email: 'demo@lifecanvas.com',
-                name: 'Demo User',
-            });
-            await this.userRepository.save(user);
-        }
-        return user;
-    }
-    async create(createGoalDto) {
-        const user = await this.getDemoUser();
+    async create(createGoalDto, userId) {
         const data = { ...createGoalDto };
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
         }
         const goal = this.goalRepository.create({
             ...data,
-            user,
+            user: { id: userId },
             role: { id: createGoalDto.roleId }
         });
         return this.goalRepository.save(goal);
     }
-    async findAll() {
-        const user = await this.getDemoUser();
+    async findAll(userId, year = 2026) {
         return this.goalRepository.find({
-            where: { userId: user.id },
+            where: { user: { id: userId }, year },
             relations: ['projects', 'resources', 'subGoals'],
             order: { quarter: 'ASC', createdAt: 'DESC' }
         });
     }
-    async findOne(id) {
+    async findOne(id, userId) {
         return this.goalRepository.findOne({
-            where: { id },
+            where: { id, user: { id: userId } },
             relations: ['role', 'projects', 'resources', 'subGoals']
         });
     }
-    async update(id, updateGoalDto) {
+    async update(id, updateGoalDto, userId) {
+        const existingGoal = await this.findOne(id, userId);
+        if (!existingGoal) {
+            throw new common_1.NotFoundException(`Goal #${id} not found`);
+        }
         const data = { ...updateGoalDto };
         if (typeof data.targetDate === 'string') {
             data.targetDate = new Date(data.targetDate);
         }
         if (data.subGoals && Array.isArray(data.subGoals)) {
-            const existingGoal = await this.goalRepository.findOne({
-                where: { id },
-                relations: ['subGoals']
-            });
-            if (existingGoal && existingGoal.subGoals) {
+            if (existingGoal.subGoals) {
                 const incomingIds = data.subGoals.map((sg) => sg.id).filter((id) => id);
                 const toRemove = existingGoal.subGoals.filter(sg => !incomingIds.includes(sg.id));
                 if (toRemove.length > 0) {
@@ -93,19 +77,17 @@ let GoalsService = class GoalsService {
         }
         return this.goalRepository.save(goal);
     }
-    async remove(id) {
-        await this.goalRepository.delete(id);
-        return { deleted: true };
+    async remove(id, userId) {
+        const result = await this.goalRepository.delete({ id, user: { id: userId } });
+        return { deleted: (result.affected ?? 0) > 0 };
     }
 };
 exports.GoalsService = GoalsService;
 exports.GoalsService = GoalsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(goal_entity_1.Goal)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(2, (0, typeorm_1.InjectRepository)(sub_goal_entity_1.SubGoal)),
+    __param(1, (0, typeorm_1.InjectRepository)(sub_goal_entity_1.SubGoal)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository])
 ], GoalsService);
 //# sourceMappingURL=goals.service.js.map
