@@ -11,7 +11,20 @@ export declare class NotesController {
         deleted: boolean;
     }>;
     findAllNotes(req: any): Promise<import("./entities/note.entity").Note[]>;
-    createNote(createDto: CreateNoteDto, req: any): Promise<import("./entities/note.entity").Note>;
+    createNote(createDto: CreateNoteDto, req: any): Promise<{
+        tags: import("./entities/note-tag.entity").NoteTag[];
+        id: string;
+        userId: string;
+        folderId: string;
+        type: string;
+        title: string;
+        content: string;
+        isFavorite: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        user: import("../database/entities/user.entity").User;
+        folder: import("./entities/note-folder.entity").NoteFolder;
+    }>;
     updateNote(id: string, updateDto: UpdateNoteDto, req: any): Promise<import("./entities/note.entity").Note | null>;
     removeNote(id: string, req: any): Promise<{
         deleted: boolean;

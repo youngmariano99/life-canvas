@@ -4,17 +4,20 @@
  */
 
 import { useState, useRef } from "react";
-import { 
-  Upload, 
-  File, 
-  FileText, 
-  FileImage, 
-  FileSpreadsheet, 
-  Trash2, 
-  Download, 
+import {
+  Upload,
+  File,
+  FileText,
+  FileImage,
+  FileSpreadsheet,
+  Trash2,
+  Download,
   X,
   Eye,
-  MoreVertical
+  MoreVertical,
+  Maximize,
+  Minimize,
+  Tag as TagIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -33,18 +37,23 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { useLifeOSContext } from "@/context/LifeOSContext";
-import { Note, NoteDocument } from "@/types/lifeOS";
+import { Note, NoteDocument, NoteTag } from "@/types/lifeOS";
 import { cn } from "@/lib/utils";
 
 interface DocumentManagerProps {
   note: Note;
+  availableTags: NoteTag[];
   onUpdate: (updates: Partial<Note>) => void;
   onClose: () => void;
+  isFullscreen?: boolean;
+  toggleFullscreen?: () => void;
 }
 
-export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProps) {
+export function DocumentManager({ note, availableTags, onUpdate, onClose, isFullscreen, toggleFullscreen }: DocumentManagerProps) {
   const { state, addNoteDocument, deleteNoteDocument } = useLifeOSContext();
   const [title, setTitle] = useState(note.title);
+  const [selectedTags, setSelectedTags] = useState<string[]>(note.tags || []);
+  const [showTagPicker, setShowTagPicker] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<NoteDocument | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,13 +67,23 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
     onUpdate({ title: newTitle });
   };
 
+  // Update tags via debounce to match other components
+  const toggleTag = (tagId: string) => {
+    const newTags = selectedTags.includes(tagId)
+      ? selectedTags.filter(t => t !== tagId)
+      : [...selectedTags, tagId];
+
+    setSelectedTags(newTags);
+    onUpdate({ tags: newTags });
+  };
+
   // Handle file upload
   const handleFileUpload = async (files: FileList | null) => {
     if (!files) return;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       // Convert to base64
       const reader = new FileReader();
       reader.onload = () => {
@@ -137,18 +156,73 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
           className="text-lg font-semibold border-none shadow-none focus-visible:ring-0 px-0 flex-1"
           placeholder="Título de documentos"
         />
-        
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-4 h-4" />
-        </Button>
+
+        <div className="flex items-center gap-1">
+          <Popover open={showTagPicker} onOpenChange={setShowTagPicker}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" title="Etiquetas" className={selectedTags.length > 0 ? "text-primary" : ""}>
+                <TagIcon className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="end">
+              <h4 className="font-semibold mb-2 text-sm">Etiquetas</h4>
+              <div className="flex items-center flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                {availableTags.map(tag => (
+                  <Badge
+                    key={tag.id}
+                    variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => toggleTag(tag.id)}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+                {availableTags.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No hay etiquetas disponibles</p>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {toggleFullscreen && (
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </Button>
+          )}
+
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* Tags Display */}
+      {selectedTags.length > 0 && (
+        <div className="flex flex-wrap gap-1 px-4 py-2 border-b border-border bg-muted/30">
+          {selectedTags.map(tagId => {
+            const tag = availableTags.find(t => t.id === tagId);
+            if (!tag) return null;
+            return (
+              <Badge
+                key={tagId}
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={() => toggleTag(tagId)}
+              >
+                {tag.name}
+                <X className="w-3 h-3 ml-1" />
+              </Badge>
+            );
+          })}
+        </div>
+      )}
 
       {/* Upload Area */}
       <div
         className={cn(
           "m-4 p-8 border-2 border-dashed rounded-xl transition-colors cursor-pointer",
-          isDragging 
-            ? "border-primary bg-primary/5" 
+          isDragging
+            ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/50 hover:bg-muted/50"
         )}
         onDragOver={handleDragOver}
@@ -163,7 +237,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
           className="hidden"
           onChange={(e) => handleFileUpload(e.target.files)}
         />
-        
+
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
             <Upload className="w-6 h-6 text-muted-foreground" />
@@ -185,7 +259,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
             Documentos ({documents.length})
           </span>
         </div>
-        
+
         <ScrollArea className="h-[calc(100%-28px)]">
           {documents.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
@@ -211,7 +285,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
                       {getFileIcon(doc.fileType)}
                     </div>
                   )}
-                  
+
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{doc.fileName}</p>
@@ -224,7 +298,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -247,7 +321,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
                         <Download className="w-4 h-4 mr-2" />
                         Descargar
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => deleteNoteDocument(doc.id)}
                       >
@@ -269,7 +343,7 @@ export function DocumentManager({ note, onUpdate, onClose }: DocumentManagerProp
           <DialogHeader>
             <DialogTitle>{previewDoc?.fileName}</DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-auto">
             {previewDoc?.fileType.startsWith("image/") && (
               <img

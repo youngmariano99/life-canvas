@@ -74,6 +74,7 @@ export function NotesSection() {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Get current note
   const selectedNote = useMemo(() => {
@@ -113,7 +114,7 @@ export function NotesSection() {
     }
 
     if (selectedTagFilter) {
-      notes = notes.filter(n => n.tags.includes(selectedTagFilter));
+      notes = notes.filter(n => (n.tags || []).includes(selectedTagFilter));
     }
 
     // Sort: pinned first, then by updated date
@@ -215,6 +216,8 @@ export function NotesSection() {
     setSelectedNoteId(noteId);
     setShowMobileSidebar(false);
   };
+
+  const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
   const renderFolderTree = (folders: (NoteFolder & { children: any[] })[], depth = 0) => {
     return folders.map(folder => {
@@ -497,7 +500,8 @@ export function NotesSection() {
       <aside className={cn(
         "w-full lg:w-72 border-r border-border bg-card/50 flex-col",
         // Mobile: Show sidebar only if NO note selected
-        !selectedNote ? "flex" : "hidden lg:flex"
+        !selectedNote ? "flex" : "hidden lg:flex",
+        isFullscreen && "hidden lg:hidden"
       )}>
         {sidebarContent}
       </aside>
@@ -506,7 +510,8 @@ export function NotesSection() {
       <main className={cn(
         "flex-1 flex flex-col overflow-hidden bg-background",
         // Mobile: Show main content only if note selected, otherwise hidden (showing sidebar)
-        "fixed inset-0 z-40 lg:static lg:flex",
+        !isFullscreen && "fixed inset-0 z-40 lg:static lg:flex",
+        isFullscreen && "fixed inset-0 z-50 lg:fixed lg:inset-0 lg:z-50",
         !selectedNote && "hidden lg:flex"
       )}>
         {selectedNote ? (
@@ -526,20 +531,28 @@ export function NotesSection() {
                 availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
                 onClose={() => setSelectedNoteId(null)}
+                isFullscreen={isFullscreen}
+                toggleFullscreen={toggleFullscreen}
               />
             )}
             {selectedNote.type === "whiteboard" && (
               <Whiteboard
                 note={selectedNote}
+                availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
                 onClose={() => setSelectedNoteId(null)}
+                isFullscreen={isFullscreen}
+                toggleFullscreen={toggleFullscreen}
               />
             )}
             {selectedNote.type === "document" && (
               <DocumentManager
                 note={selectedNote}
+                availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
                 onClose={() => setSelectedNoteId(null)}
+                isFullscreen={isFullscreen}
+                toggleFullscreen={toggleFullscreen}
               />
             )}
           </>

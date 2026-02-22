@@ -10,15 +10,15 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Typography from "@tiptap/extension-typography";
-import { 
-  Bold, 
-  Italic, 
-  Strikethrough, 
-  Code, 
-  List, 
-  ListOrdered, 
-  Heading1, 
-  Heading2, 
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
   Heading3,
   Quote,
   Minus,
@@ -26,12 +26,14 @@ import {
   X,
   Tag as TagIcon,
   Save,
-  Keyboard
+  Keyboard,
+  Maximize,
+  Minimize
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Popover,
   PopoverContent,
   PopoverTrigger
@@ -50,11 +52,13 @@ interface NoteEditorProps {
   availableTags: NoteTag[];
   onUpdate: (updates: Partial<Note>) => void;
   onClose: () => void;
+  isFullscreen?: boolean;
+  toggleFullscreen?: () => void;
 }
 
-export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEditorProps) {
+export function NoteEditor({ note, availableTags, onUpdate, onClose, isFullscreen, toggleFullscreen }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title);
-  const [selectedTags, setSelectedTags] = useState<string[]>(note.tags);
+  const [selectedTags, setSelectedTags] = useState<string[]>(note.tags || []);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -78,81 +82,6 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
     editorProps: {
       attributes: {
         class: "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-2"
-      },
-      handleKeyDown: (view, event) => {
-        // Handle markdown-style shortcuts at the start of a line
-        const { state } = view;
-        const { selection } = state;
-        const { $from } = selection;
-        const lineStart = $from.start();
-        const textBefore = state.doc.textBetween(lineStart, $from.pos, "\n", "\n");
-        
-        if (event.key === " " && !event.shiftKey) {
-          // # + space = Heading 1
-          if (textBefore === "#") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleHeading({ level: 1 }).run();
-            return true;
-          }
-          // ## + space = Heading 2
-          if (textBefore === "##") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleHeading({ level: 2 }).run();
-            return true;
-          }
-          // ### + space = Heading 3
-          if (textBefore === "###") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleHeading({ level: 3 }).run();
-            return true;
-          }
-          // - + space = Bullet list
-          if (textBefore === "-" || textBefore === "*") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleBulletList().run();
-            return true;
-          }
-          // 1. + space = Ordered list
-          if (/^\d+\.$/.test(textBefore)) {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleOrderedList().run();
-            return true;
-          }
-          // [] + space = Task list
-          if (textBefore === "[]" || textBefore === "[ ]") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleTaskList().run();
-            return true;
-          }
-          // > + space = Blockquote
-          if (textBefore === ">") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleBlockquote().run();
-            return true;
-          }
-          // ``` + space = Code block
-          if (textBefore === "```") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().toggleCodeBlock().run();
-            return true;
-          }
-          // --- = Horizontal rule
-          if (textBefore === "---") {
-            event.preventDefault();
-            view.dispatch(state.tr.delete(lineStart, $from.pos));
-            editor?.chain().focus().setHorizontalRule().run();
-            return true;
-          }
-        }
-        return false;
       }
     },
     onUpdate: ({ editor }) => {
@@ -189,8 +118,8 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
   }, [selectedTags, note.tags, onUpdate]);
 
   const toggleTag = (tagId: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tagId) 
+    setSelectedTags(prev =>
+      prev.includes(tagId)
         ? prev.filter(id => id !== tagId)
         : [...prev, tagId]
     );
@@ -208,7 +137,7 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           className="text-lg font-semibold border-none shadow-none focus-visible:ring-0 px-0"
           placeholder="Título del apunte"
         />
-        
+
         <div className="flex items-center gap-1">
           {isSaving && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -216,7 +145,7 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
               Guardando...
             </span>
           )}
-          
+
           <Popover open={showTagPicker} onOpenChange={setShowTagPicker}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -251,7 +180,13 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
               </div>
             </PopoverContent>
           </Popover>
-          
+
+          {toggleFullscreen && (
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -265,8 +200,8 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
             const tag = availableTags.find(t => t.id === tagId);
             if (!tag) return null;
             return (
-              <Badge 
-                key={tagId} 
+              <Badge
+                key={tagId}
                 variant="secondary"
                 className="cursor-pointer"
                 onClick={() => toggleTag(tagId)}
@@ -299,9 +234,9 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           icon={<Heading3 className="w-4 h-4" />}
           title="Título 3 (### + espacio)"
         />
-        
+
         <div className="w-px h-5 bg-border mx-1" />
-        
+
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive("bold")}
@@ -326,9 +261,9 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           icon={<Code className="w-4 h-4" />}
           title="Código (Ctrl+E)"
         />
-        
+
         <div className="w-px h-5 bg-border mx-1" />
-        
+
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive("bulletList")}
@@ -347,9 +282,9 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           icon={<CheckSquare className="w-4 h-4" />}
           title="Tareas ([] + espacio)"
         />
-        
+
         <div className="w-px h-5 bg-border mx-1" />
-        
+
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           isActive={editor.isActive("blockquote")}
@@ -361,9 +296,9 @@ export function NoteEditor({ note, availableTags, onUpdate, onClose }: NoteEdito
           icon={<Minus className="w-4 h-4" />}
           title="Línea horizontal (--- + espacio)"
         />
-        
+
         <div className="w-px h-5 bg-border mx-1" />
-        
+
         {/* Keyboard shortcuts help */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -437,8 +372,8 @@ function ToolbarButton({ onClick, isActive, icon, title }: ToolbarButtonProps) {
       title={title}
       className={cn(
         "p-1.5 rounded transition-colors",
-        isActive 
-          ? "bg-primary text-primary-foreground" 
+        isActive
+          ? "bg-primary text-primary-foreground"
           : "hover:bg-muted text-muted-foreground hover:text-foreground"
       )}
     >

@@ -61,8 +61,32 @@ export class NotesService {
     }
 
     async createNote(createDto: CreateNoteDto, userId: string) {
-        // Handle tags (assuming tags is string[] in DTO, but we need NoteTag entities)
-        // For simplicity, we'll ignore tags for now or treating them as needing full implementation later
+        // Handle tags: frontend sends an array of tag IDs (string[])
+        let tagEntities: NoteTag[] = [];
+        if (createDto.tags && createDto.tags.length > 0) {
+            // Fetch existing tags
+            tagEntities = await this.tagRepository.findByIds(createDto.tags);
+            const foundIds = tagEntities.map(t => t.id);
+
+            // For tags that don't exist (e.g. auto-generated "role-123"), create them on the fly
+            const missingIds = createDto.tags.filter(id => !foundIds.includes(id));
+            if (missingIds.length > 0) {
+                const newTags = missingIds.map(id => {
+                    const type = id.split('-')[0] as any;
+                    const referenceId = id.split('-').slice(1).join('-');
+                    return this.tagRepository.create({
+                        id, // Use the custom ID from frontend
+                        userId, // Link to current user
+                        name: id, // Fallback name
+                        color: 'bg-primary', // Fallback color
+                        type: ['role', 'goal', 'project'].includes(type) ? type : 'custom',
+                        referenceId: referenceId || undefined
+                    });
+                });
+                const savedTags = await this.tagRepository.save(newTags);
+                tagEntities = [...tagEntities, ...savedTags];
+            }
+        }
 
         const note = this.noteRepository.create({
             title: createDto.title,
@@ -70,18 +94,54 @@ export class NotesService {
             content: createDto.content,
             isFavorite: createDto.isFavorite,
             folder: createDto.folderId ? { id: createDto.folderId } as any : null,
-            user: { id: userId } as any
+            user: { id: userId } as any,
+            tags: tagEntities
         });
 
-        return this.noteRepository.save(note);
+        const savedNote = await this.noteRepository.save(note);
+        return { ...savedNote, tags: savedNote.tags || [] };
     }
 
     async updateNote(id: string, updateDto: UpdateNoteDto, userId: string) {
         const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
         if (!note) throw new Error(`Note ${id} not found`);
 
-        const { tags, ...data } = updateDto as any; // Ignore tags for simple update
+        const { tags, ...data } = updateDto as any;
+
+        // Update basic data
         await this.noteRepository.update(id, data);
+
+        // Update tags if provided
+        if (tags !== undefined) {
+            let tagEntities: NoteTag[] = [];
+            if (tags && tags.length > 0) {
+                tagEntities = await this.tagRepository.findByIds(tags);
+                const foundIds = tagEntities.map(t => t.id);
+
+                const missingIds = tags.filter((id: string) => !foundIds.includes(id));
+                if (missingIds.length > 0) {
+                    const newTags = missingIds.map((id: string) => {
+                        const type = id.split('-')[0] as any;
+                        const referenceId = id.split('-').slice(1).join('-');
+                        return this.tagRepository.create({
+                            id,
+                            userId,
+                            name: id,
+                            color: 'bg-primary',
+                            type: ['role', 'goal', 'project'].includes(type) ? type : 'custom',
+                            referenceId: referenceId || undefined
+                        });
+                    });
+                    const savedTags = await this.tagRepository.save(newTags);
+                    tagEntities = [...tagEntities, ...savedTags];
+                }
+            }
+
+            // To update ManyToMany relations, we must save the entity instance with the new tags array.
+            // .update() does not handle ManyToMany relations.
+            note.tags = tagEntities;
+            await this.noteRepository.save(note);
+        }
         return this.noteRepository.findOne({
             where: { id },
             relations: ['tags', 'folder']

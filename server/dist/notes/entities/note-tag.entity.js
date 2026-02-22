@@ -16,6 +16,8 @@ let NoteTag = class NoteTag {
     userId;
     name;
     color;
+    type;
+    referenceId;
     createdAt;
     user;
     notes;
@@ -37,6 +39,14 @@ __decorate([
     (0, typeorm_1.Column)({ length: 20, default: '#808080' }),
     __metadata("design:type", String)
 ], NoteTag.prototype, "color", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 20, default: 'custom' }),
+    __metadata("design:type", String)
+], NoteTag.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'reference_id', nullable: true }),
+    __metadata("design:type", String)
+], NoteTag.prototype, "referenceId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

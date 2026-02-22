@@ -5,6 +5,8 @@ export declare class NoteTag {
     userId: string;
     name: string;
     color: string;
+    type: 'role' | 'goal' | 'project' | 'custom';
+    referenceId: string;
     createdAt: Date;
     user: User;
     notes: Note[];

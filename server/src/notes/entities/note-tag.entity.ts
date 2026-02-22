@@ -16,6 +16,12 @@ export class NoteTag {
     @Column({ length: 20, default: '#808080' })
     color: string;
 
+    @Column({ type: 'varchar', length: 20, default: 'custom' })
+    type: 'role' | 'goal' | 'project' | 'custom';
+
+    @Column({ name: 'reference_id', nullable: true })
+    referenceId: string;
+
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 

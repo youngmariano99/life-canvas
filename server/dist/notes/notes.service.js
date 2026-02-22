@@ -61,15 +61,39 @@ let NotesService = class NotesService {
         });
     }
     async createNote(createDto, userId) {
+        let tagEntities = [];
+        if (createDto.tags && createDto.tags.length > 0) {
+            tagEntities = await this.tagRepository.findByIds(createDto.tags);
+            const foundIds = tagEntities.map(t => t.id);
+            const missingIds = createDto.tags.filter(id => !foundIds.includes(id));
+            if (missingIds.length > 0) {
+                const newTags = missingIds.map(id => {
+                    const type = id.split('-')[0];
+                    const referenceId = id.split('-').slice(1).join('-');
+                    return this.tagRepository.create({
+                        id,
+                        userId,
+                        name: id,
+                        color: 'bg-primary',
+                        type: ['role', 'goal', 'project'].includes(type) ? type : 'custom',
+                        referenceId: referenceId || undefined
+                    });
+                });
+                const savedTags = await this.tagRepository.save(newTags);
+                tagEntities = [...tagEntities, ...savedTags];
+            }
+        }
         const note = this.noteRepository.create({
             title: createDto.title,
             type: createDto.type || 'note',
             content: createDto.content,
             isFavorite: createDto.isFavorite,
             folder: createDto.folderId ? { id: createDto.folderId } : null,
-            user: { id: userId }
+            user: { id: userId },
+            tags: tagEntities
         });
-        return this.noteRepository.save(note);
+        const savedNote = await this.noteRepository.save(note);
+        return { ...savedNote, tags: savedNote.tags || [] };
     }
     async updateNote(id, updateDto, userId) {
         const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
@@ -77,6 +101,32 @@ let NotesService = class NotesService {
             throw new Error(`Note ${id} not found`);
         const { tags, ...data } = updateDto;
         await this.noteRepository.update(id, data);
+        if (tags !== undefined) {
+            let tagEntities = [];
+            if (tags && tags.length > 0) {
+                tagEntities = await this.tagRepository.findByIds(tags);
+                const foundIds = tagEntities.map(t => t.id);
+                const missingIds = tags.filter((id) => !foundIds.includes(id));
+                if (missingIds.length > 0) {
+                    const newTags = missingIds.map((id) => {
+                        const type = id.split('-')[0];
+                        const referenceId = id.split('-').slice(1).join('-');
+                        return this.tagRepository.create({
+                            id,
+                            userId,
+                            name: id,
+                            color: 'bg-primary',
+                            type: ['role', 'goal', 'project'].includes(type) ? type : 'custom',
+                            referenceId: referenceId || undefined
+                        });
+                    });
+                    const savedTags = await this.tagRepository.save(newTags);
+                    tagEntities = [...tagEntities, ...savedTags];
+                }
+            }
+            note.tags = tagEntities;
+            await this.noteRepository.save(note);
+        }
         return this.noteRepository.findOne({
             where: { id },
             relations: ['tags', 'folder']
