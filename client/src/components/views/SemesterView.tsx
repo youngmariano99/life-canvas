@@ -328,16 +328,18 @@ export function SemesterView() {
                                   <button
                                     onClick={() => !state.isReadOnly && handleToggleSubGoal(goal.id, sg.id)}
                                     disabled={state.isReadOnly}
-                                    className={cn(
-                                      "mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                      sg.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary/50",
-                                      state.isReadOnly && "opacity-50 cursor-not-allowed"
-                                    )}
+                                    className="p-2 -m-2 group/sgbtn"
                                   >
-                                    {sg.completed && <Check className="w-3 h-3" />}
+                                    <div className={cn(
+                                      "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                                      sg.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 group-hover/sgbtn:border-primary/50",
+                                      state.isReadOnly && "opacity-50 cursor-not-allowed"
+                                    )}>
+                                      {sg.completed && <Check className="w-3.5 h-3.5" />}
+                                    </div>
                                   </button>
                                   <span className={cn(
-                                    "text-sm flex-1 break-words leading-tight",
+                                    "text-sm flex-1 break-words leading-tight ml-1 mt-0.5",
                                     sg.completed ? "text-muted-foreground line-through decoration-muted-foreground/50" : "text-foreground/90"
                                   )}>
                                     {sg.title}
@@ -345,9 +347,9 @@ export function SemesterView() {
                                   {!state.isReadOnly && (
                                     <button
                                       onClick={() => handleDeleteSubGoal(goal.id, sg.id)}
-                                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
+                                      className="opacity-0 group-hover:opacity-100 p-2 -m-2 text-muted-foreground hover:text-destructive transition-opacity"
                                     >
-                                      <X className="w-3 h-3" />
+                                      <X className="w-4 h-4" />
                                     </button>
                                   )}
                                 </div>
@@ -372,9 +374,9 @@ export function SemesterView() {
                           {!state.isReadOnly && (
                             <button
                               onClick={() => deleteGoal(goal.id)}
-                              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                              className="text-muted-foreground hover:text-destructive transition-colors p-2 -m-1"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-5 h-5" />
                             </button>
                           )}
                         </div>

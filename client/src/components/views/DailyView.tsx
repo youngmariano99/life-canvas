@@ -99,9 +99,10 @@ export function DailyView() {
           <Button
             variant="outline"
             size="icon"
+            className="w-10 h-10"
             onClick={() => setSelectedDate(subDays(selectedDate, 1))}
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </Button>
           <Button
             variant={isToday ? "default" : "outline"}
@@ -114,9 +115,10 @@ export function DailyView() {
           <Button
             variant="outline"
             size="icon"
+            className="w-10 h-10"
             onClick={() => setSelectedDate(addDays(selectedDate, 1))}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -133,7 +135,7 @@ export function DailyView() {
               key={day.toISOString()}
               onClick={() => setSelectedDate(day)}
               className={cn(
-                "flex flex-col items-center min-w-[60px] py-3 px-4 rounded-xl transition-all",
+                "flex flex-col items-center min-w-[70px] py-4 px-3 rounded-xl transition-all",
                 isSelected
                   ? "bg-primary text-primary-foreground shadow-card"
                   : "bg-card hover:bg-secondary border border-border",

@@ -296,14 +296,14 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
                                   onClick={() => !readOnly && handleToggleStatus(habit.id, dayStr, log?.status)}
                                   disabled={readOnly}
                                   className={cn(
-                                    "w-7 h-7 rounded-lg mx-auto flex items-center justify-center transition-all",
+                                    "w-10 h-10 rounded-xl mx-auto flex items-center justify-center transition-all",
                                     statusConfig
                                       ? statusConfig.class
                                       : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/10",
                                     readOnly && "cursor-not-allowed opacity-50"
                                   )}
                                 >
-                                  {statusConfig && <statusConfig.icon className="w-3 h-3" />}
+                                  {statusConfig && <statusConfig.icon className="w-5 h-5" />}
                                 </button>
                               </td>
                             );

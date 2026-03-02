@@ -4,14 +4,25 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument, PomodoroSession, PomodoroSettings, ActivePauseRoutine, ActivePauseEntry } from "@/types/lifeOS";
+import { LifeOSState, initialState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument, PomodoroSession, PomodoroSettings, ActivePauseRoutine, ActivePauseEntry } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 import { api } from "@/lib/api";
 
 export function useLifeOS() {
-  const [state, setState] = useState<LifeOSState>(() => store.loadState());
+  const [state, setState] = useState<LifeOSState>({
+    ...initialState,
+    isLoading: true
+  });
 
+  // Load local state from IndexedDB on mount
+  useEffect(() => {
+    async function loadLocal() {
+      const localState = await store.loadState();
+      setState(localState);
+    }
+    loadLocal();
+  }, []);
   // Initial Load from API
   useEffect(() => {
     async function loadData() {
@@ -74,9 +85,11 @@ export function useLifeOS() {
     loadData();
   }, [state.selectedYear]);
 
-  // Persist to localStorage on every state change (Keeping this as backup for now, but usually we would remove it for connected parts)
+  // Persist to IndexedDB on every state change
   useEffect(() => {
-    store.saveState(state);
+    if (!state.isLoading) {
+      store.saveState(state);
+    }
   }, [state]);
 
   // Navigation
@@ -666,8 +679,9 @@ export function useLifeOS() {
   }, []);
 
   // Reset
-  const resetAll = useCallback(() => {
-    setState(store.resetState());
+  const resetAll = useCallback(async () => {
+    const newState = await store.resetState();
+    setState(newState);
   }, []);
 
   // Helpers

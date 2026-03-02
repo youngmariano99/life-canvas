@@ -165,19 +165,19 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-6 w-6 text-muted-foreground"
+                            className="h-10 w-10 text-muted-foreground"
                             onClick={() => handleEditColumn(index)}
                           >
-                            <Edit2 className="w-3 h-3" />
+                            <Edit2 className="h-5 w-5" />
                           </Button>
                           {project.statuses.length > 2 && (
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              className="h-10 w-10 text-muted-foreground hover:text-destructive"
                               onClick={() => handleDeleteColumn(index)}
                             >
-                              <X className="w-3 h-3" />
+                              <X className="h-5 w-5" />
                             </Button>
                           )}
                         </div>
@@ -215,10 +215,10 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                            className="h-10 w-10 text-muted-foreground hover:text-destructive flex-shrink-0"
                             onClick={() => deleteProjectActivity(activity.id)}
                           >
-                            <X className="w-3 h-3" />
+                            <X className="h-5 w-5" />
                           </Button>
                         )}
                       </div>

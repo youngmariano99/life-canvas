@@ -105,10 +105,10 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/20"
+              className="text-white/70 hover:text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
               onClick={onClose}
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </Button>
           )}
         </div>
@@ -134,18 +134,20 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
                     <button
                       onClick={() => !state.isReadOnly && handleToggleActivity(activity.id, activity.status)}
                       disabled={state.isReadOnly}
-                      className={cn(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0",
+                      className="p-2 -m-2 group/btn"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 flex items-center justify-center rounded border-2 transition-all",
                         isCompleted
                           ? "bg-success border-success text-white"
-                          : "border-border hover:border-primary",
+                          : "border-border group-hover/btn:border-primary",
                         state.isReadOnly && "opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      {isCompleted && <Check className="w-3 h-3" />}
+                      )}>
+                        {isCompleted && <Check className="w-4 h-4" />}
+                      </div>
                     </button>
                     <span className={cn(
-                      "text-sm flex-1",
+                      "text-sm flex-1 ml-1",
                       isCompleted && "line-through text-muted-foreground"
                     )}>
                       {activity.title}
@@ -180,18 +182,20 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
                     <button
                       onClick={() => !state.isReadOnly && handleToggleHabit(habit.id)}
                       disabled={state.isReadOnly}
-                      className={cn(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0",
+                      className="p-2 -m-2 group/btn"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 flex items-center justify-center rounded border-2 transition-all",
                         isCompleted
                           ? "bg-success border-success text-white"
-                          : "border-border hover:border-primary",
+                          : "border-border group-hover/btn:border-primary",
                         state.isReadOnly && "opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      {isCompleted && <Check className="w-3 h-3" />}
+                      )}>
+                        {isCompleted && <Check className="w-4 h-4" />}
+                      </div>
                     </button>
                     <span className={cn(
-                      "text-sm flex-1",
+                      "text-sm flex-1 ml-1",
                       isCompleted && "line-through text-muted-foreground"
                     )}>
                       {habit.name}

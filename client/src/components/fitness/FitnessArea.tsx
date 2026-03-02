@@ -115,14 +115,14 @@ export function FitnessArea() {
         <div className="bg-card rounded-2xl border border-border p-4 sm:p-6">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-6">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}>
-              <ChevronLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}>
+              <ChevronLeft className="w-6 h-6" />
             </Button>
             <h3 className="text-lg font-semibold capitalize">
               {format(selectedMonth, "MMMM yyyy", { locale: es })}
             </h3>
-            <Button variant="ghost" size="icon" onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}>
-              <ChevronRight className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}>
+              <ChevronRight className="w-6 h-6" />
             </Button>
           </div>
 
@@ -210,9 +210,9 @@ export function FitnessArea() {
                 </div>
                 <Dialog open={isAddingActivity} onOpenChange={setIsAddingActivity}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="gap-1">
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">Agregar</span>
+                    <Button size="sm" className="h-10 px-4 gap-1">
+                      <Plus className="w-5 h-5" />
+                      <span className="hidden sm:inline">Agregar Actividad</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">

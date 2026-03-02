@@ -2,8 +2,17 @@
  * API Client for interacting with the NestJS Backend
  */
 import { Role, Goal, Habit, HabitLog, Project, ProjectActivity, DailyStone, FitnessActivity, Deviation, Resource, NoteFolder, Note, CalendarEvent, FitnessRoutine, User, PomodoroSession } from "@/types/lifeOS";
+import { actionQueue } from "@/store/ActionQueue";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/api";
+
+// Auto-Sync al volver a tener internet
+if (typeof window !== "undefined") {
+    window.addEventListener("online", () => {
+        console.log("Back online! Syncing background queue...");
+        actionQueue.sync();
+    });
+}
 
 const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token');
@@ -13,10 +22,27 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
         ...(token ? { "Authorization": `Bearer ${token}` } : {})
     };
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
+    let response: Response;
+    try {
+        response = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers,
+        });
+    } catch (networkError: any) {
+        // Interceptar fallo de red puro (TypeError: Failed to fetch) en mutaciones
+        const method = (options.method || "GET").toUpperCase();
+        if (method !== "GET") {
+            console.warn(`[Offline] Queueing ${method} ${endpoint}`);
+            await actionQueue.enqueue({
+                endpoint,
+                method: method as any,
+                payload: options.body ? JSON.parse(options.body as string) : undefined
+            });
+            // Fake a successful empty response to optimistic UI to continue
+            return null;
+        }
+        throw new Error("Estás fuera de línea y esto no puede ser cacheado.");
+    }
 
     if (!response.ok) {
         if (response.status === 401) {

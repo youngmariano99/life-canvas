@@ -27,20 +27,29 @@ import {
   ActivePauseEntry
 } from "@/types/lifeOS";
 
+import localforage from "localforage";
+
 const STORAGE_KEY = "life-os-2026";
 
+// Configurar localforage
+localforage.config({
+  name: 'LifeOS',
+  storeName: 'life_os_store',
+  description: 'Persistencia offline de Life OS 2026'
+});
+
 /**
- * Load state from localStorage
+ * Load state from IndexedDB (Asynchronous)
  */
-export function loadState(): LifeOSState {
+export async function loadState(): Promise<LifeOSState> {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = await localforage.getItem<string>(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       return {
         ...initialState,
         ...parsed,
-        isLoading: true, // Force loading state on startup
+        isLoading: true, // Force loading state on startup while syncing
         projects: parsed.projects || [],
         projectActivities: parsed.projectActivities || [],
         fitnessActivities: parsed.fitnessActivities || [],
@@ -56,20 +65,32 @@ export function loadState(): LifeOSState {
         focusMode: parsed.focusMode ?? false,
       };
     }
+
+    // Fallback: tratar de leer del viejo localStorage para migración
+    const oldSaved = localStorage.getItem(STORAGE_KEY);
+    if (oldSaved) {
+      const parsed = JSON.parse(oldSaved);
+      await saveState(parsed); // Guardar en el nuevo store
+      return {
+        ...initialState,
+        ...parsed,
+        isLoading: true
+      };
+    }
   } catch (error) {
-    console.error("Failed to load Life-OS state:", error);
+    console.error("Failed to load Life-OS state from IndexedDB:", error);
   }
   return initialState;
 }
 
 /**
- * Save state to localStorage
+ * Save state to IndexedDB
  */
-export function saveState(state: LifeOSState): void {
+export async function saveState(state: LifeOSState): Promise<void> {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    await localforage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
-    console.error("Failed to save Life-OS state:", error);
+    console.error("Failed to save Life-OS state to IndexedDB:", error);
   }
 }
 
@@ -590,8 +611,9 @@ export function toggleFocusMode(state: LifeOSState): LifeOSState {
 /**
  * Reset all data (for testing/restart)
  */
-export function resetState(): LifeOSState {
-  localStorage.removeItem(STORAGE_KEY);
+export async function resetState(): Promise<LifeOSState> {
+  await localforage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_KEY); // limpiar viejo tmb
   return initialState;
 }
 

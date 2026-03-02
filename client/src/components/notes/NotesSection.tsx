@@ -241,20 +241,20 @@ export function NotesSection() {
           >
             {hasChildren ? (
               <button
-                className="p-0.5"
+                className="p-1 -ml-1 min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleFolder(folder.id);
                 }}
               >
                 {isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
                 ) : (
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 )}
               </button>
             ) : (
-              <span className="w-5" />
+              <span className="min-w-[32px]" />
             )}
 
             {isExpanded ? (
@@ -276,10 +276,10 @@ export function NotesSection() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                  className="h-10 w-10 opacity-50 sm:opacity-0 sm:group-hover:opacity-100 flex-shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical className="w-3 h-3" />
+                  <MoreVertical className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -454,10 +454,10 @@ export function NotesSection() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                          className="h-10 w-10 opacity-50 sm:opacity-0 sm:group-hover:opacity-100 flex-shrink-0"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <MoreVertical className="w-3 h-3" />
+                          <MoreVertical className="w-5 h-5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">

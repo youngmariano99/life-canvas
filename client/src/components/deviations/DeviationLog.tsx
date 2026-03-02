@@ -7,7 +7,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { BookOpen, Plus, Lightbulb, AlertCircle, ArrowRight } from "lucide-react";
+import { BookOpen, Plus, Lightbulb, AlertCircle, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -167,12 +167,12 @@ export function DeviationLog() {
               className="bg-card rounded-2xl border border-border p-6 shadow-soft group relative"
             >
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(deviation)}>
-                  Edit
+              <div className="absolute top-4 right-4 flex gap-1 opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-[44px] w-[44px]" onClick={() => handleOpenEdit(deviation)}>
+                  <Pencil className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(deviation.id)}>
-                  Eliminar
+                <Button variant="ghost" size="icon" className="h-[44px] w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(deviation.id)}>
+                  <Trash2 className="h-5 w-5" />
                 </Button>
               </div>
 

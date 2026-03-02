@@ -227,25 +227,27 @@ export function FitnessRoutineCreator() {
                                 {isOneLiner ? "Objetivos" : "Ejercicios / Bloques"}
                             </Label>
                             {!isOneLiner && (
-                                <Button size="sm" variant="ghost" onClick={addItem} className="h-8 gap-1">
-                                    <Plus className="w-3.5 h-3.5" /> Agregar Ítem
+                                <Button size="sm" variant="ghost" onClick={addItem} className="h-10 px-3 gap-1">
+                                    <Plus className="w-4 h-4" /> Agregar Ítem
                                 </Button>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             {items.map((item, index) => (
-                                <div key={item.id} className="flex gap-2 items-center group animate-in fade-in slide-in-from-left-2">
-                                    <GripVertical className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 cursor-move" />
+                                <div key={item.id} className="flex gap-2 items-center animate-in fade-in slide-in-from-left-2">
+                                    <div className="p-2 -ml-2 cursor-move flex-shrink-0 touch-none">
+                                        <GripVertical className="w-5 h-5 text-muted-foreground/50" />
+                                    </div>
                                     {renderInputs(item, index)}
                                     {!isOneLiner && (
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="h-10 w-10 text-muted-foreground hover:text-destructive flex-shrink-0"
                                             onClick={() => removeItem(item.id)}
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-5 h-5" />
                                         </Button>
                                     )}
                                 </div>

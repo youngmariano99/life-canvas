@@ -171,20 +171,20 @@ export function EventCalendar({ readOnly = false }: EventCalendarProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => handleNavigate("prev")}>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleNavigate("prev")}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
-          <h3 className="text-lg font-semibold min-w-[180px] text-center capitalize">
+          <h3 className="text-lg font-semibold min-w-[150px] sm:min-w-[180px] text-center capitalize">
             {viewMode === "week"
               ? `${format(startDate, "d MMM", { locale: es })} - ${format(endDate, "d MMM yyyy", { locale: es })}`
               : format(currentDate, "MMMM yyyy", { locale: es })
             }
           </h3>
-          <Button variant="ghost" size="icon" onClick={() => handleNavigate("next")}>
+          <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleNavigate("next")}>
             <ChevronRight className="w-5 h-5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+          <Button variant="outline" size="sm" className="h-10 px-4 ml-1" onClick={() => setCurrentDate(new Date())}>
             Hoy
           </Button>
         </div>
@@ -313,10 +313,10 @@ export function EventCalendar({ readOnly = false }: EventCalendarProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 opacity-50 hover:opacity-100"
+                        className="h-8 w-8 opacity-50 hover:opacity-100"
                         onClick={() => openAddEventForDate(day)}
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-4 h-4" />
                       </Button>
                     )}
                   </div>

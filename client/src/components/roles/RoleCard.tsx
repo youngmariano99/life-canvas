@@ -121,9 +121,9 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
           {isHovering && (
             <button
               onClick={handleUploadClick}
-              className="absolute top-3 right-3 p-2 bg-black/40 rounded-lg backdrop-blur-sm transition-opacity hover:bg-black/60"
+              className="absolute top-2 right-2 p-3 w-11 h-11 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-sm transition-opacity hover:bg-black/60 z-10"
             >
-              <ImagePlus className="w-4 h-4 text-white" />
+              <ImagePlus className="w-5 h-5 text-white" />
             </button>
           )}
 
@@ -209,9 +209,9 @@ export function RoleCard({ role, goalsCount, progress, delay = 0, onClick, varia
           {isHovering && (
             <button
               onClick={handleUploadClick}
-              className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity"
+              className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity z-10 min-h-[44px]"
             >
-              <ImagePlus className="w-6 h-6 text-white" />
+              <ImagePlus className="w-7 h-7 text-white" />
             </button>
           )}
         </div>

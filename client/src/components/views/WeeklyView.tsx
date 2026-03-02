@@ -94,13 +94,15 @@ export function WeeklyView() {
             <Button
               variant="outline"
               size="icon"
+              className="h-10 w-10"
               onClick={() => setSelectedWeek(subWeeks(selectedWeek, 1))}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
             <Button
               variant="outline"
               size="sm"
+              className="h-10 px-4"
               onClick={() => setSelectedWeek(new Date())}
             >
               Esta semana
@@ -108,9 +110,10 @@ export function WeeklyView() {
             <Button
               variant="outline"
               size="icon"
+              className="h-10 w-10"
               onClick={() => setSelectedWeek(addWeeks(selectedWeek, 1))}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
         </div>

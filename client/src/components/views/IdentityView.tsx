@@ -53,9 +53,9 @@ export function IdentityView() {
           <Button
             variant="ghost"
             onClick={() => setSelectedRole(null)}
-            className="gap-2 pl-2"
+            className="gap-2 pl-2 pr-4 min-h-[44px]"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
             <span className="text-lg font-medium">Volver a roles</span>
           </Button>
         </div>
