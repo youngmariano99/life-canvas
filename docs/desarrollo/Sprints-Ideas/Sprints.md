@@ -57,3 +57,10 @@ Este documento sirve como registro de las ideas, sprints y tareas pendientes de 
 - [x] **Persistencia de Caché (Lectura Offline):** Migramos a `localforage` (IndexedDB) logrando cargas masivas instantáneas independientemente del límite de 5MB del viejo LocalStorage.
 - [x] **Cola de Mutaciones (Escritura Offline):** Desarrollado `ActionQueue.ts` que intercepta fallos de `fetchWithAuth` en `api.ts`.
 - [x] **UI/UX de Estado de Red:** Integrado `PWABadge.tsx` al `Dashboard` y `MobileNav` que reacciona a eventos online/offline nativos del Browser, con auto-retry local silenciado.
+
+### 🎯 Sprint 3: Gestión Directa (CRUD) en Tarjetas de Rol
+**Objetivo:** Permitir al usuario crear, editar y eliminar Hábitos y Objetivos directamente desde la vista de Resumen de cada Rol en la pestaña "Identidad", sin recargar ni cambiar de pestaña.
+
+**Tareas Propuestas (Completadas):**
+- [x] **Hábitos In-Site:** Modificados los modales de `RoleSummaryView.tsx` incorporando un botón `+` para añadir Hábitos de forma veloz. Añadido DropdownMenu en cada Hábito con opciones de `Editar` (Inline Input) y `Eliminar` (Trash).
+- [x] **Objetivos In-Site:** Añadida similar lógica a los Objetivos (Goals). Se puede añadir título y elegir el Quarter (Q1-Q4) in situ, y modificarlos o destruirlos en el aire logrando consistencia Optimista.
