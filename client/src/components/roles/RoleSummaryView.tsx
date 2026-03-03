@@ -7,11 +7,21 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useState } from "react";
 import {
   X, Check, Target, Calendar, Repeat, FolderKanban,
-  GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users
+  GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
+  Plus, Trash2, Pencil, MoreHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { Role, ROLE_COLORS } from "@/types/lifeOS";
 import { cn } from "@/lib/utils";
@@ -34,8 +44,26 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
     getActivitiesForDate,
     getHabitLogsForDate,
     logHabit,
-    updateProjectActivity
+    updateProjectActivity,
+    addHabit,
+    updateHabit,
+    deleteHabit,
+    addGoal,
+    updateGoal,
+    deleteGoal
   } = useLifeOSContext();
+
+  const [isAddingHabit, setIsAddingHabit] = useState(false);
+  const [newHabitName, setNewHabitName] = useState("");
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [editHabitName, setEditHabitName] = useState("");
+
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [newGoalQuarter, setNewGoalQuarter] = useState<1 | 2 | 3 | 4>(1);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editGoalTitle, setEditGoalTitle] = useState("");
+  const [editGoalQuarter, setEditGoalQuarter] = useState<1 | 2 | 3 | 4>(1);
 
   const today = format(new Date(), "yyyy-MM-dd");
   const colors = ROLE_COLORS[role.color];
@@ -79,6 +107,48 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
   const handleToggleActivity = (activityId: string, currentStatus: string) => {
     const newStatus = currentStatus === "Completada" ? "Por hacer" : "Completada";
     updateProjectActivity(activityId, { status: newStatus });
+  };
+
+  const handleCreateHabit = () => {
+    if (!newHabitName.trim()) return;
+    addHabit({
+      name: newHabitName.trim(),
+      roleId: role.id,
+      frequency: "daily"
+    });
+    setNewHabitName("");
+    setIsAddingHabit(false);
+  };
+
+  const handleSaveEditHabit = () => {
+    if (!editingHabitId || !editHabitName.trim()) return;
+    updateHabit(editingHabitId, { name: editHabitName.trim() });
+    setEditingHabitId(null);
+  };
+
+  const handleCreateGoal = () => {
+    if (!newGoalTitle.trim()) return;
+    addGoal({
+      roleId: role.id,
+      title: newGoalTitle.trim(),
+      quarter: newGoalQuarter,
+      semester: newGoalQuarter <= 2 ? 1 : 2,
+      status: "pending",
+      subGoals: [],
+    });
+    setNewGoalTitle("");
+    setNewGoalQuarter(1);
+    setIsAddingGoal(false);
+  };
+
+  const handleSaveEditGoal = () => {
+    if (!editingGoalId || !editGoalTitle.trim()) return;
+    updateGoal(editingGoalId, {
+      title: editGoalTitle.trim(),
+      quarter: editGoalQuarter,
+      semester: editGoalQuarter <= 2 ? 1 : 2
+    });
+    setEditingGoalId(null);
   };
 
   const renderContent = () => (
@@ -166,18 +236,45 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
         {/* Habits */}
         {roleHabits.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Repeat className="w-4 h-4 text-muted-foreground" />
-              <h3 className="font-semibold text-sm text-foreground">Hábitos</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Repeat className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm text-foreground">Hábitos</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setIsAddingHabit(!isAddingHabit)}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
+
             <div className="space-y-2">
+              {isAddingHabit && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50">
+                  <Input
+                    autoFocus
+                    placeholder="Nuevo hábito..."
+                    value={newHabitName}
+                    onChange={(e) => setNewHabitName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateHabit()}
+                    className="h-8 text-sm"
+                  />
+                  <Button size="sm" onClick={handleCreateHabit} className="h-8">Guardar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsAddingHabit(false)} className="h-8 px-2">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
               {roleHabits.map((habit) => {
                 const log = todayHabitLogs.find(l => l.habitId === habit.id);
                 const isCompleted = log?.status === "completed";
                 return (
                   <div
                     key={habit.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                    className="group/item flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <button
                       onClick={() => !state.isReadOnly && handleToggleHabit(habit.id)}
@@ -194,12 +291,61 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
                         {isCompleted && <Check className="w-4 h-4" />}
                       </div>
                     </button>
-                    <span className={cn(
-                      "text-sm flex-1 ml-1",
-                      isCompleted && "line-through text-muted-foreground"
-                    )}>
-                      {habit.name}
-                    </span>
+
+                    {editingHabitId === habit.id ? (
+                      <div className="flex-1 flex gap-2 items-center">
+                        <Input
+                          autoFocus
+                          value={editHabitName}
+                          onChange={(e) => setEditHabitName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEditHabit()}
+                          className="h-7 text-sm py-1"
+                        />
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleSaveEditHabit}>
+                          <Check className="w-4 h-4 text-success" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingHabitId(null)}>
+                          <X className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className={cn(
+                          "text-sm flex-1 ml-1 cursor-default",
+                          isCompleted && "line-through text-muted-foreground"
+                        )}>
+                          {habit.name}
+                        </span>
+
+                        {!state.isReadOnly && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setEditingHabitId(habit.id);
+                                setEditHabitName(habit.name);
+                              }}>
+                                <Pencil className="w-4 h-4 mr-2" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:bg-destructive/10"
+                                onClick={() => {
+                                  if (confirm(`¿Eliminar hábito '${habit.name}'?`)) {
+                                    deleteHabit(habit.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -208,35 +354,161 @@ export function RoleSummaryView({ role, onClose, variant = "inline" }: RoleSumma
         )}
 
         {/* Upcoming Goals */}
-        {upcomingGoals.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-3">
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-muted-foreground" />
-              <h3 className="font-semibold text-sm text-foreground">Próximos Objetivos</h3>
+              <h3 className="font-semibold text-sm text-foreground">Objetivos</h3>
             </div>
-            <div className="space-y-2">
-              {upcomingGoals.map((goal) => (
-                <div key={goal.id} className="p-3 rounded-xl bg-muted/50">
-                  <p className="text-sm font-medium">{goal.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={cn(
-                      "text-xs px-2 py-0.5 rounded-full",
-                      colors.bg,
-                      "text-white"
-                    )}>
-                      Q{goal.quarter}
-                    </span>
-                    {goal.targetDate && (
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(goal.targetDate), "d MMM", { locale: es })}
-                      </span>
-                    )}
-                  </div>
+            {!state.isReadOnly && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setIsAddingGoal(!isAddingGoal)}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {isAddingGoal && (
+              <div className="flex flex-col gap-2 p-3 rounded-xl bg-muted/50 border border-border">
+                <Input
+                  autoFocus
+                  placeholder="Título del objetivo..."
+                  value={newGoalTitle}
+                  onChange={(e) => setNewGoalTitle(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <div className="flex gap-2">
+                  <Select
+                    value={newGoalQuarter.toString()}
+                    onValueChange={(v) => setNewGoalQuarter(parseInt(v) as 1 | 2 | 3 | 4)}
+                  >
+                    <SelectTrigger className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Q1 (Ene-Mar)</SelectItem>
+                      <SelectItem value="2">Q2 (Abr-Jun)</SelectItem>
+                      <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
+                      <SelectItem value="4">Q4 (Oct-Dic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={handleCreateGoal} className="h-8">Guardar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsAddingGoal(false)} className="h-8 px-2">
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
+            )}
+
+            {roleGoals.length > 0 ? roleGoals.map((goal) => (
+              <div key={goal.id} className="p-3 rounded-xl bg-muted/50 group/item relative">
+                {editingGoalId === goal.id ? (
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      autoFocus
+                      value={editGoalTitle}
+                      onChange={(e) => setEditGoalTitle(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <Select
+                        value={editGoalQuarter.toString()}
+                        onValueChange={(v) => setEditGoalQuarter(parseInt(v) as 1 | 2 | 3 | 4)}
+                      >
+                        <SelectTrigger className="h-8 text-sm flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Q1</SelectItem>
+                          <SelectItem value="2">Q2</SelectItem>
+                          <SelectItem value="3">Q3</SelectItem>
+                          <SelectItem value="4">Q4</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" onClick={handleSaveEditGoal} className="h-8">
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingGoalId(null)} className="h-8 px-2">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="pr-6">
+                      <p className={cn("text-sm font-medium", goal.status === 'completed' && "line-through text-muted-foreground")}>{goal.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={cn(
+                          "text-xs px-2 py-0.5 rounded-full",
+                          goal.status === 'completed' ? "bg-muted-foreground text-white" : colors.bg,
+                          "text-white"
+                        )}>
+                          Q{goal.quarter}
+                        </span>
+                        {goal.targetDate && (
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(goal.targetDate), "d MMM", { locale: es })}
+                          </span>
+                        )}
+                        {goal.status === 'completed' && (
+                          <span className="text-xs text-success flex items-center gap-1 mt-0.5">
+                            <Check className="w-3 h-3" /> Completado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {!state.isReadOnly && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setEditingGoalId(goal.id);
+                              setEditGoalTitle(goal.title);
+                              setEditGoalQuarter(Math.min(Math.max(goal.quarter, 1), 4) as 1 | 2 | 3 | 4);
+                            }}>
+                              <Pencil className="w-4 h-4 mr-2" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const newStatus = goal.status === 'completed' ? 'pending' : 'completed';
+                                updateGoal(goal.id, { status: newStatus });
+                              }}
+                            >
+                              <Check className="w-4 h-4 mr-2" /> {goal.status === 'completed' ? 'Marcar Pendiente' : 'Marcar Completado'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm(`¿Eliminar objetivo '${goal.title}'?`)) {
+                                  deleteGoal(goal.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )) : (
+              !isAddingGoal && <p className="text-sm text-muted-foreground py-2 text-center bg-card rounded-xl">Sin objetivos</p>
+            )}
+          </div>
+        </section>
 
         {/* Projects */}
         {roleProjects.length > 0 && (
