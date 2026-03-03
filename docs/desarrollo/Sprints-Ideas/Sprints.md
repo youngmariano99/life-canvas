@@ -52,8 +52,8 @@ Este documento sirve como registro de las ideas, sprints y tareas pendientes de 
 ### 🚀 Sprint 2: Experiencia Offline-First (Nivel 2) & PWA
 **Objetivo:** Permitir que la aplicación funcione eficientemente sin conexión o con conexiones inestables mediante el uso de caché local y una cola de mutaciones, integrándola como una PWA instalable en dispositivos móviles.
 
-**Tareas Propuestas:**
-- [ ] **Configuración PWA:** Añadir `manifest.json`, iconos y Service Worker básico para que la app se pueda "Instalar" en el celular y ofrezca precarga de assets estáticos.
-- [ ] **Persistencia de Caché (Lectura Offline):** Conectar `PersistQueryClient` (React Query) o la capa de estado global a `IndexedDB` para que al abrir la app sin internet, muestre los últimos datos de manera instantánea.
-- [ ] **Cola de Mutaciones (Escritura Offline):** Configurar el manejo de peticiones de escritura (crear notas, marcar hábitos, etc.) para que se guarden en una cola local si falla la red, y se reintenten automáticamente cuando vuelva la conexión.
-- [ ] **UI/UX de Estado de Red:** Añadir un pequeño indicador no intrusivo (quizás un icono en el Header) que avise al usuario si está navegando "Offline" y tiene cambios pendientes de sincronizar.
+**Tareas Propuestas (Completadas):**
+- [x] **Configuración PWA:** Añadidos configuración de vite-plugin-pwa instalable.
+- [x] **Persistencia de Caché (Lectura Offline):** Migramos a `localforage` (IndexedDB) logrando cargas masivas instantáneas independientemente del límite de 5MB del viejo LocalStorage.
+- [x] **Cola de Mutaciones (Escritura Offline):** Desarrollado `ActionQueue.ts` que intercepta fallos de `fetchWithAuth` en `api.ts`.
+- [x] **UI/UX de Estado de Red:** Integrado `PWABadge.tsx` al `Dashboard` y `MobileNav` que reacciona a eventos online/offline nativos del Browser, con auto-retry local silenciado.

@@ -42,9 +42,11 @@ El repositorio sigue una estructura de directorios dividida en monorepo:
 El Frontend se rige por un diseño modular, con una fuerte arquitectura orientada a la experiencia de usuario (**UI Optimista**).
 
 ### 3.1. Gestión del Estado (Optimistic UI)
-El sistema emplea un patrón de sincronización híbrida continuo:
+El sistema emplea un patrón de sincronización híbrida continuo y **Offline-First (Nivel 2)**:
 - **Estado Remoto (Server State):** El backend y su BD son la única fuente de la verdad para el ciclo de vida largo.
-- **Estado Local Inmediato (Client State):** A través del hook orquestador `useLifeOS`, cada vez que el usuario realiza un cambio (ej., marcar la Piedra del Día, crear un Objetivo), el estado en React se muta sincrónicamente. La interfaz de usuario refleja la acción al instante. A la vez, en segundo plano (background) Axios emite las llamadas contra la API para persistir realmente el estado. 
+- **Estado Local Inmediato (Client State):** A través del hook orquestador `useLifeOS`, cada vez que el usuario realiza un cambio (ej., marcar la Piedra del Día, crear un Objetivo), el estado en React se muta sincrónicamente. La interfaz de usuario refleja la acción al instante. 
+- **Persistencia Masiva (Caché):** El estado se respalda de forma asíncrona e ininterrumpida en **IndexedDB** a través de `localforage` (`lifeOSStore.ts`). Esto permite a la app cargar miles de registros instantáneamente al abrirse sin conexión, saltando las limitantes de 5MB y el bloqueo de hilo del viejo localStorage.
+- **Cola de Mutaciones (Action Queue):** Si un cambio es realizado sin internet (Offline), la red en segundo plano emitirá un *Network Error*. El interceptor general de red de la UI alojará la petición HTTP cruda en una cola persistente dentro de la base de datos local y avisará visualmente con un Badge en cabecera. Al recuperar conexión, la PWA despachará cada petición atrapada de forma silenciosa para empatar los datos hacia la Nube.
 
 ### 3.2. Estructura de Componentes
 El diseño modular segmenta en jerarquía:

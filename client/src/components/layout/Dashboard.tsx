@@ -19,6 +19,7 @@ import { PomodoroView } from "@/components/views/PomodoroView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "./MobileNav";
 import { YearSelector } from "./YearSelector";
+import { PWABadge } from "@/components/pwa/PWABadge";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -135,6 +136,7 @@ export function Dashboard() {
 
             {/* Actions (Desktop Only for some) */}
             <div className="hidden lg:flex items-center gap-1 sm:gap-2">
+              <PWABadge />
               <ThemeToggle />
 
               <Button
@@ -187,6 +189,7 @@ export function Dashboard() {
 
             {/* Mobile Header Actions (Minimal) */}
             <div className="flex lg:hidden items-center gap-2">
+              <PWABadge />
               <ThemeToggle />
             </div>
           </div>
