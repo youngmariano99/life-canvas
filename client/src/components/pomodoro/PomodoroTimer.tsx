@@ -64,7 +64,7 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
     const [timeLeft, setTimeLeft] = useState(settings.workDuration * 60);
     const [elapsedTime, setElapsedTime] = useState(0); // For stopwatch
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const lastTickRef = useRef<number>(Date.now());
 
     // Reset timer when settings change or session type changes
     useEffect(() => {
@@ -82,17 +82,26 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
             if (intervalRef.current) clearInterval(intervalRef.current);
         } else {
             setTimerState("running");
+            lastTickRef.current = Date.now();
             intervalRef.current = setInterval(() => {
-                if (mode === "timer") {
-                    setTimeLeft(prev => {
-                        if (prev <= 1) {
-                            handleComplete();
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                } else {
-                    setElapsedTime(prev => prev + 1);
+                const now = Date.now();
+                const deltaSecs = Math.round((now - lastTickRef.current) / 1000);
+
+                if (deltaSecs >= 1) {
+                    lastTickRef.current = now;
+
+                    if (mode === "timer") {
+                        setTimeLeft(prev => {
+                            const next = prev - deltaSecs;
+                            if (next <= 0) {
+                                handleComplete();
+                                return 0;
+                            }
+                            return next;
+                        });
+                    } else {
+                        setElapsedTime(prev => prev + deltaSecs);
+                    }
                 }
             }, 1000);
         }
@@ -101,14 +110,17 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
     const stopTimer = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setTimerState("idle");
+
         if (mode === "timer") {
             let duration = settings.workDuration;
             if (sessionType === "shortBreak") duration = settings.shortBreakDuration;
             if (sessionType === "longBreak") duration = settings.longBreakDuration;
+
+            const consumedSecs = (duration * 60) - timeLeft;
+            handleComplete(consumedSecs);
             setTimeLeft(duration * 60);
         } else {
-            handleComplete(elapsedTime); // Save session on stop for stopwatch? Or just reset? 
-            // User requested: "Stop when I finish activity". So stop = complete.
+            handleComplete(elapsedTime);
             setElapsedTime(0);
         }
     };
@@ -141,11 +153,13 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
             }
         }
 
-        const durationMin = actualDurationSecs ? Math.ceil(actualDurationSecs / 60) : (
-            sessionType === "work" ? settings.workDuration :
-                sessionType === "shortBreak" ? settings.shortBreakDuration :
-                    settings.longBreakDuration
-        );
+        const durationMin = actualDurationSecs !== undefined
+            ? Math.max(1, Math.round(actualDurationSecs / 60))
+            : (
+                sessionType === "work" ? settings.workDuration :
+                    sessionType === "shortBreak" ? settings.shortBreakDuration :
+                        settings.longBreakDuration
+            );
 
         // Only log work sessions
         if (sessionType === "work" || mode === "stopwatch") {
@@ -240,7 +254,14 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
                         variant="outline"
                         size="icon"
                         className="h-12 w-12 rounded-full border-2"
-                        onClick={() => handleComplete()}
+                        onClick={() => {
+                            const duration = sessionType === "work" ? settings.workDuration :
+                                sessionType === "shortBreak" ? settings.shortBreakDuration :
+                                    settings.longBreakDuration;
+                            const consumedSecs = (duration * 60) - timeLeft;
+                            handleComplete(consumedSecs);
+                            setTimeLeft(duration * 60);
+                        }}
                         title="Saltar"
                     >
                         <SkipForward className="w-5 h-5" />

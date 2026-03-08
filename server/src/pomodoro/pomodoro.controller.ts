@@ -11,21 +11,21 @@ export class PomodoroController {
 
     @Post()
     create(@Request() req, @Body() createPomodoroDto: Partial<Pomodoro>) {
-        return this.pomodoroService.create(req.user.userId, createPomodoroDto);
+        return this.pomodoroService.create(req.user.id, createPomodoroDto);
     }
 
     @Get()
     findAll(@Request() req) {
-        return this.pomodoroService.findAll(req.user.userId);
+        return this.pomodoroService.findAll(req.user.id);
     }
 
     @Get(':id')
     findOne(@Request() req, @Param('id') id: string) {
-        return this.pomodoroService.findOne(req.user.userId, id);
+        return this.pomodoroService.findOne(req.user.id, id);
     }
 
     @Delete(':id')
     remove(@Request() req, @Param('id') id: string) {
-        return this.pomodoroService.remove(req.user.userId, id);
+        return this.pomodoroService.remove(req.user.id, id);
     }
 }
