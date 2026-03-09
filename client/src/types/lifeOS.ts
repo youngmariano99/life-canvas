@@ -361,13 +361,14 @@ export interface LifeOSState {
   notes: Note[];
   noteTags: NoteTag[];
   noteDocuments: NoteDocument[];
-  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness" | "notes";
+  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness" | "notes" | "inbox" | "projects" | "pomodoro";
   selectedDate: string;
   showPastItems: boolean;
   focusMode: boolean;
   selectedYear: number;
   isReadOnly: boolean;
   isLoading: boolean;
+  activePomodoroTaskId?: string;
 }
 
 // Default initial state

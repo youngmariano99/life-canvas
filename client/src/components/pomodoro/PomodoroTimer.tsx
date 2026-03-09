@@ -4,6 +4,7 @@ import { Play, Pause, Square, SkipForward, RotateCcw, Volume2, VolumeX } from "l
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PomodoroSettings, PomodoroMode } from "@/types/lifeOS";
+import { useLifeOSContext } from "@/context/LifeOSContext";
 
 // Simple Circular Progress Component inline for now if not exists
 function CircularTimer({ progress, timeString, mode, status, color }: { progress: number, timeString: string, mode: string, status: string, color: string }) {
@@ -58,12 +59,14 @@ interface PomodoroTimerProps {
 }
 
 export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProps) {
+    const { state } = useLifeOSContext();
     const [mode, setMode] = useState<PomodoroMode>("timer"); // 'timer' | 'stopwatch'
     const [timerState, setTimerState] = useState<"idle" | "running" | "paused">("idle");
     const [sessionType, setSessionType] = useState<"work" | "shortBreak" | "longBreak">("work");
     const [timeLeft, setTimeLeft] = useState(settings.workDuration * 60);
     const [elapsedTime, setElapsedTime] = useState(0); // For stopwatch
 
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastTickRef = useRef<number>(Date.now());
 
     // Reset timer when settings change or session type changes
@@ -213,6 +216,13 @@ export function PomodoroTimer({ settings, onSessionComplete }: PomodoroTimerProp
                     Modo Libre
                 </button>
             </div>
+
+            {/* Foco Actual */}
+            {state.activePomodoroTaskId && (
+                <div className="bg-primary/10 text-primary px-4 py-2 rounded-lg font-medium text-sm text-center shadow-sm max-w-sm w-full truncate border border-primary/20">
+                    Enfocado en: {state.activePomodoroTaskId}
+                </div>
+            )}
 
             {/* Timer Display */}
             <CircularTimer

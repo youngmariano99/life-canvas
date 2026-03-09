@@ -835,6 +835,10 @@ export function useLifeOS() {
       setState(s => store.updatePomodoroSettings(s, settings));
     }, []),
 
+    setActivePomodoroTaskId: useCallback((taskId: string | undefined) => {
+      setState(s => ({ ...s, activePomodoroTaskId: taskId }));
+    }, []),
+
     // Reset
     resetAll,
     // Helpers
@@ -847,5 +851,6 @@ export function useLifeOS() {
     getProjectsByGoal,
     getActivitiesByProject,
     getActivitiesForDate,
+    setActivePomodoroTaskId,
   };
 }

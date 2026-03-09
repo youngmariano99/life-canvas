@@ -7,6 +7,7 @@ import { LifeOSProvider, useLifeOSContext } from "@/context/LifeOSContext";
 import { YearWizard } from "@/components/wizard/YearWizard";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { ServerStatusIndicator } from "@/components/ui/ServerStatusIndicator";
+import { QuickCaptureFAB } from "@/components/ui/QuickCaptureFAB";
 
 function LifeOSApp() {
   const { state } = useLifeOSContext();
@@ -27,6 +28,7 @@ function LifeOSApp() {
       ) : (
         <Dashboard />
       )}
+      {state.isConfigured && !state.isEditingWizard && <QuickCaptureFAB />}
     </>
   );
 }

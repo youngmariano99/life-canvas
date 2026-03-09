@@ -18,6 +18,7 @@ import { ROLE_COLORS } from "@/types/lifeOS";
 import { KanbanBoard } from "@/components/weekly/KanbanBoard";
 import { EventCalendar } from "@/components/calendar/EventCalendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WeeklyWizard } from "@/components/weekly/WeeklyWizard";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
@@ -38,6 +39,7 @@ export function WeeklyView() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "" });
   const [activeTab, setActiveTab] = useState<string>("projects");
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
@@ -80,6 +82,8 @@ export function WeeklyView() {
 
   return (
     <div className="space-y-6">
+      <WeeklyWizard open={isWizardOpen} onOpenChange={setIsWizardOpen} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -115,6 +119,16 @@ export function WeeklyView() {
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
+            {!state.isReadOnly && (
+              <Button
+                variant="default"
+                className="h-10 ml-2 gap-2 shadow-sm"
+                onClick={() => setIsWizardOpen(true)}
+              >
+                <Sparkles className="w-4 h-4" />
+                Planificar Semana
+              </Button>
+            )}
           </div>
         </div>
       </div>

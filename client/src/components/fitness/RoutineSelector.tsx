@@ -51,22 +51,41 @@ export function RoutineSelector({ onSelect }: RoutineSelectorProps) {
                         <PlayCircle className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
 
-                    <div className="space-y-1 mt-1">
-                        {routine.content.slice(0, 3).map((item: any, i: number) => {
-                            let text = "";
-                            if (typeof item === 'string') text = item;
-                            else if (item.name) text = item.name + (item.sets ? ` (${item.sets}x${item.reps})` : '') + (item.target ? ` (${item.target})` : '');
-                            else if (item.work) text = `${item.sets}x ${item.work}/${item.rest}`;
-                            else if (item.targetTime) text = `Tiempo: ${item.targetTime}`;
-                            else if (item.targetDistance) text = `Distancia: ${item.targetDistance}`;
+                    <div className="space-y-1 mt-3 pt-3 border-t border-border/50">
+                        {routine.content.map((item: any, i: number) => {
+                            let title = "";
+                            let details = "";
 
-                            return <p key={i} className="text-xs text-muted-foreground truncate">• {text}</p>
+                            if (typeof item === 'string') {
+                                title = item;
+                            } else if (item.name) {
+                                title = item.name;
+                                details = [
+                                    item.sets && item.reps ? `${item.sets}x${item.reps}` : null,
+                                    item.weight ? `${item.weight}` : null,
+                                    item.target ? `Obj: ${item.target}` : null
+                                ].filter(Boolean).join(" • ");
+                            } else if (item.work) {
+                                title = "Intervalo";
+                                details = `${item.sets || 1}x ${item.work}s / ${item.rest}s`;
+                            } else if (item.targetTime || item.targetDistance) {
+                                title = "Cardio";
+                                details = [
+                                    item.targetTime ? `⏱ ${item.targetTime}` : null,
+                                    item.targetDistance ? `📍 ${item.targetDistance}` : null
+                                ].filter(Boolean).join(" • ");
+                            }
+
+                            return (
+                                <div key={i} className="flex justify-between items-center text-xs py-0.5">
+                                    <span className="text-foreground/90 font-medium truncate pr-2 flex items-center gap-1.5">
+                                        <div className="w-1 h-1 rounded-full bg-primary/50" />
+                                        {title}
+                                    </span>
+                                    {details && <span className="text-muted-foreground whitespace-nowrap text-[10px] font-mono bg-muted/50 px-1.5 py-0.5 rounded">{details}</span>}
+                                </div>
+                            );
                         })}
-                        {routine.content.length > 3 && (
-                            <p className="text-[10px] text-muted-foreground italic pl-1">
-                                +{routine.content.length - 3} más...
-                            </p>
-                        )}
                     </div>
 
                     <button

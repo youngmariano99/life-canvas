@@ -64,3 +64,44 @@ Este documento sirve como registro de las ideas, sprints y tareas pendientes de 
 **Tareas Propuestas (Completadas):**
 - [x] **Hábitos In-Site:** Modificados los modales de `RoleSummaryView.tsx` incorporando un botón `+` para añadir Hábitos de forma veloz. Añadido DropdownMenu en cada Hábito con opciones de `Editar` (Inline Input) y `Eliminar` (Trash).
 - [x] **Objetivos In-Site:** Añadida similar lógica a los Objetivos (Goals). Se puede añadir título y elegir el Quarter (Q1-Q4) in situ, y modificarlos o destruirlos en el aire logrando consistencia Optimista.
+
+### 🧠 Reestructuración: Segundo Cerebro + Asistente Virtual (Métodos GTD / PARA)
+
+El sistema evolucionará para ser un ente proactivo guiado y medible.
+
+#### 🏗️ Sprint 5: Jerarquía de Datos (Proyectos e Inbox) -> COMPLETADO
+**Objetivo:** Revivir y potenciar la estructura core subyacente. Explotar las entidades Backend existentes (`Projects` y `ProjectActivities`) e inyectarlas al Frontend formando el pipeline Objetivo -> Proyecto -> Actividad.
+- [x] Mapear las entidades Frontend faltantes para consumir `Projects` desde la API.
+- [x] Crear vista/Dashboard exclusivo de Proyectos.
+- [x] Refactorizar creación de Objetivos a formato SMART (Wizard).
+- [x] Crear tabla conceptual de `Inbox` o adaptar el modelo para volcado rápido de ideas sin categorizar.
+
+#### 📥 Sprint 6: Captura Rápida y Bandeja de Entrada (Inbox) -> COMPLETADO
+**Objetivo:** Centralizar el vaciado mental para no perder ideas y liberar carga cognitiva temporal.
+- [x] Implementar un botón "FAB" Global (Floating Action Button) o atajo de teclado para "Captura Rápida".
+- [x] Crear vista de Entrada/Inbox para acumular ideas, recordatorios y tareas crudas sin fecha.
+
+#### 🧙‍♂️ Sprint 7: Asistente de Planificación Semanal (Weekly Wizard) -> COMPLETADO
+**Objetivo:** Reemplazar el Kanban suelto por un flujo guiado paso a paso para organizar la semana.
+- [x] UI Paso 1: Vaciar el Inbox (Procesar, Eliminar o Asignar Notas a Proyectos).
+- [x] UI Paso 2: Revisión de Métricas (Hábitos y Pomodoros pasados).
+- [x] UI Paso 3: Asignar la Semana (Bajar Actividades desde Proyectos al Kanban).
+- [x] UI Paso 4: Definición de la "Roca de la Semana".
+
+#### 🎯 Sprint 8: Tablero de Ejecución (Modo Hoy)
+**Objetivo:** El bloqueo de distracciones. Vista 100% enfocada al láser del "hacer".
+- Reestructurar el `DailyView` para mostrar la "Roca del Día" liderando la pantalla.
+- Ocultar planificaciones futuras. Mostrar solo las tareas agendadas al día.
+- Integración directa: Clickeando la actividad levanta el Pomodoro vinculado.
+- Incorporar mini-checklists de Hábitos rápidos a los laterales.
+
+#### 🗂️ Sprint 9: Segundo Cerebro (Método PARA) -> COMPLETADO
+**Objetivo:** Ordenar la sección actual de "Notas" para atarlas a Proyectos, Áreas (Roles) y Recursos.
+- [x] Refactorizar las jerarquías de Storage/Notas para acoplarlas a P.A.R.A.
+- [x] Crear vista de carpeta automática dentro del visor de Proyecto (todo centralizado).
+
+#### 📈 Sprint 10: Métricas y Retroalimentación Automática
+**Objetivo:** Dashboards de incentivo visual y reporte de tiempos para calibrar prioridades.
+- Crear componente de "Progress Bar" dinámico para Objetivos basado en avance de Proyectos.
+- Desarrollar "Heatmap" de Hábitos (estilo aportes de GitHub verde).
+- "Focus Report": Gráficos de horas Pomodoro agrupadas por Roles.

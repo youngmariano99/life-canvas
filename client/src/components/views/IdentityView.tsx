@@ -13,6 +13,12 @@ import { RoleCard } from "@/components/roles/RoleCard";
 import { RoleSummaryView } from "@/components/roles/RoleSummaryView";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap,
@@ -101,77 +107,90 @@ export function IdentityView() {
         </div>
       </motion.div>
 
-      {/* Vision & Mission Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Vision Card */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-card rounded-2xl border border-border p-6 shadow-card"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Telescope className="w-6 h-6 text-primary" />
+      {/* Strategic Foundation Accordion */}
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="strategic-foundation" className="border-none bg-card/30 rounded-2xl mb-4 overflow-hidden shadow-sm">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50 rounded-2xl transition-colors">
+            <div className="flex items-center gap-3">
+              <Compass className="w-5 h-5 text-primary" />
+              <span className="font-semibold text-lg">Visión, Misión y Prioridades</span>
             </div>
-            <div className="space-y-3 flex-1">
-              <div>
-                <h3 className="font-semibold text-foreground">Visión 2030</h3>
-                <p className="text-sm text-muted-foreground">Tu vida en 5 años</p>
-              </div>
-              <p className="text-foreground/90 leading-relaxed">
-                {yearSettings?.vision5Years || "Sin definir"}
-              </p>
-            </div>
-          </div>
-        </motion.div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6 pt-2 space-y-6">
+            {/* Vision & Mission Cards */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Vision Card */}
+              <motion.div
+                variants={itemVariants}
+                className="bg-card rounded-2xl border border-border p-6 shadow-card"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Telescope className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <div>
+                      <h3 className="font-semibold text-foreground">Visión 2030</h3>
+                      <p className="text-sm text-muted-foreground">Tu vida en 5 años</p>
+                    </div>
+                    <p className="text-foreground/90 leading-relaxed">
+                      {yearSettings?.vision5Years || "Sin definir"}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
 
-        {/* Mission Card */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-card rounded-2xl border border-border p-6 shadow-card"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-              <Compass className="w-6 h-6 text-accent" />
+              {/* Mission Card */}
+              <motion.div
+                variants={itemVariants}
+                className="bg-card rounded-2xl border border-border p-6 shadow-card"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <Compass className="w-6 h-6 text-accent" />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <div>
+                      <h3 className="font-semibold text-foreground">Misión Personal</h3>
+                      <p className="text-sm text-muted-foreground">Tu propósito central</p>
+                    </div>
+                    <p className="text-foreground/90 leading-relaxed italic">
+                      "{yearSettings?.mission || "Sin definir"}"
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-            <div className="space-y-3 flex-1">
-              <div>
-                <h3 className="font-semibold text-foreground">Misión Personal</h3>
-                <p className="text-sm text-muted-foreground">Tu propósito central</p>
-              </div>
-              <p className="text-foreground/90 leading-relaxed italic">
-                "{yearSettings?.mission || "Sin definir"}"
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
 
-      {/* Semester Focus */}
-      {(yearSettings?.h1Priority || yearSettings?.h2Priority) && (
-        <motion.div
-          variants={itemVariants}
-          className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-border p-6"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <Target className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Prioridades Semestrales</h3>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-card/80 rounded-xl p-4">
-              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                H1 • Ene-Jun
-              </span>
-              <p className="mt-2 text-foreground">{yearSettings?.h1Priority || "—"}</p>
-            </div>
-            <div className="bg-card/80 rounded-xl p-4">
-              <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-1 rounded-full">
-                H2 • Jul-Dic
-              </span>
-              <p className="mt-2 text-foreground">{yearSettings?.h2Priority || "—"}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+            {/* Semester Focus */}
+            {(yearSettings?.h1Priority || yearSettings?.h2Priority) && (
+              <motion.div
+                variants={itemVariants}
+                className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-border p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Target className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Prioridades Semestrales</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-card/80 rounded-xl p-4">
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                      H1 • Ene-Jun
+                    </span>
+                    <p className="mt-2 text-foreground">{yearSettings?.h1Priority || "—"}</p>
+                  </div>
+                  <div className="bg-card/80 rounded-xl p-4">
+                    <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-1 rounded-full">
+                      H2 • Jul-Dic
+                    </span>
+                    <p className="mt-2 text-foreground">{yearSettings?.h2Priority || "—"}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Roles Section */}
       <motion.div variants={itemVariants} className="space-y-4">

@@ -23,7 +23,10 @@ import {
   Pin,
   Tag as TagIcon,
   X,
-  Filter
+  Filter,
+  Users,
+  Archive,
+  FolderKanban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +67,9 @@ export function NotesSection() {
     getRoleById
   } = useLifeOSContext();
 
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  // P.A.R.A Navigation State
+  const [selectedParaType, setSelectedParaType] = useState<"project" | "role" | "folder" | "archive" | "all">("all");
+  const [selectedParaId, setSelectedParaId] = useState<string | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,12 +102,20 @@ export function NotesSection() {
     return buildTree(null);
   }, [state.noteFolders]);
 
-  // Filter notes by folder and search
+  // Filter notes by P.A.R.A and search
   const filteredNotes = useMemo(() => {
     let notes = state.notes;
 
-    if (selectedFolderId) {
-      notes = notes.filter(n => n.folderId === selectedFolderId);
+    if (selectedParaType === "folder" && selectedParaId) {
+      notes = notes.filter(n => n.folderId === selectedParaId && !n.tags?.includes("system-archive"));
+    } else if (selectedParaType === "project" && selectedParaId) {
+      notes = notes.filter(n => n.tags?.includes(`project-${selectedParaId}`) && !n.tags?.includes("system-archive"));
+    } else if (selectedParaType === "role" && selectedParaId) {
+      notes = notes.filter(n => n.tags?.includes(`role-${selectedParaId}`) && !n.tags?.includes("system-archive"));
+    } else if (selectedParaType === "archive") {
+      notes = notes.filter(n => n.tags?.includes("system-archive"));
+    } else if (selectedParaType === "all") {
+      notes = notes.filter(n => !n.tags?.includes("system-archive"));
     }
 
     if (searchQuery) {
@@ -123,7 +136,7 @@ export function NotesSection() {
       if (!a.isPinned && b.isPinned) return 1;
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  }, [state.notes, selectedFolderId, searchQuery, selectedTagFilter]);
+  }, [state.notes, selectedParaType, selectedParaId, searchQuery, selectedTagFilter]);
 
   // Generate auto tags from roles, goals, projects
   const availableTags = useMemo(() => {
@@ -186,26 +199,36 @@ export function NotesSection() {
     if (!newFolderName.trim()) return;
     addNoteFolder({
       name: newFolderName.trim(),
-      parentId: selectedFolderId
+      parentId: selectedParaType === "folder" ? selectedParaId : null
     });
     setNewFolderName("");
     setShowNewFolderDialog(false);
   };
 
   const handleCreateNote = (type: "note" | "whiteboard" | "document") => {
-    if (!selectedFolderId && state.noteFolders.length === 0) {
+    if (selectedParaType === "folder" && !selectedParaId && state.noteFolders.length === 0) {
       // Create default folder if none exists
       addNoteFolder({ name: "Mis Apuntes", parentId: null });
     }
 
-    const folderId = selectedFolderId || state.noteFolders[0]?.id || "";
+    const folderId = (selectedParaType === "folder" ? selectedParaId : null) || state.noteFolders[0]?.id || "";
+
+    // Auto assign tag based on where user is standing
+    const tags: string[] = [];
+    if (selectedParaType === "project" && selectedParaId) {
+      tags.push(`project-${selectedParaId}`);
+    } else if (selectedParaType === "role" && selectedParaId) {
+      tags.push(`role-${selectedParaId}`);
+    } else if (selectedParaType === "archive") {
+      tags.push("system-archive");
+    }
 
     addNote({
       folderId,
       type,
       title: type === "note" ? "Nueva Nota" : type === "whiteboard" ? "Nueva Pizarra" : "Documentos",
       content: type === "whiteboard" ? "[]" : "",
-      tags: [],
+      tags,
       isPinned: false
     });
 
@@ -222,7 +245,7 @@ export function NotesSection() {
   const renderFolderTree = (folders: (NoteFolder & { children: any[] })[], depth = 0) => {
     return folders.map(folder => {
       const isExpanded = expandedFolders.has(folder.id);
-      const isSelected = selectedFolderId === folder.id;
+      const isSelected = selectedParaType === "folder" && selectedParaId === folder.id;
       const hasChildren = folder.children.length > 0;
       const notesCount = state.notes.filter(n => n.folderId === folder.id).length;
 
@@ -235,7 +258,8 @@ export function NotesSection() {
             )}
             style={{ paddingLeft: `${depth * 12 + 8}px` }}
             onClick={() => {
-              setSelectedFolderId(folder.id);
+              setSelectedParaType("folder");
+              setSelectedParaId(folder.id);
               if (hasChildren) toggleFolder(folder.id);
             }}
           >
@@ -351,31 +375,92 @@ export function NotesSection() {
         </div>
       </div>
 
-      {/* Folders */}
-      <div className="p-2">
+      {/* P.A.R.A Folders */}
+      <div className="p-2 border-b border-border/50">
         <div className="flex items-center justify-between px-2 py-1 mb-1">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Carpetas
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Navegación PARA
           </span>
           <button
             className={cn(
-              "text-xs text-muted-foreground hover:text-foreground",
-              !selectedFolderId && "text-primary"
+              "text-xs hover:text-foreground font-medium transition-colors",
+              selectedParaType === "all" ? "text-primary" : "text-muted-foreground"
             )}
-            onClick={() => setSelectedFolderId(null)}
+            onClick={() => { setSelectedParaType("all"); setSelectedParaId(null); }}
           >
-            Todos
+            Todo
           </button>
         </div>
 
-        <ScrollArea className="h-40">
-          {folderTree.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">
-              No hay carpetas. Crea una para empezar.
-            </p>
-          ) : (
-            renderFolderTree(folderTree)
-          )}
+        <ScrollArea className="h-64 pr-2">
+          {/* Proyectos */}
+          <div className="mb-4">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1 block">Proyectos</span>
+            {state.projects.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-2 py-1">Sin proyectos activos</p>
+            ) : (
+              state.projects.map(p => (
+                <div
+                  key={p.id}
+                  className={cn(
+                    "cursor-pointer px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors",
+                    selectedParaType === "project" && selectedParaId === p.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                  )}
+                  onClick={() => { setSelectedParaType("project"); setSelectedParaId(p.id); }}
+                >
+                  <FolderKanban className="w-4 h-4 text-emerald-500" />
+                  <span className="truncate">{p.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Áreas */}
+          <div className="mb-4">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1 block">Áreas (Roles)</span>
+            {state.roles.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-2 py-1">Sin roles definidos</p>
+            ) : (
+              state.roles.map(r => (
+                <div
+                  key={r.id}
+                  className={cn(
+                    "cursor-pointer px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors",
+                    selectedParaType === "role" && selectedParaId === r.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                  )}
+                  onClick={() => { setSelectedParaType("role"); setSelectedParaId(r.id); }}
+                >
+                  <Users className="w-4 h-4 text-blue-500" />
+                  <span className="truncate">{r.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Recursos */}
+          <div className="mb-4">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1 block">Recursos (Carpetas libes)</span>
+            {folderTree.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-2 py-1">No hay carpetas</p>
+            ) : (
+              renderFolderTree(folderTree)
+            )}
+          </div>
+
+          {/* Archivo */}
+          <div>
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1 block">Archivo</span>
+            <div
+              className={cn(
+                "cursor-pointer px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors",
+                selectedParaType === "archive" ? "bg-primary/10 text-primary" : "hover:bg-muted"
+              )}
+              onClick={() => { setSelectedParaType("archive"); setSelectedParaId(null); }}
+            >
+              <Archive className="w-4 h-4 text-gray-500" />
+              <span>Elementos Archivados</span>
+            </div>
+          </div>
         </ScrollArea>
       </div>
 

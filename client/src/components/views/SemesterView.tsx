@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Check, Clock, Pause, X, Calendar, Eye, EyeOff, Package } from "lucide-react";
+import { Plus, GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users, Check, Clock, Pause, X, Calendar, Eye, EyeOff, Package, FolderKanban } from "lucide-react";
 import { format, parseISO, isWithinInterval, startOfQuarter, endOfQuarter, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ export function SemesterView() {
   const [newGoalRole, setNewGoalRole] = useState("");
   const [newGoalQuarter, setNewGoalQuarter] = useState<1 | 2 | 3 | 4>(1);
   const [newGoalDate, setNewGoalDate] = useState("");
+  const [newGoalDescription, setNewGoalDescription] = useState("");
 
   const visibleQuarters = QUARTERS.filter(q => q.semester === selectedSemester);
   const today = new Date();
@@ -111,6 +112,7 @@ export function SemesterView() {
     addGoal({
       roleId: newGoalRole,
       title: newGoalTitle.trim(),
+      description: newGoalDescription.trim() || undefined,
       quarter: newGoalQuarter,
       semester: newGoalQuarter <= 2 ? 1 : 2,
       status: "pending",
@@ -118,6 +120,7 @@ export function SemesterView() {
       subGoals: [],
     });
     setNewGoalTitle("");
+    setNewGoalDescription("");
     setNewGoalDate("");
     setIsAddingGoal(false);
   };
@@ -249,6 +252,18 @@ export function SemesterView() {
                       onChange={(e) => setNewGoalDate(e.target.value)}
                     />
                   </div>
+                  <div>
+                    <label className="text-sm text-foreground flex items-center justify-between mb-1.5">
+                      <span>Definición SMART</span>
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Específico, Medible, Alcanzable, Relevante, Temporal</span>
+                    </label>
+                    <textarea
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Ej: Aumentar ventas un 20% contactando a 50 leads semanales..."
+                      value={newGoalDescription}
+                      onChange={(e) => setNewGoalDescription(e.target.value)}
+                    />
+                  </div>
                   <Button onClick={handleAddGoal} disabled={!newGoalTitle.trim() || !newGoalRole} className="w-full">
                     Agregar
                   </Button>
@@ -319,6 +334,16 @@ export function SemesterView() {
                                   {format(parseISO(goal.targetDate), "d MMM", { locale: es })}
                                 </span>
                               )}
+                            </div>
+                            {goal.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 italic border-l-2 border-primary/20 pl-2">
+                                {goal.description}
+                              </p>
+                            )}
+                            {/* Parent-Child Relation Visualizer */}
+                            <div className="mt-2 text-[10px] font-medium text-primary bg-primary/5 inline-flex flex-wrap items-center gap-1 px-1.5 py-0.5 rounded border border-primary/10">
+                              <FolderKanban className="w-3 h-3" />
+                              {state.projects.filter(p => p.goalId === goal.id).length} Proyectos Asociados
                             </div>
 
                             {/* Sub-goals List */}

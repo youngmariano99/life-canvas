@@ -12,6 +12,7 @@ type LifeOSContextType = ReturnType<typeof useLifeOS> & {
   addPomodoroSession: (session: Omit<PomodoroSession, "id" | "createdAt">) => Promise<void>;
   deletePomodoroSession: (sessionId: string) => Promise<void>;
   updatePomodoroSettings: (settings: Partial<PomodoroSettings>) => void;
+  setActivePomodoroTaskId: (taskId: string | undefined) => void;
 
   // Active Pause
   addActivePauseRoutine: (routine: Omit<ActivePauseRoutine, "id">) => void;

@@ -25,6 +25,7 @@ export function FitnessArea() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isAddingActivity, setIsAddingActivity] = useState(false);
+  const [activeTab, setActiveTab] = useState("manual");
   const [selectedActivity, setSelectedActivity] = useState<FitnessActivity | null>(null);
 
   const [newActivity, setNewActivity] = useState<{
@@ -98,6 +99,7 @@ export function FitnessArea() {
       notes: ""
     });
     setIsAddingActivity(false);
+    setActiveTab("manual");
   };
 
   return (
@@ -223,7 +225,7 @@ export function FitnessArea() {
                       </DialogTitle>
                     </DialogHeader>
 
-                    <Tabs defaultValue="manual" className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-4">
                         <TabsTrigger value="manual">Registro Manual</TabsTrigger>
                         <TabsTrigger value="routines">Usar Rutina</TabsTrigger>
@@ -349,12 +351,12 @@ export function FitnessArea() {
                             type: routine.type === 'cardio' ? 'neat' : 'workout',
                             name: routine.name,
                             notes: `Estructura: ${routine.structureType.replace('_', ' ')}\n${formattedContent}`,
-                            duration: targetTime?.replace(/[^0-9]/g, '') || "", // Try to extract just numbers if it's simpler, else leave user to edit
+                            duration: targetTime ? String(targetTime).replace(/[^0-9]/g, '') : "",
+                            distance: targetDistance ? String(targetDistance).replace(/[^0-9.]/g, '') : newActivity.distance,
                           });
 
-                          // Switch tab back to manual
-                          const tabsTrigger = document.querySelector('[data-state="inactive"][value="manual"]') as HTMLElement;
-                          if (tabsTrigger) tabsTrigger.click();
+                          // Switch tab back to manual safely using state
+                          setActiveTab("manual");
                         }} />
                       </TabsContent>
                     </Tabs>

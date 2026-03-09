@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 interface HabitTrackerProps {
   selectedDate: string;
   readOnly?: boolean;
+  compact?: boolean;
 }
 
 const STATUS_ICONS = {
@@ -34,7 +35,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Dumbbell, Briefcase, Palette, Heart, Sparkles, Users2, Users,
 };
 
-export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerProps) {
+export function HabitTracker({ selectedDate, readOnly = false, compact = false }: HabitTrackerProps) {
   const { state, addHabit, logHabit, updateHabit, deleteHabit, getRoleById } = useLifeOSContext();
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
@@ -173,16 +174,18 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-xs">
-        {Object.entries(STATUS_ICONS).map(([key, config]) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <div className={cn("w-4 h-4 rounded flex items-center justify-center", config.class)}>
-              <config.icon className="w-2.5 h-2.5" />
+      {!compact && (
+        <div className="flex flex-wrap gap-3 text-xs">
+          {Object.entries(STATUS_ICONS).map(([key, config]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <div className={cn("w-4 h-4 rounded flex items-center justify-center", config.class)}>
+                <config.icon className="w-2.5 h-2.5" />
+              </div>
+              <span className="text-muted-foreground">{config.label}</span>
             </div>
-            <span className="text-muted-foreground">{config.label}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Habit Grid by Role */}
       {state.habits.length === 0 ? (
@@ -207,6 +210,43 @@ export function HabitTracker({ selectedDate, readOnly = false }: HabitTrackerPro
             const role = roleId !== "no-role" ? getRoleById(roleId) : null;
             const Icon = role ? ICON_MAP[role.icon] || Users : Users;
             const colors = role ? ROLE_COLORS[role.color] : { bg: "bg-muted", text: "text-muted-foreground" };
+
+            if (compact) {
+              return (
+                <div key={roleId} className="bg-card rounded-xl border border-border overflow-hidden">
+                  <div className={cn("flex items-center gap-3 px-4 py-2", role ? colors.bg : "bg-muted")}>
+                    <Icon className={cn("w-4 h-4", role ? "text-white" : "text-muted-foreground")} />
+                    <span className={cn("font-medium text-sm", role ? "text-white" : "text-foreground")}>
+                      {role?.name || "Generales"}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {habits.map(habit => {
+                      const log = logsMap[habit.id]?.[selectedDate];
+                      const statusConfig = log ? STATUS_ICONS[log.status] : null;
+                      return (
+                        <div key={habit.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+                          <span className={cn("text-sm", log?.status === "completed" && "line-through text-muted-foreground")}>
+                            {habit.name}
+                          </span>
+                          <button
+                            onClick={() => !readOnly && handleToggleStatus(habit.id, selectedDate, log?.status)}
+                            disabled={readOnly}
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0",
+                              statusConfig ? statusConfig.class : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/10",
+                              readOnly && "cursor-not-allowed opacity-50"
+                            )}
+                          >
+                            {statusConfig && <statusConfig.icon className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            }
 
             return (
               <div key={roleId} className="bg-card rounded-2xl border border-border overflow-hidden">

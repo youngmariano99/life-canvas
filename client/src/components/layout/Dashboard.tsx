@@ -5,16 +5,18 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText, LogOut, BrainCircuit } from "lucide-react";
+import { Compass, Calendar, Target, BookOpen, Menu, RotateCcw, Settings, CalendarDays, Dumbbell, X, FileText, LogOut, BrainCircuit, Inbox, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { IdentityView } from "@/components/views/IdentityView";
 import { SemesterView } from "@/components/views/SemesterView";
+import { ProjectsView } from "@/components/views/ProjectsView";
 import { DailyView } from "@/components/views/DailyView";
 import { WeeklyView } from "@/components/views/WeeklyView";
 import { DeviationLog } from "@/components/deviations/DeviationLog";
 import { FitnessArea } from "@/components/fitness/FitnessArea";
 import { NotesSection } from "@/components/notes/NotesSection";
+import { InboxView } from "@/components/views/InboxView";
 import { PomodoroView } from "@/components/views/PomodoroView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "./MobileNav";
@@ -44,17 +46,19 @@ import {
 export const VIEWS = [
   { id: "identity", label: "Identidad", icon: Compass, description: "Visión y Roles" },
   { id: "semester", label: "Roadmap", icon: Calendar, description: "Objetivos" },
-  { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Proyectos" },
+  { id: "projects", label: "Proyectos", icon: FolderKanban, description: "Segundo Cerebro" },
+  { id: "weekly", label: "Semanal", icon: CalendarDays, description: "Sprints" },
   { id: "daily", label: "Ejecución", icon: Target, description: "Hoy" },
   { id: "fitness", label: "Fitness", icon: Dumbbell, description: "Actividad" },
   { id: "pomodoro", label: "Enfoque", icon: BrainCircuit, description: "Pomodoro" },
   { id: "notes", label: "Apuntes", icon: FileText, description: "Notas e ideas" },
+  { id: "inbox", label: "Inbox", icon: Inbox, description: "Bandeja de Entrada" },
   { id: "deviations", label: "Aprendizajes", icon: BookOpen, description: "Desvíos" },
 ] as const;
 
 export type ViewType = typeof VIEWS[number]["id"];
 
-const SECONDARY_VIEWS = ["fitness", "notes", "deviations"];
+const SECONDARY_VIEWS = ["fitness", "notes", "deviations", "inbox"];
 
 export function Dashboard() {
   const { state, resetAll, startEditingWizard } = useLifeOSContext();
@@ -206,11 +210,13 @@ export function Dashboard() {
         >
           {currentView === "identity" && <IdentityView />}
           {currentView === "semester" && <SemesterView />}
+          {currentView === "projects" && <ProjectsView />}
           {currentView === "weekly" && <WeeklyView />}
           {currentView === "daily" && <DailyView />}
           {currentView === "fitness" && <FitnessArea />}
           {currentView === "pomodoro" && <PomodoroView />}
           {currentView === "notes" && <NotesSection />}
+          {currentView === "inbox" && <InboxView />}
           {currentView === "deviations" && <DeviationLog />}
         </motion.div>
       </main>
