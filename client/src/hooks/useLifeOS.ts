@@ -851,6 +851,5 @@ export function useLifeOS() {
     getProjectsByGoal,
     getActivitiesByProject,
     getActivitiesForDate,
-    setActivePomodoroTaskId,
   };
 }
