@@ -11,10 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ROLE_COLORS } from "@/types/lifeOS";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export function ProjectsView() {
-    const { state, setView, addNote, updateNote } = useLifeOSContext();
+    const { state, setView, addNote, addProject } = useLifeOSContext();
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [isCreatingProject, setIsCreatingProject] = useState(false);
+    const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "", description: "" });
 
     // Link projects to their parent goals, and calculate completion from activities
     const enrichedProjects = useMemo(() => {
@@ -45,6 +51,24 @@ export function ProjectsView() {
         });
     }, [state.projects, state.goals, state.roles, state.projectActivities]);
 
+    const handleCreateProject = () => {
+        if (!newProject.name.trim() || !newProject.goalId) {
+            toast.error("El nombre y el objetivo son obligatorios");
+            return;
+        }
+
+        addProject({
+            name: newProject.name.trim(),
+            goalId: newProject.goalId,
+            description: newProject.description.trim() || undefined,
+            dueDate: newProject.dueDate || undefined,
+        });
+
+        setNewProject({ name: "", goalId: "", dueDate: "", description: "" });
+        setIsCreatingProject(false);
+        toast.success("Proyecto creado exitosamente");
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -57,7 +81,7 @@ export function ProjectsView() {
                         Tu segundo cerebro. Convierte tus grandes Objetivos en Proyectos medibles con acciones claras.
                     </p>
                 </div>
-                <Button className="shrink-0 gap-2">
+                <Button className="shrink-0 gap-2" onClick={() => setIsCreatingProject(true)}>
                     <Plus className="w-4 h-4" /> Nuevo Proyecto
                 </Button>
             </div>
@@ -151,6 +175,32 @@ export function ProjectsView() {
             {/* Project Details Modal (Dashboard Individual) */}
             <Dialog open={!!selectedProjectId} onOpenChange={(open) => !open && setSelectedProjectId(null)}>
                 <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-6">
+                    <DialogHeader className="flex-none">
+                        {(() => {
+                            const project = enrichedProjects.find(p => p.id === selectedProjectId);
+                            if (!project) {
+                                return <DialogTitle>Detalles del Proyecto</DialogTitle>;
+                            }
+                            return (
+                                <>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Badge variant="outline" className="text-xs">{project.parentGoal?.title || "Sin meta"}</Badge>
+                                        <Badge variant="secondary" className={cn("text-xs text-white", project.parentRole ? ROLE_COLORS[project.parentRole.color].bg : "bg-gray-500")}>
+                                            {project.parentRole?.name || "Sin área"}
+                                        </Badge>
+                                    </div>
+                                    <DialogTitle className="text-2xl flex items-center gap-2">
+                                        <FolderKanban className="w-6 h-6 text-primary" />
+                                        {project.name}
+                                    </DialogTitle>
+                                    {project.description && (
+                                        <p className="text-muted-foreground mt-2">{project.description}</p>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </DialogHeader>
+
                     {(() => {
                         const project = enrichedProjects.find(p => p.id === selectedProjectId);
                         if (!project) return null;
@@ -170,99 +220,148 @@ export function ProjectsView() {
                         };
 
                         return (
-                            <>
-                                <DialogHeader className="flex-none">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Badge variant="outline" className="text-xs">{project.parentGoal?.title || "Sin meta"}</Badge>
-                                        <Badge variant="secondary" className={cn("text-xs text-white", project.parentRole ? ROLE_COLORS[project.parentRole.color].bg : "bg-gray-500")}>
-                                            {project.parentRole?.name || "Sin área"}
-                                        </Badge>
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 min-h-0">
+                                {/* Left Panel: Activities */}
+                                <div className="flex flex-col border rounded-xl overflow-hidden bg-muted/10">
+                                    <div className="px-4 py-3 border-b bg-card flex items-center justify-between">
+                                        <h3 className="font-semibold text-sm flex items-center gap-2">
+                                            <ListTodo className="w-4 h-4" />
+                                            Plan de Acción
+                                        </h3>
+                                        <span className="text-xs text-muted-foreground font-medium">
+                                            {project.completedActivities.length} / {project.activities.length}
+                                        </span>
                                     </div>
-                                    <DialogTitle className="text-2xl flex items-center gap-2">
-                                        <FolderKanban className="w-6 h-6 text-primary" />
-                                        {project.name}
-                                    </DialogTitle>
-                                    {project.description && (
-                                        <p className="text-muted-foreground mt-2">{project.description}</p>
-                                    )}
-                                </DialogHeader>
-
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 min-h-0">
-                                    {/* Left Panel: Activities */}
-                                    <div className="flex flex-col border rounded-xl overflow-hidden bg-muted/10">
-                                        <div className="px-4 py-3 border-b bg-card flex items-center justify-between">
-                                            <h3 className="font-semibold text-sm flex items-center gap-2">
-                                                <ListTodo className="w-4 h-4" />
-                                                Plan de Acción
-                                            </h3>
-                                            <span className="text-xs text-muted-foreground font-medium">
-                                                {project.completedActivities.length} / {project.activities.length}
-                                            </span>
-                                        </div>
-                                        <ScrollArea className="flex-1 p-4">
-                                            {project.activities.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground text-center py-8">No hay actividades definidas.</p>
-                                            ) : (
-                                                <div className="space-y-2">
-                                                    {project.activities.map(act => (
-                                                        <div key={act.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                                                            <div className={cn("w-4 h-4 rounded-full mt-0.5 border-2 flex-shrink-0", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' ? "bg-success border-success" : "border-muted-foreground/30")} />
-                                                            <div>
-                                                                <p className={cn("text-sm font-medium", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' && "line-through text-muted-foreground")}>{act.title}</p>
-                                                            </div>
+                                    <ScrollArea className="flex-1 p-4">
+                                        {project.activities.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground text-center py-8">No hay actividades definidas.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {project.activities.map(act => (
+                                                    <div key={act.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                                                        <div className={cn("w-4 h-4 rounded-full mt-0.5 border-2 flex-shrink-0", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' ? "bg-success border-success" : "border-muted-foreground/30")} />
+                                                        <div>
+                                                            <p className={cn("text-sm font-medium", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' && "line-through text-muted-foreground")}>{act.title}</p>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </ScrollArea>
-                                    </div>
-
-                                    {/* Right Panel: Linked Notes (Segundo Cerebro) */}
-                                    <div className="flex flex-col border rounded-xl overflow-hidden bg-primary/5 border-primary/10">
-                                        <div className="px-4 py-3 border-b border-primary/10 bg-primary/10 flex items-center justify-between">
-                                            <h3 className="font-semibold text-sm flex items-center gap-2 text-primary">
-                                                <FileText className="w-4 h-4" />
-                                                Recursos y Apuntes
-                                            </h3>
-                                            <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-primary/20" onClick={handleCreateLinkedNote}>
-                                                <Plus className="w-3 h-3 mr-1" /> Nuevo
-                                            </Button>
-                                        </div>
-                                        <ScrollArea className="flex-1 p-4">
-                                            {projectNotes.length === 0 ? (
-                                                <div className="text-center py-8">
-                                                    <FileText className="w-8 h-8 mx-auto text-primary/30 mb-2" />
-                                                    <p className="text-sm text-primary/60">No hay apuntes vinculados a este proyecto.</p>
-                                                    <p className="text-xs text-primary/40 mt-1">Usa esto para documentar investigación, links o minutas.</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-2">
-                                                    {projectNotes.map(note => (
-                                                        <div
-                                                            key={note.id}
-                                                            className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-card hover:border-primary/50 transition-colors cursor-pointer group"
-                                                            onClick={() => setView("notes")}
-                                                        >
-                                                            <div className="flex items-center gap-3 overflow-hidden">
-                                                                <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
-                                                                    <FileText className="w-4 h-4" />
-                                                                </div>
-                                                                <div className="truncate">
-                                                                    <p className="text-sm font-medium truncate">{note.title}</p>
-                                                                    <p className="text-xs text-muted-foreground">{format(new Date(note.updatedAt), "d MMM", { locale: es })}</p>
-                                                                </div>
-                                                            </div>
-                                                            <ExternalLink className="w-4 h-4 text-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </ScrollArea>
-                                    </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </ScrollArea>
                                 </div>
-                            </>
+
+                                {/* Right Panel: Linked Notes (Segundo Cerebro) */}
+                                <div className="flex flex-col border rounded-xl overflow-hidden bg-primary/5 border-primary/10">
+                                    <div className="px-4 py-3 border-b border-primary/10 bg-primary/10 flex items-center justify-between">
+                                        <h3 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                                            <FileText className="w-4 h-4" />
+                                            Recursos y Apuntes
+                                        </h3>
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-primary/20" onClick={handleCreateLinkedNote}>
+                                            <Plus className="w-3 h-3 mr-1" /> Nuevo
+                                        </Button>
+                                    </div>
+                                    <ScrollArea className="flex-1 p-4">
+                                        {projectNotes.length === 0 ? (
+                                            <div className="text-center py-8">
+                                                <FileText className="w-8 h-8 mx-auto text-primary/30 mb-2" />
+                                                <p className="text-sm text-primary/60">No hay apuntes vinculados a este proyecto.</p>
+                                                <p className="text-xs text-primary/40 mt-1">Usa esto para documentar investigación, links o minutas.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {projectNotes.map(note => (
+                                                    <div
+                                                        key={note.id}
+                                                        className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-card hover:border-primary/50 transition-colors cursor-pointer group"
+                                                        onClick={() => setView("notes")}
+                                                    >
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
+                                                                <FileText className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="truncate">
+                                                                <p className="text-sm font-medium truncate">{note.title}</p>
+                                                                <p className="text-xs text-muted-foreground">{format(new Date(note.updatedAt), "d MMM", { locale: es })}</p>
+                                                            </div>
+                                                        </div>
+                                                        <ExternalLink className="w-4 h-4 text-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </ScrollArea>
+                                </div>
+                            </div>
                         );
                     })()}
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Project Modal */}
+            <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Nuevo Proyecto</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Nombre del Proyecto</Label>
+                            <Input
+                                id="name"
+                                value={newProject.name}
+                                onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="Ej: Lanzamiento de App, Mudanza..."
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="goal">Objetivo Vinculado</Label>
+                            <Select
+                                value={newProject.goalId}
+                                onValueChange={(v) => setNewProject(prev => ({ ...prev, goalId: v }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar objetivo..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {state.goals.map(goal => (
+                                        <SelectItem key={goal.id} value={goal.id}>
+                                            {goal.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Descripción (Opcional)</Label>
+                            <Input
+                                id="description"
+                                value={newProject.description}
+                                onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Breve descripción del alcance..."
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="dueDate">Fecha Límite (Opcional)</Label>
+                            <Input
+                                id="dueDate"
+                                type="date"
+                                value={newProject.dueDate}
+                                onChange={(e) => setNewProject(prev => ({ ...prev, dueDate: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-4">
+                        <Button variant="outline" onClick={() => setIsCreatingProject(false)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleCreateProject}
+                            disabled={!newProject.name.trim() || !newProject.goalId}
+                        >
+                            Crear Proyecto
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

@@ -69,7 +69,7 @@ export function QuickCaptureFAB() {
                     <div className="p-4 border-b border-border/10 flex items-center justify-between bg-muted/30">
                         <div className="flex items-center gap-2 text-foreground/80">
                             <Inbox className="w-4 h-4" />
-                            <span className="text-sm font-medium">Captura Rápida</span>
+                            <DialogTitle className="text-sm font-medium">Captura Rápida</DialogTitle>
                             <span className="text-xs text-muted-foreground ml-2 hidden sm:inline-block border border-border/50 rounded px-1.5 py-0.5 bg-background/50">
                                 Ctrl + K
                             </span>
