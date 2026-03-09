@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Target, FolderKanban, Calendar as CalendarIcon, MoreVertical, ListTodo, ActivitySquare, FileText, ExternalLink } from "lucide-react";
+import { Plus, Target, FolderKanban, Calendar as CalendarIcon, MoreVertical, ListTodo, ActivitySquare, FileText, ExternalLink, Check } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { useLifeOSContext } from "@/context/LifeOSContext";
@@ -17,10 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 export function ProjectsView() {
-    const { state, setView, addNote, addProject } = useLifeOSContext();
+    const { state, setView, addNote, addProject, addProjectActivity, updateProjectActivity } = useLifeOSContext();
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "", description: "" });
+    const [newActivityTitle, setNewActivityTitle] = useState("");
 
     // Link projects to their parent goals, and calculate completion from activities
     const enrichedProjects = useMemo(() => {
@@ -207,8 +208,8 @@ export function ProjectsView() {
 
                         const projectNotes = state.notes.filter(n => n.tags?.includes(`project-${project.id}`));
 
-                        const handleCreateLinkedNote = () => {
-                            addNote({
+                        const handleCreateLinkedNote = async () => {
+                            await addNote({
                                 folderId: state.noteFolders[0]?.id || "",
                                 type: "note",
                                 title: `Apunte: ${project.name}`,
@@ -216,7 +217,28 @@ export function ProjectsView() {
                                 tags: [`project-${project.id}`],
                                 isPinned: false
                             });
-                            setView("notes");
+                            toast.success("Apunte vinculado creado");
+                        };
+
+                        const handleAddActivity = async (e: React.FormEvent) => {
+                            e.preventDefault();
+                            if (!newActivityTitle.trim()) return;
+
+                            await addProjectActivity({
+                                projectId: project.id,
+                                title: newActivityTitle.trim(),
+                                status: "Pendiente"
+                            });
+                            setNewActivityTitle("");
+                            toast.success("Actividad añadida");
+                        };
+
+                        const handleToggleActivity = async (activityId: string, currentStatus: string) => {
+                            const newStatus = (currentStatus.toLowerCase() === 'completada' || currentStatus.toLowerCase() === 'completado')
+                                ? 'Pendiente'
+                                : 'Completada';
+
+                            await updateProjectActivity(activityId, { status: newStatus });
                         };
 
                         return (
@@ -233,20 +255,51 @@ export function ProjectsView() {
                                         </span>
                                     </div>
                                     <ScrollArea className="flex-1 p-4">
-                                        {project.activities.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground text-center py-8">No hay actividades definidas.</p>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {project.activities.map(act => (
-                                                    <div key={act.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                                                        <div className={cn("w-4 h-4 rounded-full mt-0.5 border-2 flex-shrink-0", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' ? "bg-success border-success" : "border-muted-foreground/30")} />
-                                                        <div>
-                                                            <p className={cn("text-sm font-medium", act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado' && "line-through text-muted-foreground")}>{act.title}</p>
+                                        <div className="space-y-4">
+                                            {/* Add Activity Form */}
+                                            <form onSubmit={handleAddActivity} className="flex gap-2">
+                                                <Input
+                                                    placeholder="Nueva actividad..."
+                                                    value={newActivityTitle}
+                                                    onChange={(e) => setNewActivityTitle(e.target.value)}
+                                                    className="h-9 bg-card"
+                                                />
+                                                <Button type="submit" size="sm" className="shrink-0 h-9">
+                                                    <Plus className="w-4 h-4" />
+                                                </Button>
+                                            </form>
+
+                                            {project.activities.length === 0 ? (
+                                                <p className="text-sm text-muted-foreground text-center py-8">No hay actividades definidas.</p>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {project.activities.map(act => (
+                                                        <div
+                                                            key={act.id}
+                                                            className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors group cursor-pointer"
+                                                            onClick={() => handleToggleActivity(act.id, act.status)}
+                                                        >
+                                                            <div className={cn(
+                                                                "w-5 h-5 rounded-full mt-0.5 border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+                                                                (act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado')
+                                                                    ? "bg-success border-success text-white"
+                                                                    : "border-muted-foreground/30 group-hover:border-primary/50"
+                                                            )}>
+                                                                {(act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado') && <Check className="w-3.5 h-3.5" />}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className={cn(
+                                                                    "text-sm font-medium transition-all truncate",
+                                                                    (act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado') && "line-through text-muted-foreground opacity-70"
+                                                                )}>
+                                                                    {act.title}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </ScrollArea>
                                 </div>
 
