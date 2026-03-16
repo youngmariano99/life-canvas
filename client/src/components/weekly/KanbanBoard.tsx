@@ -74,12 +74,12 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
 
   const handleSaveColumn = () => {
     if (editingColumnIndex === null || !editedColumnName.trim()) return;
-    const newStatuses = [...project.statuses];
-    const oldStatus = newStatuses[editingColumnIndex];
-    newStatuses[editingColumnIndex] = editedColumnName.trim();
+    const currentStatuses = project.statuses?.length ? [...project.statuses] : ["Pendiente", "En progreso", "Completado"];
+    const oldStatus = currentStatuses[editingColumnIndex];
+    currentStatuses[editingColumnIndex] = editedColumnName.trim();
 
     // Update project statuses
-    updateProject(project.id, { statuses: newStatuses });
+    updateProject(project.id, { statuses: currentStatuses });
 
     // Update all activities with old status
     activities
@@ -91,14 +91,16 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
   };
 
   const handleAddColumn = () => {
-    const newStatuses = [...project.statuses, `Estado ${project.statuses.length + 1}`];
+    const currentStatuses = project.statuses?.length ? project.statuses : ["Pendiente", "En progreso", "Completado"];
+    const newStatuses = [...currentStatuses, `Estado ${currentStatuses.length + 1}`];
     updateProject(project.id, { statuses: newStatuses });
   };
 
   const handleDeleteColumn = (index: number) => {
-    if (project.statuses.length <= 2) return; // Keep at least 2 columns
-    const statusToDelete = project.statuses[index];
-    const newStatuses = project.statuses.filter((_, i) => i !== index);
+    const currentStatuses = project.statuses?.length ? project.statuses : ["Pendiente", "En progreso", "Completado"];
+    if (currentStatuses.length <= 2) return; // Keep at least 2 columns
+    const statusToDelete = currentStatuses[index];
+    const newStatuses = currentStatuses.filter((_, i) => i !== index);
 
     // Move activities to first column
     activities
@@ -107,6 +109,8 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
 
     updateProject(project.id, { statuses: newStatuses });
   };
+
+  const statuses = project.statuses?.length ? project.statuses : ["Pendiente", "En progreso", "Completado"];
 
   return (
     <div className="space-y-4">
@@ -122,11 +126,11 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
 
       {/* Kanban Columns */}
       <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0">
-        <div className="grid gap-4 min-w-[max(100%,_800px)]" style={{ gridTemplateColumns: `repeat(${project.statuses.length}, minmax(280px, 1fr))` }}>
-          {project.statuses.map((status, index) => {
+        <div className="grid gap-4 min-w-[max(100%,_800px)]" style={{ gridTemplateColumns: `repeat(${statuses.length}, minmax(280px, 1fr))` }}>
+          {statuses.map((status, index) => {
             const columnActivities = getActivitiesForStatus(status);
             const isFirst = index === 0;
-            const isLast = index === project.statuses.length - 1;
+            const isLast = index === statuses.length - 1;
 
             return (
               <div
@@ -170,7 +174,7 @@ export function KanbanBoard({ project, readOnly = false }: KanbanBoardProps) {
                           >
                             <Edit2 className="h-5 w-5" />
                           </Button>
-                          {project.statuses.length > 2 && (
+                          {statuses.length > 2 && (
                             <Button
                               size="icon"
                               variant="ghost"

@@ -8,18 +8,50 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function InboxView() {
-    const { state, deleteNote } = useLifeOSContext();
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-    // Filtrar las notas cuya etiqueta es custom-inbox y no tienen carpeta (raíz puramente para inbox temporal)
+export function InboxView() {
+    const { state, deleteNote, addProjectActivity } = useLifeOSContext();
+    const [processingItem, setProcessingItem] = useState<any>(null);
+    const [activityTitle, setActivityTitle] = useState("");
+    const [selectedProjectId, setSelectedProjectId] = useState("");
+
+    // Filtrar las notas cuya etiqueta es custom-inbox
     const inboxItems = useMemo(() => {
         return state.notes.filter(note => note.tags.includes("custom-inbox"));
     }, [state.notes]);
+
+    const handleProcessItem = (item: any) => {
+        setProcessingItem(item);
+        setActivityTitle(item.content);
+        setSelectedProjectId("");
+    };
+
+    const handleConvert = async () => {
+        if (!processingItem || !selectedProjectId || !activityTitle.trim()) return;
+
+        try {
+            await addProjectActivity({
+                projectId: selectedProjectId,
+                title: activityTitle.trim(),
+                status: "Pendiente"
+            });
+            await deleteNote(processingItem.id);
+            toast.success("Idea convertida en actividad de proyecto");
+            setProcessingItem(null);
+        } catch {
+            toast.error("Error al convertir idea");
+        }
+    };
 
     const handleDelete = async (id: string) => {
         try {
             await deleteNote(id);
             toast.success("Elemento descartado");
+            if (processingItem?.id === id) setProcessingItem(null);
         } catch {
             toast.error("Error al descartar elemento");
         }
@@ -33,9 +65,14 @@ export function InboxView() {
                     <p className="text-muted-foreground">Tu espacio de captura rápida. Clasifícalo cuando tengas tiempo libre.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" className="hidden sm:flex">
+                    <Button 
+                        variant="outline" 
+                        className="hidden sm:flex gap-2"
+                        disabled={inboxItems.length === 0}
+                        onClick={() => handleProcessItem(inboxItems[0])}
+                    >
                         Procesar Inbox
-                        <ArrowRightCircle className="ml-2 w-4 h-4" />
+                        <ArrowRightCircle className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
@@ -87,7 +124,12 @@ export function InboxView() {
                                             <span>
                                                 {format(new Date(item.createdAt), "dd MMM, HH:mm", { locale: es })}
                                             </span>
-                                            <Button variant="link" size="sm" className="h-auto p-0 text-primary">
+                                            <Button 
+                                                variant="link" 
+                                                size="sm" 
+                                                className="h-auto p-0 text-primary font-semibold"
+                                                onClick={() => handleProcessItem(item)}
+                                            >
                                                 Procesar
                                             </Button>
                                         </div>
@@ -98,6 +140,71 @@ export function InboxView() {
                     </AnimatePresence>
                 </div>
             )}
+
+            {/* Processing Dialog */}
+            <Dialog open={!!processingItem} onOpenChange={(open) => !open && setProcessingItem(null)}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Procesar Idea</DialogTitle>
+                        <DialogDescription>
+                            Convierte esta captura en una actividad accionable dentro de un proyecto.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="bg-muted/50 p-4 rounded-lg italic text-sm border">
+                            "{processingItem?.content}"
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="activity-title">Nombre de la Actividad</Label>
+                                <Input
+                                    id="activity-title"
+                                    value={activityTitle}
+                                    onChange={(e) => setActivityTitle(e.target.value)}
+                                    placeholder="¿Qué hay que hacer?"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label>Asignar a Proyecto</Label>
+                                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Seleccionar un proyecto..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {state.projects.map(project => (
+                                            <SelectItem key={project.id} value={project.id}>
+                                                {project.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex gap-2">
+                        <Button
+                            variant="destructive"
+                            className="mr-auto"
+                            onClick={() => handleDelete(processingItem.id)}
+                        >
+                            Eliminar
+                        </Button>
+                        <Button variant="ghost" onClick={() => setProcessingItem(null)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleConvert}
+                            disabled={!selectedProjectId || !activityTitle.trim()}
+                        >
+                            Convertir en Actividad
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

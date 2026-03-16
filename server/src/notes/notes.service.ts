@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Note } from './entities/note.entity';
 import { NoteFolder } from './entities/note-folder.entity';
 import { NoteTag } from './entities/note-tag.entity';
@@ -65,7 +65,7 @@ export class NotesService {
         let tagEntities: NoteTag[] = [];
         if (createDto.tags && createDto.tags.length > 0) {
             // Fetch existing tags
-            tagEntities = await this.tagRepository.findByIds(createDto.tags);
+            tagEntities = await this.tagRepository.findBy({ id: In(createDto.tags) });
             const foundIds = tagEntities.map(t => t.id);
 
             // For tags that don't exist (e.g. auto-generated "role-123"), create them on the fly
@@ -115,7 +115,7 @@ export class NotesService {
         if (tags !== undefined) {
             let tagEntities: NoteTag[] = [];
             if (tags && tags.length > 0) {
-                tagEntities = await this.tagRepository.findByIds(tags);
+                tagEntities = await this.tagRepository.findBy({ id: In(tags) });
                 const foundIds = tagEntities.map(t => t.id);
 
                 const missingIds = tags.filter((id: string) => !foundIds.includes(id));

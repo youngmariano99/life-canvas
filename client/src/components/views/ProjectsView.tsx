@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KanbanBoard } from "@/components/weekly/KanbanBoard";
 import { toast } from "sonner";
 
 export function ProjectsView() {
@@ -21,7 +23,6 @@ export function ProjectsView() {
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "", description: "" });
-    const [newActivityTitle, setNewActivityTitle] = useState("");
 
     // Link projects to their parent goals, and calculate completion from activities
     const enrichedProjects = useMemo(() => {
@@ -176,28 +177,51 @@ export function ProjectsView() {
             {/* Project Details Modal (Dashboard Individual) */}
             <Dialog open={!!selectedProjectId} onOpenChange={(open) => !open && setSelectedProjectId(null)}>
                 <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-6">
-                    <DialogHeader className="flex-none">
+                    <DialogHeader className="flex-none p-0">
                         {(() => {
                             const project = enrichedProjects.find(p => p.id === selectedProjectId);
-                            if (!project) {
-                                return <DialogTitle>Detalles del Proyecto</DialogTitle>;
-                            }
+                            if (!project) return <DialogTitle>Detalles del Proyecto</DialogTitle>;
+                            
                             return (
-                                <>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Badge variant="outline" className="text-xs">{project.parentGoal?.title || "Sin meta"}</Badge>
-                                        <Badge variant="secondary" className={cn("text-xs text-white", project.parentRole ? ROLE_COLORS[project.parentRole.color].bg : "bg-gray-500")}>
-                                            {project.parentRole?.name || "Sin área"}
-                                        </Badge>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{project.parentGoal?.title || "Sin meta"}</Badge>
+                                            <Badge variant="secondary" className={cn("text-[10px] uppercase tracking-wider text-white", project.parentRole ? ROLE_COLORS[project.parentRole.color].bg : "bg-gray-500")}>
+                                                {project.parentRole?.name || "Sin área"}
+                                            </Badge>
+                                        </div>
+                                        {project.dueDate && (
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <CalendarIcon className="w-3.5 h-3.5" />
+                                                <span>{format(new Date(project.dueDate), "d MMM yyyy", { locale: es })}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <DialogTitle className="text-2xl flex items-center gap-2">
-                                        <FolderKanban className="w-6 h-6 text-primary" />
-                                        {project.name}
-                                    </DialogTitle>
-                                    {project.description && (
-                                        <p className="text-muted-foreground mt-2">{project.description}</p>
-                                    )}
-                                </>
+                                    
+                                    <div>
+                                        <DialogTitle className="text-3xl font-bold tracking-tight">
+                                            {project.name}
+                                        </DialogTitle>
+                                        {project.description && (
+                                            <p className="text-muted-foreground mt-2 text-sm leading-relaxed max-w-2xl">{project.description}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-4 py-2">
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <span className="text-xs font-medium text-muted-foreground">Progreso General</span>
+                                                <span className="text-xs font-bold text-primary">{project.progress}%</span>
+                                            </div>
+                                            <Progress value={project.progress} className="h-1.5" />
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50">
+                                            <ListTodo className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <span className="text-xs font-semibold">{project.completedActivities.length}/{project.activities.length}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             );
                         })()}
                     </DialogHeader>
@@ -217,135 +241,82 @@ export function ProjectsView() {
                                 tags: [`project-${project.id}`],
                                 isPinned: false
                             });
-                            toast.success("Apunte vinculado creado");
-                        };
-
-                        const handleAddActivity = async (e: React.FormEvent) => {
-                            e.preventDefault();
-                            if (!newActivityTitle.trim()) return;
-
-                            await addProjectActivity({
-                                projectId: project.id,
-                                title: newActivityTitle.trim(),
-                                status: "Pendiente"
-                            });
-                            setNewActivityTitle("");
-                            toast.success("Actividad añadida");
-                        };
-
-                        const handleToggleActivity = async (activityId: string, currentStatus: string) => {
-                            const newStatus = (currentStatus.toLowerCase() === 'completada' || currentStatus.toLowerCase() === 'completado')
-                                ? 'Pendiente'
-                                : 'Completada';
-
-                            await updateProjectActivity(activityId, { status: newStatus });
+                            toast.success("Recurso creado y vinculado");
                         };
 
                         return (
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 min-h-0">
-                                {/* Left Panel: Activities */}
-                                <div className="flex flex-col border rounded-xl overflow-hidden bg-muted/10">
-                                    <div className="px-4 py-3 border-b bg-card flex items-center justify-between">
-                                        <h3 className="font-semibold text-sm flex items-center gap-2">
-                                            <ListTodo className="w-4 h-4" />
-                                            Plan de Acción
-                                        </h3>
-                                        <span className="text-xs text-muted-foreground font-medium">
-                                            {project.completedActivities.length} / {project.activities.length}
-                                        </span>
-                                    </div>
-                                    <ScrollArea className="flex-1 p-4">
-                                        <div className="space-y-4">
-                                            {/* Add Activity Form */}
-                                            <form onSubmit={handleAddActivity} className="flex gap-2">
-                                                <Input
-                                                    placeholder="Nueva actividad..."
-                                                    value={newActivityTitle}
-                                                    onChange={(e) => setNewActivityTitle(e.target.value)}
-                                                    className="h-9 bg-card"
-                                                />
-                                                <Button type="submit" size="sm" className="shrink-0 h-9">
-                                                    <Plus className="w-4 h-4" />
-                                                </Button>
-                                            </form>
+                            <Tabs defaultValue="activities" className="flex-1 flex flex-col mt-4 min-h-0">
+                                <TabsList className="grid w-full grid-cols-2 mb-4">
+                                    <TabsTrigger value="activities" className="gap-2">
+                                        <ActivitySquare className="w-4 h-4" />
+                                        Plan de Acción (Kanban)
+                                    </TabsTrigger>
+                                    <TabsTrigger value="notes" className="gap-2">
+                                        <FileText className="w-4 h-4" />
+                                        Recursos y Notas ({projectNotes.length})
+                                    </TabsTrigger>
+                                </TabsList>
 
-                                            {project.activities.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground text-center py-8">No hay actividades definidas.</p>
+                                <TabsContent value="activities" className="flex-1 min-h-0 focus-visible:outline-none">
+                                    <ScrollArea className="h-full pr-4">
+                                        <div className="pb-8">
+                                            <KanbanBoard project={project} />
+                                        </div>
+                                    </ScrollArea>
+                                </TabsContent>
+
+                                <TabsContent value="notes" className="flex-1 min-h-0 focus-visible:outline-none">
+                                    <div className="flex flex-col h-full border rounded-2xl overflow-hidden bg-muted/10 border-border/50">
+                                        <div className="px-5 py-3 border-b border-border/50 bg-card flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="w-4 h-4 text-primary" />
+                                                <h3 className="font-bold text-sm">Biblioteca del Proyecto</h3>
+                                            </div>
+                                            <Button size="sm" className="h-8 gap-2" onClick={handleCreateLinkedNote}>
+                                                <Plus className="w-3.5 h-3.5" /> Nuevo Recurso
+                                            </Button>
+                                        </div>
+                                        
+                                        <ScrollArea className="flex-1 p-4">
+                                            {projectNotes.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center py-20 text-center">
+                                                    <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+                                                        <FileText className="w-8 h-8 text-primary/20" />
+                                                    </div>
+                                                    <h4 className="font-semibold text-muted-foreground">Sin recursos aún</h4>
+                                                    <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
+                                                        Usa este espacio para guardar notas de investigación, enlaces o minutas de este proyecto.
+                                                    </p>
+                                                </div>
                                             ) : (
-                                                <div className="space-y-2">
-                                                    {project.activities.map(act => (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {projectNotes.map(note => (
                                                         <div
-                                                            key={act.id}
-                                                            className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors group cursor-pointer"
-                                                            onClick={() => handleToggleActivity(act.id, act.status)}
+                                                            key={note.id}
+                                                            className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+                                                            onClick={() => {
+                                                                // Future: open specific note modal
+                                                                setView("notes");
+                                                            }}
                                                         >
-                                                            <div className={cn(
-                                                                "w-5 h-5 rounded-full mt-0.5 border-2 flex-shrink-0 flex items-center justify-center transition-colors",
-                                                                (act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado')
-                                                                    ? "bg-success border-success text-white"
-                                                                    : "border-muted-foreground/30 group-hover:border-primary/50"
-                                                            )}>
-                                                                {(act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado') && <Check className="w-3.5 h-3.5" />}
+                                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                                                    <FileText className="w-5 h-5" />
+                                                                </div>
+                                                                <div className="truncate">
+                                                                    <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{note.title}</p>
+                                                                    <p className="text-[10px] text-muted-foreground uppercase font-medium">{format(new Date(note.updatedAt), "d MMM yyyy", { locale: es })}</p>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className={cn(
-                                                                    "text-sm font-medium transition-all truncate",
-                                                                    (act.status.toLowerCase() === 'completada' || act.status.toLowerCase() === 'completado') && "line-through text-muted-foreground opacity-70"
-                                                                )}>
-                                                                    {act.title}
-                                                                </p>
-                                                            </div>
+                                                            <ExternalLink className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0" />
                                                         </div>
                                                     ))}
                                                 </div>
                                             )}
-                                        </div>
-                                    </ScrollArea>
-                                </div>
-
-                                {/* Right Panel: Linked Notes (Segundo Cerebro) */}
-                                <div className="flex flex-col border rounded-xl overflow-hidden bg-primary/5 border-primary/10">
-                                    <div className="px-4 py-3 border-b border-primary/10 bg-primary/10 flex items-center justify-between">
-                                        <h3 className="font-semibold text-sm flex items-center gap-2 text-primary">
-                                            <FileText className="w-4 h-4" />
-                                            Recursos y Apuntes
-                                        </h3>
-                                        <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-primary/20" onClick={handleCreateLinkedNote}>
-                                            <Plus className="w-3 h-3 mr-1" /> Nuevo
-                                        </Button>
+                                        </ScrollArea>
                                     </div>
-                                    <ScrollArea className="flex-1 p-4">
-                                        {projectNotes.length === 0 ? (
-                                            <div className="text-center py-8">
-                                                <FileText className="w-8 h-8 mx-auto text-primary/30 mb-2" />
-                                                <p className="text-sm text-primary/60">No hay apuntes vinculados a este proyecto.</p>
-                                                <p className="text-xs text-primary/40 mt-1">Usa esto para documentar investigación, links o minutas.</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {projectNotes.map(note => (
-                                                    <div
-                                                        key={note.id}
-                                                        className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-card hover:border-primary/50 transition-colors cursor-pointer group"
-                                                        onClick={() => setView("notes")}
-                                                    >
-                                                        <div className="flex items-center gap-3 overflow-hidden">
-                                                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
-                                                                <FileText className="w-4 h-4" />
-                                                            </div>
-                                                            <div className="truncate">
-                                                                <p className="text-sm font-medium truncate">{note.title}</p>
-                                                                <p className="text-xs text-muted-foreground">{format(new Date(note.updatedAt), "d MMM", { locale: es })}</p>
-                                                            </div>
-                                                        </div>
-                                                        <ExternalLink className="w-4 h-4 text-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </ScrollArea>
-                                </div>
-                            </div>
+                                </TabsContent>
+                            </Tabs>
                         );
                     })()}
                 </DialogContent>

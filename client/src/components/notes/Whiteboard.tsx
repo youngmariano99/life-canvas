@@ -33,22 +33,32 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
     elements: ExcalidrawElement[];
     appState?: Partial<AppState>;
   } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const elementsRef = useRef<readonly ExcalidrawElement[]>([]);
+  const appStateRef = useRef<AppState | null>(null);
+  const lastSavedDataRef = useRef<string | null>(null);
 
   // Parse initial content
   useEffect(() => {
     try {
+      lastSavedDataRef.current = note.content || null;
       if (note.content) {
         const parsed = JSON.parse(note.content);
-        setInitialData({
-          elements: parsed.elements || [],
-          appState: parsed.appState || {}
-        });
+        const elements = parsed.elements || [];
+        const appState = parsed.appState || {} as AppState;
+        
+        setInitialData({ elements, appState });
+        elementsRef.current = elements;
+        appStateRef.current = appState;
       } else {
         setInitialData({ elements: [], appState: {} });
+        elementsRef.current = [];
       }
     } catch {
       setInitialData({ elements: [], appState: {} });
+      elementsRef.current = [];
     }
+    setHasUnsavedChanges(false);
   }, [note.id]); // Only on note change
 
   // Update title
@@ -57,18 +67,17 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
       if (title !== note.title) {
         onUpdate({ title });
       }
-    }, 500);
+    }, 1000); // 1s for title
     return () => clearTimeout(timeout);
   }, [title, note.title, onUpdate]);
 
-  // Update tags debounce
+  // Update tags
   useEffect(() => {
-    // Only update if tags actually changed
     const currentTags = note.tags || [];
     if (JSON.stringify(currentTags) !== JSON.stringify(selectedTags)) {
       const timeout = setTimeout(() => {
         onUpdate({ tags: selectedTags });
-      }, 500);
+      }, 1000);
       return () => clearTimeout(timeout);
     }
   }, [selectedTags, note.tags, onUpdate]);
@@ -81,7 +90,8 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
 
   // Save canvas data
   const handleSave = useCallback((elements: readonly ExcalidrawElement[], appState: AppState) => {
-    setIsSaving(true);
+    if (!elements || !appState) return;
+
     const data = JSON.stringify({
       elements,
       appState: {
@@ -91,17 +101,51 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
         scrollY: appState.scrollY
       }
     });
+
+    // Avoid redundant saves
+    if (data === lastSavedDataRef.current) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    setIsSaving(true);
     onUpdate({ content: data });
-    setTimeout(() => setIsSaving(false), 500);
+    lastSavedDataRef.current = data;
+    setHasUnsavedChanges(false);
+    setTimeout(() => setIsSaving(false), 800);
   }, [onUpdate]);
 
-  // Debounced onChange
-  const handleChange = useCallback(
+  // Periodic autosave (every 30s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (hasUnsavedChanges && elementsRef.current && appStateRef.current) {
+        handleSave(elementsRef.current, appStateRef.current);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [hasUnsavedChanges, handleSave]);
+
+  // Debounced auto-save (after 10s of inactivity)
+  const debouncedAutoSave = useCallback(
     debounce((elements: readonly ExcalidrawElement[], appState: AppState) => {
       handleSave(elements, appState);
-    }, 1000),
+    }, 10000),
     [handleSave]
   );
+
+  const handleChange = (elements: readonly ExcalidrawElement[], appState: AppState) => {
+    // Basic optimization: don't flag as dirty if it's just a selection change 
+    // or something that doesn't affect the elements list/version
+    // For now, we update refs and set dirty
+    elementsRef.current = elements;
+    appStateRef.current = appState;
+    
+    if (!hasUnsavedChanges) {
+      setHasUnsavedChanges(true);
+    }
+    
+    debouncedAutoSave(elements, appState);
+  };
 
   // Export as PNG
   const handleExport = async () => {
@@ -183,9 +227,22 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
             </PopoverContent>
           </Popover>
 
+          {hasUnsavedChanges && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs gap-1.5 border-primary/20 hover:bg-primary/5 text-primary flex"
+              onClick={() => handleSave(elementsRef.current, appStateRef.current!)}
+              disabled={isSaving}
+            >
+              <Save className="w-3.5 h-3.5" />
+              Guardar ahora
+            </Button>
+          )}
+
           {isSaving && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Save className="w-3 h-3" />
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md border border-border">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Guardando...
             </span>
           )}
@@ -204,7 +261,10 @@ export function Whiteboard({ note, availableTags, onUpdate, onClose, isFullscree
             </Button>
           )}
 
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={() => {
+            if (hasUnsavedChanges) handleSave(elementsRef.current, appStateRef.current!);
+            onClose();
+          }}>
             <X className="w-4 h-4" />
           </Button>
         </div>

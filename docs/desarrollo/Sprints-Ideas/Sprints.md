@@ -100,6 +100,13 @@ El sistema evolucionará para ser un ente proactivo guiado y medible.
 - [x] Refactorizar las jerarquías de Storage/Notas para acoplarlas a P.A.R.A.
 - [x] Crear vista de carpeta automática dentro del visor de Proyecto (todo centralizado).
 
+#### 🛠️ Refactorización: Unificación de Proyectos y Mejora de Inbox -> COMPLETADO
+**Objetivo:** Eliminar redundancia visual y potenciar el flujo de captura GTD.
+- [x] Unificar Kanban y Gestión de Proyectos en una sola vista centralizada (`ProjectsView`).
+- [x] Simplificar `WeeklyView` para evitar duplicidad de funcionalidades.
+- [x] Corregir persistencia de etiquetas personalizadas (`custom-inbox`) en el Backend.
+- [x] Implementar flujo de procesamiento de ideas directamente desde la vista de Inbox.
+
 #### 📈 Sprint 10: Métricas y Retroalimentación Automática
 **Objetivo:** Dashboards de incentivo visual y reporte de tiempos para calibrar prioridades.
 - Crear componente de "Progress Bar" dinámico para Objetivos basado en avance de Proyectos.

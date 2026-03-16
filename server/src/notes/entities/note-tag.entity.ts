@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
+import { Entity, PrimaryColumn, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
 import type { User } from '../../database/entities/user.entity';
 import type { Note } from './note.entity';
 
 @Entity('note_tags')
 export class NoteTag {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn({ length: 50 })
     id: string;
 
     @Column({ name: 'user_id' })
