@@ -6,11 +6,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useLifeOSContext } from "@/context/LifeOSContext";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { ROLE_COLORS } from "@/types/lifeOS";
 
 export function QuickCaptureFAB() {
     const [isOpen, setIsOpen] = useState(false);
     const [content, setContent] = useState("");
-    const { addNote } = useLifeOSContext();
+    const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+    const { state, addNote } = useLifeOSContext();
 
     // Floating Action Button Keyboard Shortcut (Ctrl+K or Cmd+K)
     useEffect(() => {
@@ -35,17 +40,23 @@ export function QuickCaptureFAB() {
             const firstLine = content.split('\n')[0];
             const title = firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
 
+            const tags = ["custom-inbox"];
+            if (selectedRoleId) {
+                tags.push(`role-${selectedRoleId}`);
+            }
+
             await addNote({
                 title: title,
                 content: content,
                 type: "note",
-                folderId: "", // Backend handles empty string as null
-                tags: ["custom-inbox"],
+                folderId: "", // Backend handles empty string as null or optional
+                tags,
                 isPinned: false
             });
 
             toast.success("Capturado en Bandeja de Entrada");
             setContent("");
+            setSelectedRoleId(null);
             setIsOpen(false);
         } catch (error) {
             toast.error("Error al capturar idea");
@@ -94,10 +105,45 @@ export function QuickCaptureFAB() {
 
                     <div className="p-3 border-t border-border/10 bg-muted/10 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-foreground">
-                                <Tag className="w-4 h-4 mr-1.5" />
-                                <span className="text-xs">Sin clasificar</span>
-                            </Button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-foreground">
+                                        <Tag className={cn("w-4 h-4 mr-1.5", selectedRoleId && "text-primary")} />
+                                        <span className="text-xs">
+                                            {selectedRoleId 
+                                                ? state.roles.find(r => r.id === selectedRoleId)?.name 
+                                                : "Sin clasificar"}
+                                        </span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[200px] p-0" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Filtrar rol..." className="h-8" />
+                                        <CommandList>
+                                            <CommandEmpty>No hay roles.</CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem
+                                                    onSelect={() => setSelectedRoleId(null)}
+                                                    className="text-xs"
+                                                >
+                                                    <div className="w-2 h-2 rounded-full bg-muted mr-2" />
+                                                    Sin clasificar
+                                                </CommandItem>
+                                                {state.roles.map((role) => (
+                                                    <CommandItem
+                                                        key={role.id}
+                                                        onSelect={() => setSelectedRoleId(role.id)}
+                                                        className="text-xs"
+                                                    >
+                                                        <div className={cn("w-2 h-2 rounded-full mr-2", ROLE_COLORS[role.color].bg)} />
+                                                        {role.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] text-muted-foreground hidden sm:inline-block mr-2">

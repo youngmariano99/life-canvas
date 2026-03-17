@@ -19,7 +19,8 @@ export class CreateNoteFolderDto {
 
 export class CreateNoteDto {
     @IsString()
-    folderId: string;
+    @IsOptional()
+    folderId?: string;
 
     @IsString()
     @IsEnum(['note', 'whiteboard', 'document'])

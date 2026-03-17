@@ -362,7 +362,7 @@ export function DailyView() {
       )}
 
       {/* Habit Tracker */}
-      <HabitTracker selectedDate={dateStr} readOnly={state.isReadOnly} compact={true} />
+      <HabitTracker selectedDate={dateStr} readOnly={state.isReadOnly} compact={false} />
     </div>
   );
 }

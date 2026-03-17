@@ -464,14 +464,22 @@ export function useLifeOS() {
   }, []);
 
   const updateProjectActivity = useCallback(async (activityId: string, updates: Partial<ProjectActivity>) => {
+    // Optimistic update
+    setState(s => ({
+      ...s,
+      projectActivities: s.projectActivities.map(a => a.id === activityId ? { ...a, ...updates } : a)
+    }));
+
     try {
       const updatedActivity = await api.projectActivities.update(activityId, updates);
+      // Sync with server response
       setState(s => ({
         ...s,
         projectActivities: s.projectActivities.map(a => a.id === activityId ? updatedActivity : a)
       }));
     } catch (error) {
       console.error("Failed to update project activity", error);
+      // Optional: rollback if needed, but usually not necessary for simple state toggles
     }
   }, []);
 

@@ -17,9 +17,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KanbanBoard } from "@/components/weekly/KanbanBoard";
 import { toast } from "sonner";
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuLabel, 
+    DropdownMenuSeparator, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { BrainCircuit, Paperclip, Trash2, Edit } from "lucide-react";
 
 export function ProjectsView() {
-    const { state, setView, addNote, addProject, addProjectActivity, updateProjectActivity } = useLifeOSContext();
+    const { state, setView, addNote, addProject, deleteProject, updateProject, addProjectActivity, updateProjectActivity } = useLifeOSContext();
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "", description: "" });
@@ -46,9 +55,19 @@ export function ProjectsView() {
                 progress
             };
         }).sort((a, b) => {
-            // Sort by active / due date
-            if (a.progress === 100 && b.progress < 100) return 1;
-            if (a.progress < 100 && b.progress === 100) return -1;
+            // 1. Sort by Role Name
+            const roleA = a.parentRole?.name || "zzz";
+            const roleB = b.parentRole?.name || "zzz";
+            if (roleA !== roleB) return roleA.localeCompare(roleB);
+
+            // 2. Sort by Goal Title
+            const goalA = a.parentGoal?.title || "zzz";
+            const goalB = b.parentGoal?.title || "zzz";
+            if (goalA !== goalB) return goalA.localeCompare(goalB);
+
+            // 3. Sort by Progress (incomplete first)
+            if (a.progress !== b.progress) return a.progress - b.progress;
+
             return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         });
     }, [state.projects, state.goals, state.roles, state.projectActivities]);
@@ -69,6 +88,18 @@ export function ProjectsView() {
         setNewProject({ name: "", goalId: "", dueDate: "", description: "" });
         setIsCreatingProject(false);
         toast.success("Proyecto creado exitosamente");
+    };
+
+    const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation(); // Evitar abrir el modal
+        if (window.confirm("¿Estás seguro de que deseas eliminar este proyecto y todas sus actividades?")) {
+            try {
+                await deleteProject(id);
+                toast.success("Proyecto eliminado");
+            } catch {
+                toast.error("Error al eliminar proyecto");
+            }
+        }
     };
 
     return (
@@ -127,9 +158,31 @@ export function ProjectsView() {
                                                 {project.name}
                                             </CardTitle>
                                         </div>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground -mr-2 -mt-2">
-                                            <MoreVertical className="w-4 h-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 shrink-0 text-muted-foreground -mr-2 -mt-2"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Opciones</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => setSelectedProjectId(project.id)}>
+                                                    <Edit className="w-4 h-4 mr-2" /> Abrir Detalles
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="text-destructive focus:text-destructive"
+                                                    onClick={(e) => handleDeleteProject(e as any, project.id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" /> Eliminar Proyecto
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </CardHeader>
 
@@ -230,13 +283,21 @@ export function ProjectsView() {
                         const project = enrichedProjects.find(p => p.id === selectedProjectId);
                         if (!project) return null;
 
-                        const projectNotes = state.notes.filter(n => n.tags?.includes(`project-${project.id}`));
+                        const projectNotes = state.notes.filter(n => 
+                            (n.tags as any)?.some((t: any) => (typeof t === 'string' ? t : t.id) === `project-${project.id}`)
+                        );
 
-                        const handleCreateLinkedNote = async () => {
+                        const handleCreateLinkedNote = async (type: "note" | "whiteboard" | "document") => {
+                            const titles = {
+                                note: "Apunte",
+                                whiteboard: "Pizarra",
+                                document: "Documento"
+                            };
+
                             await addNote({
                                 folderId: state.noteFolders[0]?.id || "",
-                                type: "note",
-                                title: `Apunte: ${project.name}`,
+                                type,
+                                title: `${titles[type]}: ${project.name}`,
                                 content: "",
                                 tags: [`project-${project.id}`],
                                 isPinned: false
@@ -272,9 +333,30 @@ export function ProjectsView() {
                                                 <FileText className="w-4 h-4 text-primary" />
                                                 <h3 className="font-bold text-sm">Biblioteca del Proyecto</h3>
                                             </div>
-                                            <Button size="sm" className="h-8 gap-2" onClick={handleCreateLinkedNote}>
-                                                <Plus className="w-3.5 h-3.5" /> Nuevo Recurso
-                                            </Button>
+                                            
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="sm" className="h-8 gap-2">
+                                                        <Plus className="w-3.5 h-3.5" /> Nuevo Recurso
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48">
+                                                    <DropdownMenuLabel>Tipo de Recurso</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => handleCreateLinkedNote("note")} className="gap-2">
+                                                        <FileText className="w-4 h-4" />
+                                                        <span>Nuevo Apunte</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleCreateLinkedNote("whiteboard")} className="gap-2">
+                                                        <BrainCircuit className="w-4 h-4" />
+                                                        <span>Nueva Pizarra</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleCreateLinkedNote("document")} className="gap-2">
+                                                        <Paperclip className="w-4 h-4" />
+                                                        <span>Subir Archivo / Doc</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                         
                                         <ScrollArea className="flex-1 p-4">
@@ -295,13 +377,19 @@ export function ProjectsView() {
                                                             key={note.id}
                                                             className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
                                                             onClick={() => {
-                                                                // Future: open specific note modal
+                                                                // Open notes view and find this note
                                                                 setView("notes");
                                                             }}
                                                         >
                                                             <div className="flex items-center gap-3 overflow-hidden">
                                                                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                                                    <FileText className="w-5 h-5" />
+                                                                    {note.type === "whiteboard" ? (
+                                                                        <BrainCircuit className="w-5 h-5" />
+                                                                    ) : note.type === "document" ? (
+                                                                        <Paperclip className="w-5 h-5" />
+                                                                    ) : (
+                                                                        <FileText className="w-5 h-5" />
+                                                                    )}
                                                                 </div>
                                                                 <div className="truncate">
                                                                     <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{note.title}</p>
