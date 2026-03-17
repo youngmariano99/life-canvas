@@ -1,5 +1,5 @@
 
-import { Home, Calendar, Dumbbell, FileText, Menu, Settings, RotateCcw, LogOut } from "lucide-react";
+import { Target, CalendarDays, BrainCircuit, FolderKanban, Menu, Settings, RotateCcw, LogOut, Inbox, Compass, Dumbbell, FileText, BookOpen, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewType, VIEWS } from "./Dashboard";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,13 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
     const { startEditingWizard, resetAll } = useLifeOSContext();
 
     const mainItems = [
-        { id: "daily", label: "Hoy", icon: Home }, // Changed Target to Home for "Daily/Exec" feel
-        { id: "weekly", label: "Semanal", icon: Calendar },
-        { id: "fitness", label: "Fitness", icon: Dumbbell },
-        { id: "notes", label: "Notas", icon: FileText },
+        { id: "daily", label: "Hoy", icon: Target },
+        { id: "weekly", label: "Semanal", icon: CalendarDays },
+        { id: "pomodoro", label: "Enfoque", icon: BrainCircuit },
+        { id: "projects", label: "Proyectos", icon: FolderKanban },
     ];
 
-    const secondaryViewIds = ["identity", "semester", "deviations", "pomodoro"];
+    const secondaryViewIds = ["identity", "semester", "fitness", "notes", "inbox", "deviations"];
     const secondaryViews = VIEWS.filter(v => secondaryViewIds.includes(v.id));
 
     return (

@@ -58,11 +58,12 @@ export const VIEWS = [
 
 export type ViewType = typeof VIEWS[number]["id"];
 
-const SECONDARY_VIEWS = ["fitness", "notes", "deviations", "inbox"];
+const SECONDARY_VIEWS = ["identity", "semester", "fitness", "notes", "inbox", "deviations"];
 
 export function Dashboard() {
-  const { state, resetAll, startEditingWizard } = useLifeOSContext();
-  const [currentView, setCurrentView] = useState<ViewType>("identity");
+  const { state, setView, resetAll, startEditingWizard } = useLifeOSContext();
+  const currentView = state.currentView;
+  const setCurrentView = setView; 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleViewChange = (view: ViewType) => {

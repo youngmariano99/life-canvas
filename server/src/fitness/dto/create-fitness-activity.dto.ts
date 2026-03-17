@@ -30,4 +30,7 @@ export class CreateFitnessActivityDto {
 
     @IsDateString()
     date: string; // ISO or YYYY-MM-DD
+
+    @IsOptional()
+    performanceSnapshot?: any;
 }

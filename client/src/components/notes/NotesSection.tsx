@@ -64,13 +64,15 @@ export function NotesSection() {
     deleteNote,
     addNoteTag,
     deleteNoteTag,
-    getRoleById
+    getRoleById,
+    setActiveNoteId
   } = useLifeOSContext();
+
+  const selectedNoteId = state.activeNoteId || null;
 
   // P.A.R.A Navigation State
   const [selectedParaType, setSelectedParaType] = useState<"project" | "role" | "folder" | "archive" | "all">("all");
   const [selectedParaId, setSelectedParaId] = useState<string | null>(null);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
@@ -107,15 +109,15 @@ export function NotesSection() {
     let notes = state.notes;
 
     if (selectedParaType === "folder" && selectedParaId) {
-      notes = notes.filter(n => n.folderId === selectedParaId && !n.tags?.includes("system-archive"));
+      notes = notes.filter(n => n.folderId === selectedParaId && !n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === "system-archive"));
     } else if (selectedParaType === "project" && selectedParaId) {
-      notes = notes.filter(n => n.tags?.includes(`project-${selectedParaId}`) && !n.tags?.includes("system-archive"));
+      notes = notes.filter(n => n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === `project-${selectedParaId}`) && !n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === "system-archive"));
     } else if (selectedParaType === "role" && selectedParaId) {
-      notes = notes.filter(n => n.tags?.includes(`role-${selectedParaId}`) && !n.tags?.includes("system-archive"));
+      notes = notes.filter(n => n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === `role-${selectedParaId}`) && !n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === "system-archive"));
     } else if (selectedParaType === "archive") {
-      notes = notes.filter(n => n.tags?.includes("system-archive"));
+      notes = notes.filter(n => n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === "system-archive"));
     } else if (selectedParaType === "all") {
-      notes = notes.filter(n => !n.tags?.includes("system-archive"));
+      notes = notes.filter(n => !n.tags?.some((t: any) => (typeof t === 'string' ? t : t.id) === "system-archive"));
     }
 
     if (searchQuery) {
@@ -236,7 +238,7 @@ export function NotesSection() {
   };
 
   const handleSelectNote = (noteId: string) => {
-    setSelectedNoteId(noteId);
+    setActiveNoteId(noteId);
     setShowMobileSidebar(false);
   };
 
@@ -558,7 +560,7 @@ export function NotesSection() {
                           onClick={() => {
                             deleteNote(note.id);
                             if (selectedNoteId === note.id) {
-                              setSelectedNoteId(null);
+                              setActiveNoteId(undefined);
                             }
                           }}
                         >
@@ -603,7 +605,7 @@ export function NotesSection() {
           <>
             {/* Mobile Back Button */}
             <div className="lg:hidden flex items-center gap-2 p-2 border-b border-border bg-background/80 backdrop-blur-md">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedNoteId(null)}>
+              <Button variant="ghost" size="sm" onClick={() => setActiveNoteId(undefined)}>
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Volver
               </Button>
@@ -615,7 +617,7 @@ export function NotesSection() {
                 note={selectedNote}
                 availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
-                onClose={() => setSelectedNoteId(null)}
+                onClose={() => setActiveNoteId(undefined)}
                 isFullscreen={isFullscreen}
                 toggleFullscreen={toggleFullscreen}
               />
@@ -625,7 +627,7 @@ export function NotesSection() {
                 note={selectedNote}
                 availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
-                onClose={() => setSelectedNoteId(null)}
+                onClose={() => setActiveNoteId(undefined)}
                 isFullscreen={isFullscreen}
                 toggleFullscreen={toggleFullscreen}
               />
@@ -635,7 +637,7 @@ export function NotesSection() {
                 note={selectedNote}
                 availableTags={availableTags}
                 onUpdate={(updates) => updateNote(selectedNote.id, updates)}
-                onClose={() => setSelectedNoteId(null)}
+                onClose={() => setActiveNoteId(undefined)}
                 isFullscreen={isFullscreen}
                 toggleFullscreen={toggleFullscreen}
               />

@@ -27,6 +27,9 @@ export class FitnessActivity {
     @Column({ type: 'text', nullable: true })
     notes: string;
 
+    @Column('jsonb', { name: 'performance_snapshot', nullable: true })
+    performanceSnapshot: any;
+
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 

@@ -8,6 +8,7 @@ import { useLifeOSContext } from "@/context/LifeOSContext";
 import { FitnessActivity } from "@/types/lifeOS";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface FitnessActivityViewProps {
     activity: FitnessActivity | null;
@@ -139,7 +140,33 @@ export function FitnessActivityView({ activity, onClose }: FitnessActivityViewPr
                                 </div>
                             </div>
 
-                            {activity.notes && (
+                            {activity.performanceSnapshot && (
+                                <div className="space-y-4">
+                                    <h4 className="font-bold text-sm text-primary flex items-center gap-2">
+                                        <Dumbbell className="w-4 h-4" />
+                                        Rendimiento Detallado
+                                    </h4>
+                                    <div className="grid gap-3">
+                                        {activity.performanceSnapshot.map((ex, i) => (
+                                            <div key={i} className="bg-muted/30 rounded-xl p-3 space-y-2">
+                                                <p className="text-sm font-bold">{ex.exerciseName}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {ex.setsDone.map((set, si) => (
+                                                        <div key={si} className={cn(
+                                                            "text-[10px] px-2 py-1 rounded bg-background border",
+                                                            set.completed ? "border-primary/50" : "opacity-50"
+                                                        )}>
+                                                            <span className="font-bold">{set.weight}kg</span> x {set.reps}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activity.notes && !activity.performanceSnapshot && (
                                 <div className="bg-muted/20 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono">
                                     {activity.notes}
                                 </div>

@@ -21,7 +21,9 @@ export function InboxView() {
 
     // Filtrar las notas cuya etiqueta es custom-inbox
     const inboxItems = useMemo(() => {
-        return state.notes.filter(note => note.tags.includes("custom-inbox"));
+        return state.notes.filter(note => 
+            (note.tags as any)?.some((t: any) => (typeof t === 'string' ? t : t.id) === "custom-inbox")
+        );
     }, [state.notes]);
 
     const handleProcessItem = (item: any) => {
@@ -67,11 +69,12 @@ export function InboxView() {
                 <div className="flex items-center gap-2">
                     <Button 
                         variant="outline" 
-                        className="hidden sm:flex gap-2"
+                        className="flex gap-2 h-9"
                         disabled={inboxItems.length === 0}
                         onClick={() => handleProcessItem(inboxItems[0])}
                     >
-                        Procesar Inbox
+                        <span className="hidden xs:inline">Procesar Inbox</span>
+                        <span className="xs:hidden">Procesar</span>
                         <ArrowRightCircle className="w-4 h-4" />
                     </Button>
                 </div>

@@ -156,8 +156,49 @@ export interface FitnessActivity {
   calories?: number;
   distance?: number;
   notes?: string;
+  performanceSnapshot?: PerformanceSnapshot[];
   date: string;
   createdAt: string;
+}
+
+export interface PerformanceSnapshot {
+  exerciseId: string;
+  exerciseName: string;
+  setsDone: { reps: number; weight: number; completed: boolean }[];
+}
+
+export interface Exercise {
+  id: string;
+  name: string;
+  category: 'Fuerza' | 'Cardio' | 'Flexibilidad';
+  records?: {
+    maxWeight?: number;
+    maxReps?: number;
+    maxVolume?: number;
+  };
+  createdAt: string;
+}
+
+export interface TrainingBlock {
+  id: string;
+  name: string;
+  durationWeeks: number;
+  isActive: boolean;
+  routines: BlockRoutineProgression[];
+  createdAt: string;
+}
+
+export interface BlockRoutineProgression {
+  routineName: string;
+  exercises: {
+    exerciseId: string;
+    weeklyTargets: {
+      week: number;
+      sets: number;
+      reps: number | string;
+      weight?: number;
+    }[];
+  }[];
 }
 
 export type FitnessRoutineStructureType = "sets_reps" | "intervals" | "rounds" | "time" | "distance" | "custom";
@@ -352,6 +393,8 @@ export interface LifeOSState {
   projectActivities: ProjectActivity[];
   fitnessActivities: FitnessActivity[];
   fitnessRoutines: FitnessRoutine[];
+  exercises: Exercise[];
+  trainingBlocks: TrainingBlock[];
   pomodoroSessions: PomodoroSession[];
   pomodoroSettings: PomodoroSettings;
   activePauseRoutines: ActivePauseRoutine[];
@@ -361,7 +404,7 @@ export interface LifeOSState {
   notes: Note[];
   noteTags: NoteTag[];
   noteDocuments: NoteDocument[];
-  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness" | "notes" | "inbox" | "projects" | "pomodoro";
+  currentView: "identity" | "semester" | "daily" | "weekly" | "fitness" | "notes" | "inbox" | "projects" | "pomodoro" | "deviations";
   selectedDate: string;
   showPastItems: boolean;
   focusMode: boolean;
@@ -369,6 +412,7 @@ export interface LifeOSState {
   isReadOnly: boolean;
   isLoading: boolean;
   activePomodoroTaskId?: string;
+  activeNoteId?: string;
 }
 
 // Default initial state
@@ -389,6 +433,8 @@ export const initialState: LifeOSState = {
   projectActivities: [],
   fitnessActivities: [],
   fitnessRoutines: [],
+  exercises: [],
+  trainingBlocks: [],
   pomodoroSessions: [],
   pomodoroSettings: {
     workDuration: 25,
@@ -414,4 +460,5 @@ export const initialState: LifeOSState = {
   focusMode: false,
   selectedYear: new Date().getFullYear(),
   isReadOnly: false,
+  activeNoteId: undefined,
 };

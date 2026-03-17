@@ -69,11 +69,33 @@ Tu tablero para el día a día.
 
 ## 5. Área de Fitness
 
-No solo trabajo, también salud.
+El sistema de Fitness está diseñado para equilibrar el rendimiento cognitivo con la salud física mediante un seguimiento híbrido.
 
-*   **NEAT (Non-Exercise Activity Thermogenesis)**: Registra tu actividad diaria "invisible" (pasos, caminata al trabajo).
-*   **Workouts**: Registra entrenamientos formales.
-*   **Rutinas**: Crea plantillas de rutinas (ej: "Torso-Pierna", "Yoga Mañana") para registrar con un solo clic.
+### 5.1. NEAT (Actividad No Deportiva)
+Registra la actividad "invisible" que mantiene activo tu metabolismo fuera del gimnasio.
+*   **Seguimiento**: Pasos diarios, caminatas al trabajo, o actividad constante.
+*   **Métrica Principal**: Distancia/Pasos y Calorías estimadas.
+*   **Uso**: Ideal para asegurar que incluso en días de mucho trabajo sedentario, mantengas un nivel base de movimiento.
+
+### 5.2. Workouts (Entrenamientos)
+Registro de sesiones de ejercicio formal.
+*   **Modo Manual**: Permite registrar rápidamente el nombre, duración (min), calorías (kcal) y distancia (km/pasos).
+*   **Visualización**: Calendario inteligente que diferencia entre días de NEAT (punto azul) y días de Entrenamiento (punto verde/atleta).
+
+### 5.3. El Sistema de Rutinas
+Para evitar la fricción al registrar, puedes crear plantillas inteligentes:
+*   **Tipos de Estructura**:
+    *   **Series y Repeticiones**: Estructura clásica de pesas/fuerza (ej: Press Banca 3x12).
+    *   **Rondas / Circuito**: Ideal para Crossfit o HIIT, con una meta global de rondas.
+    *   **Intervalos**: Estructura Work/Rest (ej: 30s de trabajo / 15s de descanso).
+    *   **Tiempo/Distancia Fija**: Metas específicas para cardio (ej: "Correr 5km" o "Yoga 45min").
+*   **Uso con un Clic**: Al seleccionar una rutina guardada, el sistema autocompleta todos los detalles técnicos, permitiéndote registrar sesiones complejas en segundos.
+
+### 5.4. Estructura de Datos y Persistencia
+Es importante entender que el sistema de Fitness prioriza la **flexibilidad sobre la rigidez relacional**:
+*   **Sin Entidades de "Ejercicio"**: A diferencia de otras apps, no existe una base de datos maestra de ejercicios (ej: "Press de Banca" no es un objeto que edites centralizadamente). Los ejercicios son **nombres de texto estáticos** dentro de una Rutina.
+*   **Lógica de "Flattening" (Aplanamiento)**: Cuando registras una actividad basada en una rutina, el sistema toma la estructura compleja de la rutina (series, reps, intervalos) y la convierte en un bloque de texto enriquecido que se guarda en el campo `notes` de la `FitnessActivity`.
+*   **Ventaja**: Esto permite modificar una rutina en el futuro sin alterar el historial de cómo entrenaste meses atrás, manteniendo un registro fiel de lo que hiciste en ese momento exacto.
 
 ---
 

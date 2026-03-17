@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { LifeOSState, initialState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument, PomodoroSession, PomodoroSettings, ActivePauseRoutine, ActivePauseEntry } from "@/types/lifeOS";
+import { LifeOSState, initialState, Role, Goal, Habit, HabitLog, Deviation, YearSettings, Project, ProjectActivity, Resource, FitnessActivity, FitnessRoutine, CalendarEvent, NoteFolder, Note, NoteTag, NoteDocument, PomodoroSession, PomodoroSettings, ActivePauseRoutine, ActivePauseEntry, Exercise, TrainingBlock } from "@/types/lifeOS";
 import * as store from "@/store/lifeOSStore";
 
 import { api } from "@/lib/api";
@@ -28,7 +28,7 @@ export function useLifeOS() {
     async function loadData() {
       try {
         const year = state.selectedYear;
-        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines, pomodoroSessions, yearSettings] = await Promise.all([
+        const [roles, goals, habits, habitLogs, projects, projectActivities, dailyStones, fitnessActivities, deviations, noteFolders, notes, calendarEvents, fitnessRoutines, pomodoroSessions, yearSettings, exercises, trainingBlocks] = await Promise.all([
           api.roles.getAll(),
           api.goals.getAll(year),
           api.habits.getAll(year),
@@ -44,6 +44,8 @@ export function useLifeOS() {
           api.fitness.getAllRoutines(),
           api.pomodoro.getAll(),
           api.years.getSettings(year),
+          api.fitness.getAllExercises(),
+          api.fitness.getAllBlocks(),
         ]);
 
         // Fetch Resources separately
@@ -70,6 +72,8 @@ export function useLifeOS() {
           fitnessRoutines,
           pomodoroSessions,
           yearSettings,
+          exercises,
+          trainingBlocks,
           // If year settings exist OR if user has significant data (goals or roles), consider configured.
           // This handles migration for existing users who haven't set up YearSettings yet.
           isConfigured: !!yearSettings || (roles.length > 0 || goals.length > 0) || s.isConfigured,
@@ -111,6 +115,10 @@ export function useLifeOS() {
 
   const toggleFocusMode = useCallback(() => {
     setState(s => store.toggleFocusMode(s));
+  }, []);
+
+  const setActiveNoteId = useCallback((noteId: string | undefined) => {
+    setState(s => ({ ...s, activeNoteId: noteId }));
   }, []);
 
   // Wizard
@@ -566,6 +574,81 @@ export function useLifeOS() {
     }
   }, []);
 
+  // Fitness Exercises
+  const addExercise = useCallback(async (exercise: Omit<Exercise, "id" | "createdAt">) => {
+    try {
+      const newExercise = await api.fitness.createExercise(exercise);
+      setState(s => ({ ...s, exercises: [...s.exercises, newExercise] }));
+    } catch (error) {
+      console.error("Failed to create exercise", error);
+    }
+  }, []);
+
+  const updateExercise = useCallback(async (id: string, updates: Partial<Exercise>) => {
+    try {
+      const updatedExercise = await api.fitness.updateExercise(id, updates);
+      setState(s => ({
+        ...s,
+        exercises: s.exercises.map(e => e.id === id ? updatedExercise : e)
+      }));
+    } catch (error) {
+      console.error("Failed to update exercise", error);
+    }
+  }, []);
+
+  const deleteExercise = useCallback(async (id: string) => {
+    try {
+      await api.fitness.deleteExercise(id);
+      setState(s => ({
+        ...s,
+        exercises: s.exercises.filter(e => e.id !== id)
+      }));
+    } catch (error) {
+      console.error("Failed to delete exercise", error);
+    }
+  }, []);
+
+  // Training Blocks
+  const addTrainingBlock = useCallback(async (block: Omit<TrainingBlock, "id" | "createdAt">) => {
+    try {
+      const newBlock = await api.fitness.createBlock(block);
+      setState(s => ({
+        ...s,
+        trainingBlocks: newBlock.isActive 
+          ? [...s.trainingBlocks.map(b => ({ ...b, isActive: false })), newBlock]
+          : [...s.trainingBlocks, newBlock]
+      }));
+    } catch (error) {
+      console.error("Failed to create training block", error);
+    }
+  }, []);
+
+  const updateTrainingBlock = useCallback(async (id: string, updates: Partial<TrainingBlock>) => {
+    try {
+      const updatedBlock = await api.fitness.updateBlock(id, updates);
+      setState(s => ({
+        ...s,
+        trainingBlocks: updatedBlock.isActive
+          ? s.trainingBlocks.map(b => b.id === id ? updatedBlock : { ...b, isActive: false })
+          : s.trainingBlocks.map(b => b.id === id ? updatedBlock : b)
+      }));
+    } catch (error) {
+      console.error("Failed to update training block", error);
+    }
+  }, []);
+
+  const deleteTrainingBlock = useCallback(async (id: string) => {
+    try {
+      await api.fitness.deleteBlock(id);
+      setState(s => ({
+        ...s,
+        trainingBlocks: s.trainingBlocks.filter(b => b.id !== id)
+      }));
+    } catch (error) {
+      console.error("Failed to delete training block", error);
+    }
+  }, []);
+
   // Calendar Events
   const addCalendarEvent = useCallback(async (event: Omit<CalendarEvent, "id" | "createdAt">) => {
     try {
@@ -738,6 +821,7 @@ export function useLifeOS() {
     setSelectedYear,
     toggleShowPastItems,
     toggleFocusMode,
+    setActiveNoteId,
     // Wizard
     setWizardStep,
     completeWizard,
@@ -785,6 +869,12 @@ export function useLifeOS() {
     deleteFitnessActivity,
     addFitnessRoutine,
     deleteFitnessRoutine,
+    addExercise,
+    updateExercise,
+    deleteExercise,
+    addTrainingBlock,
+    updateTrainingBlock,
+    deleteTrainingBlock,
     // Calendar Events
     addCalendarEvent,
     updateCalendarEvent,

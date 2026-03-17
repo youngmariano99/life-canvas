@@ -28,7 +28,7 @@ import {
 import { BrainCircuit, Paperclip, Trash2, Edit } from "lucide-react";
 
 export function ProjectsView() {
-    const { state, setView, addNote, addProject, deleteProject, updateProject, addProjectActivity, updateProjectActivity } = useLifeOSContext();
+    const { state, setView, setActiveNoteId, addNote, addProject, deleteProject, updateProject, addProjectActivity, updateProjectActivity } = useLifeOSContext();
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [newProject, setNewProject] = useState({ name: "", goalId: "", dueDate: "", description: "" });
@@ -229,7 +229,7 @@ export function ProjectsView() {
 
             {/* Project Details Modal (Dashboard Individual) */}
             <Dialog open={!!selectedProjectId} onOpenChange={(open) => !open && setSelectedProjectId(null)}>
-                <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-6">
+                <DialogContent className="max-w-4xl w-[98vw] sm:w-full h-[95vh] sm:h-[85vh] flex flex-col p-4 sm:p-6 overflow-hidden">
                     <DialogHeader className="flex-none p-0">
                         {(() => {
                             const project = enrichedProjects.find(p => p.id === selectedProjectId);
@@ -294,12 +294,16 @@ export function ProjectsView() {
                                 document: "Documento"
                             };
 
+                            const tags = [`project-${project.id}`];
+                            if (project.parentGoal?.id) tags.push(`goal-${project.parentGoal.id}`);
+                            if (project.parentRole?.id) tags.push(`role-${project.parentRole.id}`);
+
                             await addNote({
                                 folderId: state.noteFolders[0]?.id || "",
                                 type,
                                 title: `${titles[type]}: ${project.name}`,
-                                content: "",
-                                tags: [`project-${project.id}`],
+                                content: type === "whiteboard" ? "[]" : "",
+                                tags,
                                 isPinned: false
                             });
                             toast.success("Recurso creado y vinculado");
@@ -308,13 +312,15 @@ export function ProjectsView() {
                         return (
                             <Tabs defaultValue="activities" className="flex-1 flex flex-col mt-4 min-h-0">
                                 <TabsList className="grid w-full grid-cols-2 mb-4">
-                                    <TabsTrigger value="activities" className="gap-2">
+                                    <TabsTrigger value="activities" className="gap-2 text-xs sm:text-sm px-2">
                                         <ActivitySquare className="w-4 h-4" />
-                                        Plan de Acción (Kanban)
+                                        <span className="hidden xs:inline">Plan de Acción</span>
+                                        <span className="xs:hidden">Kanban</span>
                                     </TabsTrigger>
-                                    <TabsTrigger value="notes" className="gap-2">
+                                    <TabsTrigger value="notes" className="gap-2 text-xs sm:text-sm px-2">
                                         <FileText className="w-4 h-4" />
-                                        Recursos y Notas ({projectNotes.length})
+                                        <span>Recursos</span>
+                                        <span className="hidden sm:inline">({projectNotes.length})</span>
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -377,7 +383,7 @@ export function ProjectsView() {
                                                             key={note.id}
                                                             className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
                                                             onClick={() => {
-                                                                // Open notes view and find this note
+                                                                setActiveNoteId(note.id);
                                                                 setView("notes");
                                                             }}
                                                         >

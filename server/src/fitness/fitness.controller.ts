@@ -3,6 +3,8 @@ import { FitnessService } from './fitness.service';
 import { CreateFitnessActivityDto } from './dto/create-fitness-activity.dto';
 import { CreateFitnessRoutineDto } from './dto/create-fitness-routine.dto';
 import { UpdateFitnessActivityDto } from './dto/update-fitness-activity.dto';
+import { CreateExerciseDto, UpdateExerciseDto } from './dto/exercise.dto';
+import { CreateTrainingBlockDto, UpdateTrainingBlockDto } from './dto/training-block.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @UseGuards(AuthGuard('jwt'))
@@ -52,5 +54,49 @@ export class FitnessController {
     @Delete(':id')
     remove(@Param('id') id: string, @Request() req) {
         return this.fitnessService.remove(id, req.user.id);
+    }
+
+    // --- Exercises ---
+
+    @Get('exercises')
+    findAllExercises(@Request() req) {
+        return this.fitnessService.findAllExercises(req.user.id);
+    }
+
+    @Post('exercises')
+    createExercise(@Body() createDto: CreateExerciseDto, @Request() req) {
+        return this.fitnessService.createExercise(createDto, req.user.id);
+    }
+
+    @Patch('exercises/:id')
+    updateExercise(@Param('id') id: string, @Body() updateDto: UpdateExerciseDto, @Request() req) {
+        return this.fitnessService.updateExercise(id, updateDto, req.user.id);
+    }
+
+    @Delete('exercises/:id')
+    deleteExercise(@Param('id') id: string, @Request() req) {
+        return this.fitnessService.deleteExercise(id, req.user.id);
+    }
+
+    // --- Training Blocks ---
+
+    @Get('blocks')
+    findAllBlocks(@Request() req) {
+        return this.fitnessService.findAllBlocks(req.user.id);
+    }
+
+    @Post('blocks')
+    createBlock(@Body() createDto: CreateTrainingBlockDto, @Request() req) {
+        return this.fitnessService.createBlock(createDto, req.user.id);
+    }
+
+    @Patch('blocks/:id')
+    updateBlock(@Param('id') id: string, @Body() updateDto: UpdateTrainingBlockDto, @Request() req) {
+        return this.fitnessService.updateBlock(id, updateDto, req.user.id);
+    }
+
+    @Delete('blocks/:id')
+    deleteBlock(@Param('id') id: string, @Request() req) {
+        return this.fitnessService.deleteBlock(id, req.user.id);
     }
 }

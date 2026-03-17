@@ -1,7 +1,7 @@
 /**
  * API Client for interacting with the NestJS Backend
  */
-import { Role, Goal, Habit, HabitLog, Project, ProjectActivity, DailyStone, FitnessActivity, Deviation, Resource, NoteFolder, Note, CalendarEvent, FitnessRoutine, User, PomodoroSession } from "@/types/lifeOS";
+import { Role, Goal, Habit, HabitLog, Project, ProjectActivity, DailyStone, FitnessActivity, Deviation, Resource, NoteFolder, Note, CalendarEvent, FitnessRoutine, User, PomodoroSession, Exercise, TrainingBlock } from "@/types/lifeOS";
 import { actionQueue } from "@/store/ActionQueue";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/api";
@@ -149,6 +149,16 @@ export const api = {
         getAllRoutines: async (): Promise<FitnessRoutine[]> => fetchWithAuth('/fitness/routines'),
         createRoutine: async (routine: Omit<FitnessRoutine, "id" | "createdAt">): Promise<FitnessRoutine> => fetchWithAuth('/fitness/routines', { method: 'POST', body: JSON.stringify(routine) }),
         deleteRoutine: async (id: string): Promise<void> => fetchWithAuth(`/fitness/routines/${id}`, { method: 'DELETE' }),
+        // Exercises (Catalog)
+        getAllExercises: async (): Promise<Exercise[]> => fetchWithAuth('/fitness/exercises'),
+        createExercise: async (exercise: Omit<Exercise, "id" | "createdAt">): Promise<Exercise> => fetchWithAuth('/fitness/exercises', { method: 'POST', body: JSON.stringify(exercise) }),
+        updateExercise: async (id: string, updates: Partial<Exercise>): Promise<Exercise> => fetchWithAuth(`/fitness/exercises/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+        deleteExercise: async (id: string): Promise<void> => fetchWithAuth(`/fitness/exercises/${id}`, { method: 'DELETE' }),
+        // Training Blocks
+        getAllBlocks: async (): Promise<TrainingBlock[]> => fetchWithAuth('/fitness/blocks'),
+        createBlock: async (block: Omit<TrainingBlock, "id" | "createdAt">): Promise<TrainingBlock> => fetchWithAuth('/fitness/blocks', { method: 'POST', body: JSON.stringify(block) }),
+        updateBlock: async (id: string, updates: Partial<TrainingBlock>): Promise<TrainingBlock> => fetchWithAuth(`/fitness/blocks/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+        deleteBlock: async (id: string): Promise<void> => fetchWithAuth(`/fitness/blocks/${id}`, { method: 'DELETE' }),
     },
     deviations: {
         getAll: async (year?: number): Promise<Deviation[]> => fetchWithAuth(`/deviations${year ? `?year=${year}` : ''}`),

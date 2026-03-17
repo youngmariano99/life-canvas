@@ -18,6 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FitnessRoutineCreator } from "./FitnessRoutineCreator";
 import { RoutineSelector } from "./RoutineSelector";
 import { FitnessActivityView } from "./FitnessActivityView";
+import { ExerciseCatalog } from "./ExerciseCatalog";
+import { BlockPlanView } from "./BlockPlanView";
+import { ExecutionView } from "./ExecutionView";
 import { FitnessActivity, FitnessActivityType } from "@/types/lifeOS";
 
 export function FitnessArea() {
@@ -112,7 +115,24 @@ export function FitnessArea() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="dashboard" className="gap-2">
+            <Activity className="w-4 h-4" />
+            <span>Dashboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="blocks" className="gap-2">
+            <Calendar className="w-4 h-4" />
+            <span>Mesociclos</span>
+          </TabsTrigger>
+          <TabsTrigger value="catalog" className="gap-2">
+            <Dumbbell className="w-4 h-4" />
+            <span>Catálogo</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard">
+          <div className="grid lg:grid-cols-[1fr_320px] gap-6">
         {/* Calendar */}
         <div className="bg-card rounded-2xl border border-border p-4 sm:p-6">
           {/* Month Navigation */}
@@ -226,9 +246,10 @@ export function FitnessArea() {
                     </DialogHeader>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-4">
-                        <TabsTrigger value="manual">Registro Manual</TabsTrigger>
-                        <TabsTrigger value="routines">Usar Rutina</TabsTrigger>
+                      <TabsList className="grid w-full grid-cols-3 mb-4">
+                        <TabsTrigger value="manual">Manual</TabsTrigger>
+                        <TabsTrigger value="routines">Plantilla</TabsTrigger>
+                        <TabsTrigger value="execution">Ejecutar Plan</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="manual" className="space-y-4">
@@ -359,6 +380,10 @@ export function FitnessArea() {
                           setActiveTab("manual");
                         }} />
                       </TabsContent>
+
+                      <TabsContent value="execution">
+                        <ExecutionView onClose={() => setIsAddingActivity(false)} />
+                      </TabsContent>
                     </Tabs>
                   </DialogContent>
                 </Dialog>
@@ -421,11 +446,21 @@ export function FitnessArea() {
           )}
         </div>
       </div>
+    </TabsContent>
 
-      <FitnessActivityView
-        activity={selectedActivity}
-        onClose={() => setSelectedActivity(null)}
-      />
-    </div>
+    <TabsContent value="blocks">
+      <BlockPlanView />
+    </TabsContent>
+
+    <TabsContent value="catalog">
+      <ExerciseCatalog />
+    </TabsContent>
+  </Tabs>
+
+  <FitnessActivityView
+    activity={selectedActivity}
+    onClose={() => setSelectedActivity(null)}
+  />
+</div>
   );
 }
